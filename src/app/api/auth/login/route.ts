@@ -20,6 +20,9 @@ import { getFirebaseAuth } from "@/lib/firebase/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSession } from "@/lib/auth/session";
 
+// Force dynamic rendering — never statically analyse this route at build time
+export const dynamic = "force-dynamic";
+
 // ─── Request body shape ───────────────────────────────────────────────────────
 
 interface LoginBody {

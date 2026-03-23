@@ -156,6 +156,10 @@ export function PhoneVerification({
   const handleOTPComplete = useCallback(
     (otp: string) => {
       if (!verificationId) return;
+      // Clear the reCAPTCHA verifier now — the DOM element will disappear when
+      // we switch to the "verified" render, so we must clear before that happens.
+      recaptchaVerifierRef.current?.clear();
+      recaptchaVerifierRef.current = null;
       setIsVerified(true);
       onVerified(verificationId, otp);
     },

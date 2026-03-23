@@ -291,9 +291,26 @@ export function useAuth() {
     async (data: RegisterData): Promise<void> => {
       setLoading(true);
       let firebaseUser: User | null = null;
+      let firebaseUserDeleted = false;
+
+      /**
+       * Deletes the Firebase account created during registration.
+       * Called on any failure after the account is created, to prevent orphans.
+       * Only attempts deletion once — flag prevents double-delete.
+       */
+      const cleanupFirebaseUser = async () => {
+        if (firebaseUser && !firebaseUserDeleted) {
+          firebaseUserDeleted = true;
+          try {
+            await deleteUser(firebaseUser);
+          } catch {
+            // Ignore — user may already be deleted or signed out
+          }
+        }
+      };
 
       try {
-        // Step 1: Create email account
+        // Step 1: Create Firebase email+password account
         const credential = await createUserWithEmailAndPassword(
           auth,
           data.email,
@@ -301,14 +318,16 @@ export function useAuth() {
         );
         firebaseUser = credential.user;
 
-        // Step 2 + 3: Link verified phone
+        // Step 2: Build phone credential from the verified OTP data
         const phoneCredential = PhoneAuthProvider.credential(
           data.verificationId,
           data.otp
         );
+
+        // Step 3: Link phone to the email account
         await linkWithCredential(firebaseUser, phoneCredential);
 
-        // Step 4: Fresh token from the now-linked account
+        // Step 4: Get fresh ID token from the now-linked account
         const idToken = await firebaseUser.getIdToken(true);
 
         // Step 5: Create Supabase user + set session cookie
@@ -329,34 +348,43 @@ export function useAuth() {
         const json = (await res.json()) as { user?: UserProfile; error?: string };
 
         if (!res.ok || !json.user) {
-          // Step 6: Clean up Firebase account to prevent orphan
-          await deleteUser(firebaseUser);
+          // API failed — delete the Firebase account to prevent orphan
+          await cleanupFirebaseUser();
           throw new Error(json.error ?? 'Registration failed. Please try again.');
         }
 
         setUser(json.user as UserProfile);
-        toast.success('Account created successfully!');
+        toast.success('Welcome to Primeserve! Your account is ready.');
         router.push('/buyer/marketplace');
       } catch (err) {
-        // Clean up Firebase account on Supabase-side failure
-        if (firebaseUser) {
-          try {
-            await deleteUser(firebaseUser);
-          } catch {
-            // Ignore cleanup errors
-          }
-        }
+        // Clean up Firebase account if not already done
+        await cleanupFirebaseUser();
         clearUser();
+
         const msg = err instanceof Error ? err.message : '';
+
         if (msg.includes('email-already-in-use')) {
           throw new Error('An account with this email already exists. Please log in instead.');
+        }
+        if (msg.includes('weak-password')) {
+          throw new Error('Password is too weak. Use at least 8 characters with letters and numbers.');
+        }
+        if (msg.includes('invalid-email')) {
+          throw new Error('Please enter a valid email address.');
         }
         if (msg.includes('invalid-verification-code')) {
           throw new Error('The OTP you entered is incorrect. Please go back and re-verify your phone.');
         }
-        if (msg.includes('credential-already-in-use') || msg.includes('account-exists-with-different-credential')) {
-          throw new Error('This phone number is already linked to another account.');
+        if (msg.includes('session-expired') || msg.includes('code-expired')) {
+          throw new Error('The OTP has expired. Please refresh the page and verify your phone again.');
         }
+        if (msg.includes('credential-already-in-use') || msg.includes('account-exists-with-different-credential')) {
+          throw new Error('This phone number is already registered. Please log in instead.');
+        }
+        if (msg.includes('too-many-requests')) {
+          throw new Error('Too many attempts. Please wait a few minutes and try again.');
+        }
+
         throw err instanceof Error ? err : new Error('Registration failed. Please try again.');
       }
     },

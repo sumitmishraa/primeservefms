@@ -170,6 +170,9 @@ export default function RegisterPage() {
 
   return (
     <div className="space-y-6">
+      {/* Hidden reCAPTCHA container — required by Firebase Phone Auth */}
+      <div id="recaptcha-container" className="hidden" />
+
       {/* Heading */}
       <div>
         <h1 className="text-2xl font-heading font-bold text-slate-900">Create Your Account</h1>
