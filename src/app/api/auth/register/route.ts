@@ -21,7 +21,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { adminAuth } from "@/lib/firebase/admin";
+import { getAdminAuth } from "@/lib/firebase/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSession } from "@/lib/auth/session";
 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // ── 3. Verify Firebase ID token ──────────────────────────────────────────
     let firebaseUid: string;
     try {
-      const decoded = await adminAuth.verifyIdToken(firebase_token);
+      const decoded = await getAdminAuth().verifyIdToken(firebase_token);
       firebaseUid = decoded.uid;
     } catch {
       return NextResponse.json(
