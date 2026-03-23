@@ -17,7 +17,8 @@
 'use client';
 
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { signInWithPhoneNumber, RecaptchaVerifier, type ConfirmationResult } from 'firebase/auth';
+import { signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
+import type { ConfirmationResult } from 'firebase/auth';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { auth } from '@/lib/firebase/config';
@@ -32,10 +33,10 @@ interface PhoneVerificationProps {
   phone: string;
   /**
    * Called once the user has entered all 6 OTP digits.
-   * @param confirmationResult - The ConfirmationResult from signInWithPhoneNumber
+   * @param verificationId - The verificationId string from the ConfirmationResult
    * @param otp - The 6-digit code the user entered
    */
-  onVerified: (confirmationResult: ConfirmationResult, otp: string) => void;
+  onVerified: (verificationId: string, otp: string) => void;
   /** When true interactions are disabled (e.g. parent form is submitting). */
   disabled?: boolean;
 }
@@ -182,7 +183,7 @@ export function PhoneVerification({
       recaptchaVerifierRef.current?.clear();
       recaptchaVerifierRef.current = null;
       setIsVerified(true);
-      onVerified(confirmationResultRef.current, otp);
+      onVerified(confirmationResultRef.current.verificationId, otp);
     },
     [onVerified]
   );
@@ -231,7 +232,7 @@ export function PhoneVerification({
         </div>
 
         {/* reCAPTCHA mounts here — must stay in the DOM while verifier is alive */}
-        <div id="phone-recaptcha-container" />
+        <div id="phone-recaptcha-container" style={{ display: 'none' }} />
       </div>
     );
   }

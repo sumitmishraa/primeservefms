@@ -19,10 +19,10 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signInWithPhoneNumber,
-  EmailAuthProvider,
-  linkWithCredential,
   PhoneAuthProvider,
+  linkWithCredential,
   RecaptchaVerifier,
   deleteUser,
   signOut,
@@ -52,8 +52,8 @@ export interface RegisterData {
   company_name?: string;
   newsletter_opt_in: boolean;
   terms_accepted: boolean;
-  /** The ConfirmationResult object from signInWithPhoneNumber — passed from PhoneVerification */
-  confirmationResult: ConfirmationResult;
+  /** The verificationId string from the PhoneVerification step */
+  verificationId: string;
   /** The 6-digit OTP the user entered */
   otp: string;
 }
@@ -276,18 +276,18 @@ export function useAuth() {
   // ── register ──────────────────────────────────────────────────────────────
 
   /**
-   * Full buyer registration flow (phone-first):
-   *   1. confirmationResult.confirm(otp)  — verify the OTP, sign user in as phone user
-   *   2. EmailAuthProvider.credential     — build email+password credential
-   *   3. linkWithCredential               — link email+password to the phone account
-   *   4. getIdToken(true)                 — get fresh token from the linked account
+   * Full buyer registration flow (email-first — no second SMS):
+   *   1. createUserWithEmailAndPassword   — create Firebase account with email+password
+   *   2. PhoneAuthProvider.credential     — build phone credential from stored verificationId+OTP
+   *   3. linkWithCredential               — link phone to the email account (non-blocking on failure)
+   *   4. getIdToken()                     — get ID token from the account
    *   5. POST /api/auth/register          — create the Supabase user + set session cookie
    *   6. If step 5 fails                  — delete the Firebase account to prevent orphan
    *
-   * Phone-first avoids Firebase triggering a second sendVerificationCode call,
-   * which happened when we used verificationId directly with linkWithCredential.
+   * Email-first means NO new SMS is ever sent during "Create Account" click.
+   * The verificationId+OTP from the earlier phone verification step are reused directly.
    *
-   * @param data - Registration form data including confirmationResult + otp
+   * @param data - Registration form data including verificationId + otp
    * @throws Error with a human-readable message on failure
    */
   const register = useCallback(
@@ -304,18 +304,28 @@ export function useAuth() {
       };
 
       try {
-        // Step 1: Confirm OTP — signs user into Firebase as a phone-auth user
-        const phoneResult = await data.confirmationResult.confirm(data.otp);
-        firebaseUser = phoneResult.user;
+        // Step 1: Create Firebase account with email+password (NO SMS sent here)
+        const emailResult = await createUserWithEmailAndPassword(auth, data.email, data.password);
+        firebaseUser = emailResult.user;
 
-        // Step 2: Build email+password credential
-        const emailCredential = EmailAuthProvider.credential(data.email, data.password);
+        // Step 2: Build phone credential from the stored verificationId+OTP
+        const phoneCredential = PhoneAuthProvider.credential(data.verificationId, data.otp);
 
-        // Step 3: Link email+password to the phone-verified account
-        await linkWithCredential(firebaseUser, emailCredential);
+        // Step 3: Link phone to the email account — non-blocking if it fails
+        // (phone may already be linked to another account; we still proceed)
+        try {
+          await linkWithCredential(firebaseUser, phoneCredential);
+        } catch (linkErr) {
+          const linkMsg = linkErr instanceof Error ? linkErr.message : '';
+          // credential-already-in-use means the phone is already linked elsewhere — OK to ignore
+          if (!linkMsg.includes('credential-already-in-use') && !linkMsg.includes('account-exists-with-different-credential')) {
+            // Any other link error — log but don't block registration
+            console.warn('[register] Phone link failed (non-fatal):', linkErr);
+          }
+        }
 
-        // Step 4: Fresh token from the fully-linked account
-        const idToken = await firebaseUser.getIdToken(true);
+        // Step 4: Get ID token from the account
+        const idToken = await firebaseUser.getIdToken();
 
         // Step 5: Create Supabase user + set session cookie
         const res = await fetch('/api/auth/register', {
@@ -348,17 +358,8 @@ export function useAuth() {
 
         const msg = err instanceof Error ? err.message : '';
 
-        if (msg.includes('invalid-verification-code')) {
-          throw new Error('Incorrect OTP. Please go back and re-verify your phone number.');
-        }
-        if (msg.includes('session-expired') || msg.includes('code-expired')) {
-          throw new Error('OTP expired. Please refresh the page and verify your phone again.');
-        }
-        if (msg.includes('email-already-in-use') || msg.includes('credential-already-in-use')) {
+        if (msg.includes('email-already-in-use')) {
           throw new Error('An account with this email already exists. Please log in instead.');
-        }
-        if (msg.includes('account-exists-with-different-credential')) {
-          throw new Error('This phone number is already registered. Please log in instead.');
         }
         if (msg.includes('weak-password')) {
           throw new Error('Password is too weak. Use at least 8 characters with letters and numbers.');

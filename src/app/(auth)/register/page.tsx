@@ -27,7 +27,6 @@ import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Mail, Lock, Eye, EyeOff, User, Briefcase, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import type { ConfirmationResult } from 'firebase/auth';
 import { useAuth } from '@/hooks/useAuth';
 import { PhoneVerification } from '@/components/auth/PhoneVerification';
 import { PasswordStrengthBar } from '@/components/auth/PasswordStrengthBar';
@@ -88,13 +87,13 @@ export default function RegisterPage() {
 
   // ── Phone verification state (from PhoneVerification component) ───────────
   const [phoneVerified, setPhoneVerified] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [verificationId, setVerificationId] = useState('');
   const [verifiedOtp, setVerifiedOtp] = useState('');
 
   // ── Phone verified callback ───────────────────────────────────────────────
 
-  const handlePhoneVerified = useCallback((cr: ConfirmationResult, otp: string) => {
-    setConfirmationResult(cr);
+  const handlePhoneVerified = useCallback((vid: string, otp: string) => {
+    setVerificationId(vid);
     setVerifiedOtp(otp);
     setPhoneVerified(true);
   }, []);
@@ -148,7 +147,7 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      if (!confirmationResult) {
+      if (!verificationId) {
         toast.error('Phone verification required. Please verify your phone number.');
         return;
       }
@@ -160,7 +159,7 @@ export default function RegisterPage() {
         company_name: businessName.trim() || undefined,
         newsletter_opt_in: newsletterOptIn,
         terms_accepted: termsAccepted,
-        confirmationResult,
+        verificationId,
         otp: verifiedOtp,
       });
       // register() handles the toast + redirect to /buyer/marketplace
@@ -282,7 +281,7 @@ export default function RegisterPage() {
                 setPhone(val);
                 if (phoneVerified) {
                   setPhoneVerified(false);
-                  setConfirmationResult(null);
+                  setVerificationId('');
                   setVerifiedOtp('');
                 }
                 if (fieldErrors.phone) setFieldErrors((p) => ({ ...p, phone: '' }));

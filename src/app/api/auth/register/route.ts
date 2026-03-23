@@ -27,6 +27,7 @@ import { createSession } from "@/lib/auth/session";
 
 // Force dynamic rendering — never statically analyse this route at build time
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 // ─── Validation schema ────────────────────────────────────────────────────────
 
@@ -67,9 +68,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   console.log("[REGISTER] Request received");
   try {
     // ── 1. Parse and validate request body ──────────────────────────────────
+    console.log("[REGISTER] Step 2: Validating fields...");
     let body: RegisterBody;
     try {
       const raw: unknown = await request.json();
+      console.log("[REGISTER] Step 1: Received request body:", JSON.stringify(raw));
       const result = registerSchema.safeParse(raw);
       if (!result.success) {
         const firstIssue = result.error.issues[0];
@@ -101,7 +104,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // ── 3. Verify Firebase ID token ──────────────────────────────────────────
-    console.log("[REGISTER] Step 3: verifying Firebase token");
+    console.log("[REGISTER] Step 3: Verifying Firebase token...");
     const firebaseAuth = getFirebaseAuth();
     if (!firebaseAuth) {
       console.error("[REGISTER] Firebase Admin not initialised — check FIREBASE_ADMIN_* env vars");
@@ -125,7 +128,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // ── 4. Check for duplicate email OR phone ────────────────────────────────
-    console.log("[REGISTER] Step 4: checking duplicates");
+    console.log("[REGISTER] Step 4: Checking for existing user...");
     const supabase = createAdminClient();
 
     const { data: duplicateByEmail, error: emailCheckErr } = await supabase
@@ -165,7 +168,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // ── 5. Insert new user — role is ALWAYS 'buyer' ──────────────────────────
-    console.log("[REGISTER] Step 5: inserting user into Supabase");
+    console.log("[REGISTER] Step 5: Creating user in Supabase...");
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
@@ -192,7 +195,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     console.log("[REGISTER] Step 5: user inserted, id:", newUser.id);
 
     // ── 6. Create session and return ─────────────────────────────────────────
-    console.log("[REGISTER] Step 6: creating session cookie");
+    console.log("[REGISTER] Step 6: Creating session...");
     const response = NextResponse.json(
       {
         user: {
@@ -211,10 +214,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     createSession(response, newUser.id, newUser.role);
     console.log("[REGISTER] Success — buyer registered:", email);
     return response;
-  } catch (error) {
-    console.error("[REGISTER] Unhandled error:", error);
+  } catch (error: unknown) {
+    const err = error as { message?: string; stack?: string };
+    console.error("[REGISTER] FULL ERROR:", error);
+    console.error("[REGISTER] Error message:", err?.message);
+    console.error("[REGISTER] Error stack:", err?.stack);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Registration failed: " + (err?.message ?? "Unknown error") },
       { status: 500 }
     );
   }
