@@ -8,12 +8,16 @@
  *   4. When all 6 digits are entered → calls onVerified(verificationId, otp).
  *   5. Shows "✓ Phone Verified" badge.
  *   6. Resend timer: 30s countdown before "Resend OTP" activates.
+ *
+ * Uses signInWithPhoneNumber (standard Firebase API) instead of the older
+ * PhoneAuthProvider.verifyPhoneNumber. The verifier is created once and
+ * reused — only destroyed on error or when the phone number changes.
  */
 
 'use client';
 
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { PhoneAuthProvider, RecaptchaVerifier } from 'firebase/auth';
+import { signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { auth } from '@/lib/firebase/config';
@@ -28,7 +32,7 @@ interface PhoneVerificationProps {
   phone: string;
   /**
    * Called once the user has entered all 6 OTP digits.
-   * @param verificationId - From PhoneAuthProvider.verifyPhoneNumber
+   * @param verificationId - From signInWithPhoneNumber ConfirmationResult
    * @param otp - The 6-digit code the user entered
    */
   onVerified: (verificationId: string, otp: string) => void;
@@ -65,6 +69,7 @@ export function PhoneVerification({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       recaptchaVerifierRef.current?.clear();
+      recaptchaVerifierRef.current = null;
     };
   }, []);
 
@@ -90,32 +95,44 @@ export function PhoneVerification({
     async (phoneNumber: string) => {
       setIsSending(true);
       try {
-        recaptchaVerifierRef.current?.clear();
-        recaptchaVerifierRef.current = new RecaptchaVerifier(
-          auth,
-          'phone-recaptcha-container',
-          { size: 'invisible', callback: () => {} }
-        );
+        // Create the verifier once — reuse it on resend.
+        // Only re-create if it was cleared after a previous error.
+        if (!recaptchaVerifierRef.current) {
+          recaptchaVerifierRef.current = new RecaptchaVerifier(
+            auth,
+            'phone-recaptcha-container',
+            { size: 'invisible', callback: () => {} }
+          );
+        }
 
-        const provider = new PhoneAuthProvider(auth);
-        const vId = await provider.verifyPhoneNumber(
+        // signInWithPhoneNumber is the standard Firebase API.
+        // We only use the verificationId from the result — we never call
+        // confirmationResult.confirm() here, so the user is NOT signed in yet.
+        // The verificationId is used later in register() to link the phone.
+        const confirmationResult = await signInWithPhoneNumber(
+          auth,
           '+91' + phoneNumber,
           recaptchaVerifierRef.current
         );
-        setVerificationId(vId);
+
+        setVerificationId(confirmationResult.verificationId);
         startTimer();
         toast.success('OTP sent to +91 ' + phoneNumber);
       } catch (err) {
+        // Clear verifier on error so it can be freshly re-created on retry
+        recaptchaVerifierRef.current?.clear();
+        recaptchaVerifierRef.current = null;
+
         const msg = err instanceof Error ? err.message : '';
         if (msg.includes('too-many-requests')) {
-          toast.error('Too many attempts. Wait a few minutes and try again.');
+          toast.error('Too many OTP requests. Please wait a few minutes and try again.');
         } else if (msg.includes('invalid-phone-number')) {
           toast.error('Invalid phone number. Please check and try again.');
+        } else if (msg.includes('billing-not-enabled') || msg.includes('quota-exceeded')) {
+          toast.error('SMS service temporarily unavailable. Please try again later.');
         } else {
           toast.error('Could not send OTP. Please try again.');
         }
-        recaptchaVerifierRef.current?.clear();
-        recaptchaVerifierRef.current = null;
       } finally {
         setIsSending(false);
       }
@@ -132,19 +149,20 @@ export function PhoneVerification({
     const wasValid = /^\d{10}$/.test(prevPhone);
     const nowValid = /^\d{10}$/.test(phone);
 
-    // Reset whenever the number changes
+    // Reset all state when the number changes (user is editing)
     if (phone !== prevPhone) {
       setVerificationId(null);
       setIsVerified(false);
       setResetOtp(true);
       if (timerRef.current) clearInterval(timerRef.current);
       setSecondsLeft(0);
+      // Destroy old verifier — it was bound to the old phone attempt
       recaptchaVerifierRef.current?.clear();
       recaptchaVerifierRef.current = null;
       setTimeout(() => setResetOtp(false), 100);
     }
 
-    // Auto-send the moment number becomes 10 valid digits
+    // Auto-send the moment the number becomes 10 valid digits
     if (nowValid && !wasValid) {
       void sendOTP(phone);
     }
@@ -156,8 +174,8 @@ export function PhoneVerification({
   const handleOTPComplete = useCallback(
     (otp: string) => {
       if (!verificationId) return;
-      // Clear the reCAPTCHA verifier now — the DOM element will disappear when
-      // we switch to the "verified" render, so we must clear before that happens.
+      // Destroy the verifier now — its DOM element is about to disappear
+      // when we switch to the "verified" render state.
       recaptchaVerifierRef.current?.clear();
       recaptchaVerifierRef.current = null;
       setIsVerified(true);
@@ -177,7 +195,7 @@ export function PhoneVerification({
     );
   }
 
-  // ── Render: OTP boxes (after auto-send succeeds) ──────────────────────────
+  // ── Render: OTP boxes (after send succeeds) ───────────────────────────────
 
   if (verificationId) {
     return (
@@ -209,6 +227,7 @@ export function PhoneVerification({
           )}
         </div>
 
+        {/* reCAPTCHA mounts here — must stay in the DOM while verifier is alive */}
         <div id="phone-recaptcha-container" />
       </div>
     );
@@ -230,6 +249,7 @@ export function PhoneVerification({
             : 'OTP will be sent automatically when you enter 10 digits'}
         </p>
       )}
+      {/* reCAPTCHA container must exist before sendOTP is called */}
       <div id="phone-recaptcha-container" />
     </div>
   );
