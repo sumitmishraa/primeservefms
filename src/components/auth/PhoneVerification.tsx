@@ -17,7 +17,7 @@
 'use client';
 
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
+import { signInWithPhoneNumber, RecaptchaVerifier, type ConfirmationResult } from 'firebase/auth';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { auth } from '@/lib/firebase/config';
@@ -32,10 +32,10 @@ interface PhoneVerificationProps {
   phone: string;
   /**
    * Called once the user has entered all 6 OTP digits.
-   * @param verificationId - From signInWithPhoneNumber ConfirmationResult
+   * @param confirmationResult - The ConfirmationResult from signInWithPhoneNumber
    * @param otp - The 6-digit code the user entered
    */
-  onVerified: (verificationId: string, otp: string) => void;
+  onVerified: (confirmationResult: ConfirmationResult, otp: string) => void;
   /** When true interactions are disabled (e.g. parent form is submitting). */
   disabled?: boolean;
 }
@@ -52,10 +52,11 @@ export function PhoneVerification({
   disabled = false,
 }: PhoneVerificationProps) {
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+  const confirmationResultRef = useRef<ConfirmationResult | null>(null);
   const prevPhoneRef = useRef('');
 
   const [isSending, setIsSending] = useState(false);
-  const [verificationId, setVerificationId] = useState<string | null>(null);
+  const [otpSent, setOtpSent] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [resetOtp, setResetOtp] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -115,7 +116,8 @@ export function PhoneVerification({
           recaptchaVerifierRef.current
         );
 
-        setVerificationId(confirmationResult.verificationId);
+        confirmationResultRef.current = confirmationResult;
+        setOtpSent(true);
         startTimer();
         toast.success('OTP sent to +91 ' + phoneNumber);
       } catch (err) {
@@ -151,7 +153,8 @@ export function PhoneVerification({
 
     // Reset all state when the number changes (user is editing)
     if (phone !== prevPhone) {
-      setVerificationId(null);
+      confirmationResultRef.current = null;
+      setOtpSent(false);
       setIsVerified(false);
       setResetOtp(true);
       if (timerRef.current) clearInterval(timerRef.current);
@@ -173,15 +176,15 @@ export function PhoneVerification({
 
   const handleOTPComplete = useCallback(
     (otp: string) => {
-      if (!verificationId) return;
+      if (!confirmationResultRef.current) return;
       // Destroy the verifier now — its DOM element is about to disappear
       // when we switch to the "verified" render state.
       recaptchaVerifierRef.current?.clear();
       recaptchaVerifierRef.current = null;
       setIsVerified(true);
-      onVerified(verificationId, otp);
+      onVerified(confirmationResultRef.current, otp);
     },
-    [verificationId, onVerified]
+    [onVerified]
   );
 
   // ── Render: already verified ──────────────────────────────────────────────
@@ -197,7 +200,7 @@ export function PhoneVerification({
 
   // ── Render: OTP boxes (after send succeeds) ───────────────────────────────
 
-  if (verificationId) {
+  if (otpSent) {
     return (
       <div className="space-y-3">
         <p className="text-xs text-slate-500">

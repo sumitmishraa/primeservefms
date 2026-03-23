@@ -20,7 +20,7 @@ import { useRouter } from 'next/navigation';
 import {
   signInWithEmailAndPassword,
   signInWithPhoneNumber,
-  createUserWithEmailAndPassword,
+  EmailAuthProvider,
   linkWithCredential,
   PhoneAuthProvider,
   RecaptchaVerifier,
@@ -52,9 +52,9 @@ export interface RegisterData {
   company_name?: string;
   newsletter_opt_in: boolean;
   terms_accepted: boolean;
-  /** From PhoneVerification.onVerified */
-  verificationId: string;
-  /** From PhoneVerification.onVerified */
+  /** The ConfirmationResult object from signInWithPhoneNumber — passed from PhoneVerification */
+  confirmationResult: ConfirmationResult;
+  /** The 6-digit OTP the user entered */
   otp: string;
 }
 
@@ -276,15 +276,18 @@ export function useAuth() {
   // ── register ──────────────────────────────────────────────────────────────
 
   /**
-   * Full buyer registration flow:
-   *   1. createUserWithEmailAndPassword  — create the email account
-   *   2. PhoneAuthProvider.credential   — create phone credential from verificationId + otp
-   *   3. linkWithCredential             — link phone to the email account
-   *   4. getIdToken                     — get fresh token from the linked account
-   *   5. POST /api/auth/register        — create the Supabase user + set session cookie
-   *   6. If Supabase fails              — delete the Firebase account to prevent orphan
+   * Full buyer registration flow (phone-first):
+   *   1. confirmationResult.confirm(otp)  — verify the OTP, sign user in as phone user
+   *   2. EmailAuthProvider.credential     — build email+password credential
+   *   3. linkWithCredential               — link email+password to the phone account
+   *   4. getIdToken(true)                 — get fresh token from the linked account
+   *   5. POST /api/auth/register          — create the Supabase user + set session cookie
+   *   6. If step 5 fails                  — delete the Firebase account to prevent orphan
    *
-   * @param data - Registration form data including email, password, phone OTP data
+   * Phone-first avoids Firebase triggering a second sendVerificationCode call,
+   * which happened when we used verificationId directly with linkWithCredential.
+   *
+   * @param data - Registration form data including confirmationResult + otp
    * @throws Error with a human-readable message on failure
    */
   const register = useCallback(
@@ -293,41 +296,25 @@ export function useAuth() {
       let firebaseUser: User | null = null;
       let firebaseUserDeleted = false;
 
-      /**
-       * Deletes the Firebase account created during registration.
-       * Called on any failure after the account is created, to prevent orphans.
-       * Only attempts deletion once — flag prevents double-delete.
-       */
       const cleanupFirebaseUser = async () => {
         if (firebaseUser && !firebaseUserDeleted) {
           firebaseUserDeleted = true;
-          try {
-            await deleteUser(firebaseUser);
-          } catch {
-            // Ignore — user may already be deleted or signed out
-          }
+          try { await deleteUser(firebaseUser); } catch { /* ignore */ }
         }
       };
 
       try {
-        // Step 1: Create Firebase email+password account
-        const credential = await createUserWithEmailAndPassword(
-          auth,
-          data.email,
-          data.password
-        );
-        firebaseUser = credential.user;
+        // Step 1: Confirm OTP — signs user into Firebase as a phone-auth user
+        const phoneResult = await data.confirmationResult.confirm(data.otp);
+        firebaseUser = phoneResult.user;
 
-        // Step 2: Build phone credential from the verified OTP data
-        const phoneCredential = PhoneAuthProvider.credential(
-          data.verificationId,
-          data.otp
-        );
+        // Step 2: Build email+password credential
+        const emailCredential = EmailAuthProvider.credential(data.email, data.password);
 
-        // Step 3: Link phone to the email account
-        await linkWithCredential(firebaseUser, phoneCredential);
+        // Step 3: Link email+password to the phone-verified account
+        await linkWithCredential(firebaseUser, emailCredential);
 
-        // Step 4: Get fresh ID token from the now-linked account
+        // Step 4: Fresh token from the fully-linked account
         const idToken = await firebaseUser.getIdToken(true);
 
         // Step 5: Create Supabase user + set session cookie
@@ -339,7 +326,7 @@ export function useAuth() {
             full_name: data.full_name.trim(),
             email: data.email,
             phone: '+91' + data.phone,
-            company_name: data.company_name?.trim() || null,
+            ...(data.company_name?.trim() ? { company_name: data.company_name.trim() } : {}),
             newsletter_opt_in: data.newsletter_opt_in,
             terms_accepted: data.terms_accepted,
           }),
@@ -348,7 +335,6 @@ export function useAuth() {
         const json = (await res.json()) as { user?: UserProfile; error?: string };
 
         if (!res.ok || !json.user) {
-          // API failed — delete the Firebase account to prevent orphan
           await cleanupFirebaseUser();
           throw new Error(json.error ?? 'Registration failed. Please try again.');
         }
@@ -357,14 +343,22 @@ export function useAuth() {
         toast.success('Welcome to Primeserve! Your account is ready.');
         router.push('/buyer/marketplace');
       } catch (err) {
-        // Clean up Firebase account if not already done
         await cleanupFirebaseUser();
         clearUser();
 
         const msg = err instanceof Error ? err.message : '';
 
-        if (msg.includes('email-already-in-use')) {
+        if (msg.includes('invalid-verification-code')) {
+          throw new Error('Incorrect OTP. Please go back and re-verify your phone number.');
+        }
+        if (msg.includes('session-expired') || msg.includes('code-expired')) {
+          throw new Error('OTP expired. Please refresh the page and verify your phone again.');
+        }
+        if (msg.includes('email-already-in-use') || msg.includes('credential-already-in-use')) {
           throw new Error('An account with this email already exists. Please log in instead.');
+        }
+        if (msg.includes('account-exists-with-different-credential')) {
+          throw new Error('This phone number is already registered. Please log in instead.');
         }
         if (msg.includes('weak-password')) {
           throw new Error('Password is too weak. Use at least 8 characters with letters and numbers.');
@@ -372,23 +366,11 @@ export function useAuth() {
         if (msg.includes('invalid-email')) {
           throw new Error('Please enter a valid email address.');
         }
-        if (msg.includes('invalid-verification-code')) {
-          throw new Error('The OTP you entered is incorrect. Please go back and re-verify your phone.');
-        }
-        if (msg.includes('session-expired') || msg.includes('code-expired')) {
-          throw new Error('The OTP has expired. Please refresh the page and verify your phone again.');
-        }
-        if (msg.includes('credential-already-in-use') || msg.includes('account-exists-with-different-credential')) {
-          throw new Error('This phone number is already registered. Please log in instead.');
+        if (msg.includes('operation-not-allowed')) {
+          throw new Error('Email/Password sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.');
         }
         if (msg.includes('too-many-requests')) {
           throw new Error('Too many attempts. Please wait a few minutes and try again.');
-        }
-        if (msg.includes('operation-not-allowed')) {
-          throw new Error('Registration is not enabled yet. Please contact support.');
-        }
-        if (msg.includes('unauthorized-domain') || msg.includes('auth/unauthorized-domain')) {
-          throw new Error('This website is not authorized for sign-in. Please contact support.');
         }
 
         throw err instanceof Error ? err : new Error('Registration failed. Please try again.');
