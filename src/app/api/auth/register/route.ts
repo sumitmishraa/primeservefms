@@ -21,7 +21,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAdminAuth } from "@/lib/firebase/admin";
+import { getFirebaseAuth } from "@/lib/firebase/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSession } from "@/lib/auth/session";
 
@@ -94,9 +94,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // ── 3. Verify Firebase ID token ──────────────────────────────────────────
+    const firebaseAuth = getFirebaseAuth();
+    if (!firebaseAuth) {
+      return NextResponse.json(
+        { error: "Server configuration error. Contact support." },
+        { status: 500 }
+      );
+    }
+
     let firebaseUid: string;
     try {
-      const decoded = await getAdminAuth().verifyIdToken(firebase_token);
+      const decoded = await firebaseAuth.verifyIdToken(firebase_token);
       firebaseUid = decoded.uid;
     } catch {
       return NextResponse.json(

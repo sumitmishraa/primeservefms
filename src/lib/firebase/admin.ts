@@ -1,41 +1,60 @@
-import { initializeApp, getApps, getApp, cert, type App } from "firebase-admin/app";
-import { getAuth, type Auth } from "firebase-admin/auth";
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import type { App } from "firebase-admin/app";
+import type { Auth } from "firebase-admin/auth";
 
 /**
  * Firebase Admin SDK — SERVER-SIDE ONLY.
  *
- * Uses lazy initialization so the SDK is not instantiated at module import time.
- * This prevents build failures when env vars are not available during static analysis.
- *
- * Primary use: verifying Firebase ID tokens sent from the browser after
- * a user signs in via Phone OTP or Email OTP.
+ * Lazy-initialized on first request. Never runs at module import time,
+ * so Vercel builds succeed even when env vars are not available during
+ * static analysis.
  */
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let adminApp: any = null;
 
 /**
  * Returns the Firebase Admin App, initializing it on first call.
- * Subsequent calls reuse the existing app (singleton pattern).
+ * Returns null if credentials are missing (e.g. during build).
  */
-function getAdminApp(): App {
-  if (getApps().length > 0) {
-    return getApp();
+export function getFirebaseAdmin(): App | null {
+  if (adminApp) return adminApp;
+
+  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
+  if (!projectId) {
+    console.warn("[FIREBASE_ADMIN] Missing credentials — skipping initialization");
+    return null;
   }
-  return initializeApp({
+
+  if (getApps().length > 0) {
+    adminApp = getApps()[0];
+    return adminApp;
+  }
+
+  adminApp = initializeApp({
     credential: cert({
-      projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
+      projectId,
       clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      // Private key stored with literal \n — replace with real newlines at runtime
       privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     }),
   });
+
+  return adminApp;
 }
 
 /**
  * Returns the Firebase Admin Auth instance.
- * Call this inside request handlers — never at module top-level.
+ * Returns null if credentials are missing.
+ * Always call inside a request handler, never at module top-level.
  *
  * Example:
- *   const decoded = await getAdminAuth().verifyIdToken(idToken);
+ *   const auth = getFirebaseAuth();
+ *   if (!auth) return NextResponse.json({ error: 'Server config error' }, { status: 500 });
+ *   const decoded = await auth.verifyIdToken(idToken);
  */
-export function getAdminAuth(): Auth {
-  return getAuth(getAdminApp());
+export function getFirebaseAuth(): Auth | null {
+  const app = getFirebaseAdmin();
+  if (!app) return null;
+  return getAuth(app);
 }
