@@ -1,0 +1,438 @@
+/**
+ * Supabase database types — hand-written to match all 3 migrations exactly.
+ * Re-generate by running: pnpm supabase gen types typescript --project-id <id>
+ *
+ * Table inventory (7 tables, 7 enums):
+ *   users, subcategories, vendor_applications   ← Migration 1
+ *   products                                    ← Migration 2
+ *   orders, order_items, messages               ← Migration 3
+ */
+
+// ---------------------------------------------------------------------------
+// JSON primitive — used for JSONB columns
+// ---------------------------------------------------------------------------
+type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json }
+  | Json[];
+
+// ---------------------------------------------------------------------------
+// Helpers for address JSONB (used in orders)
+// ---------------------------------------------------------------------------
+interface AddressJson {
+  name: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  phone: string;
+}
+
+// ---------------------------------------------------------------------------
+// Helper for business documents JSONB (used in users, vendor_applications)
+// ---------------------------------------------------------------------------
+interface BusinessDocumentJson {
+  doc_type: string;
+  url: string;
+  uploaded_at: string;
+}
+
+// ---------------------------------------------------------------------------
+// Helper for pricing tiers JSONB (used in products)
+// ---------------------------------------------------------------------------
+interface PricingTierJson {
+  min_qty: number;
+  max_qty: number | null;
+  price: number;
+}
+
+// ---------------------------------------------------------------------------
+// Main Database type
+// ---------------------------------------------------------------------------
+export type Database = {
+  public: {
+    Tables: {
+
+      // -----------------------------------------------------------------------
+      // users — all platform participants (admins, buyers, vendors)
+      // Migration 1, Section 4
+      // -----------------------------------------------------------------------
+      users: {
+        Row: {
+          id: string;
+          firebase_uid: string;
+          role: Database['public']['Enums']['user_role'];
+          email: string | null;
+          phone: string | null;
+          full_name: string;
+          avatar_url: string | null;
+          company_name: string | null;
+          company_type: string | null;
+          gst_number: string | null;
+          tax_id: string | null;
+          business_verified: boolean;
+          business_documents: BusinessDocumentJson[];
+          address_line1: string | null;
+          address_line2: string | null;
+          city: string | null;
+          state: string | null;
+          pincode: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          firebase_uid: string;
+          role?: Database['public']['Enums']['user_role'];
+          email?: string | null;
+          phone?: string | null;
+          full_name: string;
+          avatar_url?: string | null;
+          company_name?: string | null;
+          company_type?: string | null;
+          gst_number?: string | null;
+          tax_id?: string | null;
+          business_verified?: boolean;
+          business_documents?: Json;
+          address_line1?: string | null;
+          address_line2?: string | null;
+          city?: string | null;
+          state?: string | null;
+          pincode?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['users']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // subcategories — reference table for all 44 subcategories
+      // Migration 1, Section 1
+      // -----------------------------------------------------------------------
+      subcategories: {
+        Row: {
+          id: string;
+          category: Database['public']['Enums']['product_category'];
+          name: string;
+          slug: string;
+          display_name: string;
+          description: string | null;
+          icon_name: string | null;
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          category: Database['public']['Enums']['product_category'];
+          name: string;
+          slug: string;
+          display_name: string;
+          description?: string | null;
+          icon_name?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['subcategories']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // vendor_applications — onboarding applications for admin review
+      // Migration 1, Section 5
+      // -----------------------------------------------------------------------
+      vendor_applications: {
+        Row: {
+          id: string;
+          user_id: string;
+          company_name: string;
+          gst_number: string | null;
+          business_type: string | null;
+          business_documents: BusinessDocumentJson[];
+          product_categories: Database['public']['Enums']['product_category'][] | null;
+          description: string | null;
+          status: Database['public']['Enums']['vendor_application_status'];
+          reviewed_by: string | null;
+          review_notes: string | null;
+          reviewed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          company_name: string;
+          gst_number?: string | null;
+          business_type?: string | null;
+          business_documents?: Json;
+          product_categories?: Database['public']['Enums']['product_category'][] | null;
+          description?: string | null;
+          status?: Database['public']['Enums']['vendor_application_status'];
+          reviewed_by?: string | null;
+          review_notes?: string | null;
+          reviewed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['vendor_applications']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // products — vendor product listings on the marketplace
+      // Migration 2
+      // -----------------------------------------------------------------------
+      products: {
+        Row: {
+          id: string;
+          vendor_id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          short_description: string | null;
+          sku: string | null;
+          category: Database['public']['Enums']['product_category'];
+          subcategory_id: string | null;
+          subcategory_slug: string | null;
+          brand: string | null;
+          size_variant: string | null;
+          unit_of_measure: Database['public']['Enums']['unit_of_measure'];
+          base_price: number;
+          moq: number;
+          pricing_tiers: PricingTierJson[];
+          images: string[];
+          thumbnail_url: string | null;
+          stock_status: Database['public']['Enums']['stock_status'];
+          stock_quantity: number;
+          is_approved: boolean;
+          is_active: boolean;
+          hsn_code: string | null;
+          gst_rate: number;
+          specifications: Record<string, string>;
+          tags: string[];
+          total_orders: number;
+          avg_rating: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_id: string;
+          name: string;
+          slug?: string;
+          description?: string | null;
+          short_description?: string | null;
+          sku?: string | null;
+          category: Database['public']['Enums']['product_category'];
+          subcategory_id?: string | null;
+          subcategory_slug?: string | null;
+          brand?: string | null;
+          size_variant?: string | null;
+          unit_of_measure?: Database['public']['Enums']['unit_of_measure'];
+          base_price: number;
+          moq?: number;
+          pricing_tiers?: Json;
+          images?: string[];
+          thumbnail_url?: string | null;
+          stock_status?: Database['public']['Enums']['stock_status'];
+          stock_quantity?: number;
+          is_approved?: boolean;
+          is_active?: boolean;
+          hsn_code?: string | null;
+          gst_rate?: number;
+          specifications?: Json;
+          tags?: string[];
+          total_orders?: number;
+          avg_rating?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['products']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // orders — one per buyer-vendor checkout session
+      // Migration 3, Section 2
+      // -----------------------------------------------------------------------
+      orders: {
+        Row: {
+          id: string;
+          order_number: string;
+          buyer_id: string;
+          vendor_id: string;
+          status: Database['public']['Enums']['order_status'];
+          payment_status: Database['public']['Enums']['payment_status'];
+          subtotal: number;
+          gst_amount: number;
+          shipping_amount: number;
+          total_amount: number;
+          shipping_address: AddressJson;
+          billing_address: AddressJson | null;
+          notes: string | null;
+          cancelled_reason: string | null;
+          delivered_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_number?: string;
+          buyer_id: string;
+          vendor_id: string;
+          status?: Database['public']['Enums']['order_status'];
+          payment_status?: Database['public']['Enums']['payment_status'];
+          subtotal?: number;
+          gst_amount?: number;
+          shipping_amount?: number;
+          total_amount?: number;
+          shipping_address: Json;
+          billing_address?: Json | null;
+          notes?: string | null;
+          cancelled_reason?: string | null;
+          delivered_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['orders']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // order_items — line items for each order (product name is a snapshot)
+      // Migration 3, Section 5
+      // -----------------------------------------------------------------------
+      order_items: {
+        Row: {
+          id: string;
+          order_id: string;
+          product_id: string;
+          product_name: string;
+          product_sku: string | null;
+          quantity: number;
+          unit_price: number;
+          gst_rate: number;
+          gst_amount: number;
+          total_amount: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          product_id: string;
+          product_name: string;
+          product_sku?: string | null;
+          quantity: number;
+          unit_price: number;
+          gst_rate: number;
+          gst_amount: number;
+          total_amount: number;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['order_items']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // messages — buyer ↔ vendor inbox, optionally tied to an order
+      // Migration 3, Section 7
+      // -----------------------------------------------------------------------
+      messages: {
+        Row: {
+          id: string;
+          sender_id: string;
+          receiver_id: string;
+          order_id: string | null;
+          subject: string | null;
+          content: string;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          sender_id: string;
+          receiver_id: string;
+          order_id?: string | null;
+          subject?: string | null;
+          content: string;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['messages']['Insert']>;
+        Relationships: never[];
+      };
+    };
+
+    Views: { [_ in never]: never };
+    Functions: { [_ in never]: never };
+
+    Enums: {
+      /** Platform user role — determines dashboard and permissions */
+      user_role: 'admin' | 'buyer' | 'vendor';
+
+      /** Top-level product categories (stable — stored as ENUM in DB) */
+      product_category:
+        | 'housekeeping_materials'
+        | 'cleaning_chemicals'
+        | 'pantry_items'
+        | 'office_stationeries'
+        | 'facility_and_tools'
+        | 'printing_solution';
+
+      /** Order lifecycle from placement to delivery */
+      order_status:
+        | 'pending'
+        | 'confirmed'
+        | 'processing'
+        | 'shipped'
+        | 'delivered'
+        | 'cancelled';
+
+      /** Payment state alongside order status */
+      payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
+
+      /** Product inventory availability */
+      stock_status: 'in_stock' | 'out_of_stock' | 'low_stock';
+
+      /** Vendor onboarding application review state */
+      vendor_application_status: 'pending' | 'approved' | 'rejected';
+
+      /**
+       * Units of measure derived from the real product catalog.
+       * ream = paper; pkt = packets; can = chemical cans.
+       */
+      unit_of_measure:
+        | 'piece'
+        | 'kg'
+        | 'liter'
+        | 'pack'
+        | 'box'
+        | 'carton'
+        | 'roll'
+        | 'pair'
+        | 'set'
+        | 'ream'
+        | 'pkt'
+        | 'can'
+        | 'bottle'
+        | 'tube';
+    };
+  };
+};
+
+// ---------------------------------------------------------------------------
+// Convenience type aliases — import these in components and API routes
+// ---------------------------------------------------------------------------
+export type Tables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Row'];
+
+export type Enums<T extends keyof Database['public']['Enums']> =
+  Database['public']['Enums'][T];

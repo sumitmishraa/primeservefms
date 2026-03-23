@@ -1,0 +1,232 @@
+/**
+ * PhoneVerification — inline phone OTP verification for the registration form.
+ *
+ * Flow:
+ *   1. User enters 10-digit phone number (passed in via `phone` prop).
+ *   2. The moment the 10th digit is typed, OTP is sent AUTOMATICALLY.
+ *   3. OTP input appears (OTPInput component, 6 boxes).
+ *   4. When all 6 digits are entered → calls onVerified(verificationId, otp).
+ *   5. Shows "✓ Phone Verified" badge.
+ *   6. Resend timer: 30s countdown before "Resend OTP" activates.
+ */
+
+'use client';
+
+import { useRef, useState, useEffect, useCallback } from 'react';
+import { PhoneAuthProvider, RecaptchaVerifier } from 'firebase/auth';
+import { CheckCircle2, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { auth } from '@/lib/firebase/config';
+import { OTPInput } from './OTPInput';
+
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
+
+interface PhoneVerificationProps {
+  /** 10-digit phone number to verify (without +91 prefix). */
+  phone: string;
+  /**
+   * Called once the user has entered all 6 OTP digits.
+   * @param verificationId - From PhoneAuthProvider.verifyPhoneNumber
+   * @param otp - The 6-digit code the user entered
+   */
+  onVerified: (verificationId: string, otp: string) => void;
+  /** When true interactions are disabled (e.g. parent form is submitting). */
+  disabled?: boolean;
+}
+
+const RESEND_COOLDOWN = 30; // seconds
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export function PhoneVerification({
+  phone,
+  onVerified,
+  disabled = false,
+}: PhoneVerificationProps) {
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+  const prevPhoneRef = useRef('');
+
+  const [isSending, setIsSending] = useState(false);
+  const [verificationId, setVerificationId] = useState<string | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
+  const [resetOtp, setResetOtp] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const isValidPhone = /^\d{10}$/.test(phone);
+
+  // ── Cleanup on unmount ────────────────────────────────────────────────────
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      recaptchaVerifierRef.current?.clear();
+    };
+  }, []);
+
+  // ── Start resend countdown ────────────────────────────────────────────────
+
+  const startTimer = useCallback(() => {
+    setSecondsLeft(RESEND_COOLDOWN);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current!);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  // ── Send OTP ──────────────────────────────────────────────────────────────
+
+  const sendOTP = useCallback(
+    async (phoneNumber: string) => {
+      setIsSending(true);
+      try {
+        recaptchaVerifierRef.current?.clear();
+        recaptchaVerifierRef.current = new RecaptchaVerifier(
+          auth,
+          'phone-recaptcha-container',
+          { size: 'invisible', callback: () => {} }
+        );
+
+        const provider = new PhoneAuthProvider(auth);
+        const vId = await provider.verifyPhoneNumber(
+          '+91' + phoneNumber,
+          recaptchaVerifierRef.current
+        );
+        setVerificationId(vId);
+        startTimer();
+        toast.success('OTP sent to +91 ' + phoneNumber);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : '';
+        if (msg.includes('too-many-requests')) {
+          toast.error('Too many attempts. Wait a few minutes and try again.');
+        } else if (msg.includes('invalid-phone-number')) {
+          toast.error('Invalid phone number. Please check and try again.');
+        } else {
+          toast.error('Could not send OTP. Please try again.');
+        }
+        recaptchaVerifierRef.current?.clear();
+        recaptchaVerifierRef.current = null;
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [startTimer]
+  );
+
+  // ── Reset + auto-send when phone changes ─────────────────────────────────
+
+  useEffect(() => {
+    const prevPhone = prevPhoneRef.current;
+    prevPhoneRef.current = phone;
+
+    const wasValid = /^\d{10}$/.test(prevPhone);
+    const nowValid = /^\d{10}$/.test(phone);
+
+    // Reset whenever the number changes
+    if (phone !== prevPhone) {
+      setVerificationId(null);
+      setIsVerified(false);
+      setResetOtp(true);
+      if (timerRef.current) clearInterval(timerRef.current);
+      setSecondsLeft(0);
+      recaptchaVerifierRef.current?.clear();
+      recaptchaVerifierRef.current = null;
+      setTimeout(() => setResetOtp(false), 100);
+    }
+
+    // Auto-send the moment number becomes 10 valid digits
+    if (nowValid && !wasValid) {
+      void sendOTP(phone);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phone]);
+
+  // ── OTP complete ──────────────────────────────────────────────────────────
+
+  const handleOTPComplete = useCallback(
+    (otp: string) => {
+      if (!verificationId) return;
+      setIsVerified(true);
+      onVerified(verificationId, otp);
+    },
+    [verificationId, onVerified]
+  );
+
+  // ── Render: already verified ──────────────────────────────────────────────
+
+  if (isVerified) {
+    return (
+      <div className="flex items-center gap-2 py-2">
+        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+        <span className="text-sm font-medium text-emerald-700">Phone Verified</span>
+      </div>
+    );
+  }
+
+  // ── Render: OTP boxes (after auto-send succeeds) ──────────────────────────
+
+  if (verificationId) {
+    return (
+      <div className="space-y-3">
+        <p className="text-xs text-slate-500">
+          Enter the 6-digit code sent to{' '}
+          <span className="font-semibold text-slate-700">+91 {phone}</span>
+        </p>
+
+        <OTPInput onComplete={handleOTPComplete} reset={resetOtp} />
+
+        <div className="text-center">
+          {secondsLeft > 0 ? (
+            <p className="text-xs text-slate-400">
+              Resend OTP in{' '}
+              <span className="font-mono font-semibold text-slate-600">
+                00:{String(secondsLeft).padStart(2, '0')}
+              </span>
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void sendOTP(phone)}
+              disabled={isSending || disabled}
+              className="text-xs text-teal-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            >
+              {isSending ? 'Sending…' : 'Resend OTP'}
+            </button>
+          )}
+        </div>
+
+        <div id="phone-recaptcha-container" />
+      </div>
+    );
+  }
+
+  // ── Render: hint while user is still typing ───────────────────────────────
+
+  return (
+    <div className="space-y-2">
+      {isSending ? (
+        <div className="flex items-center gap-2 py-2 text-sm text-teal-600">
+          <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+          <span>Sending verification code…</span>
+        </div>
+      ) : (
+        <p className="text-xs text-slate-400">
+          {phone.length > 0 && !isValidPhone
+            ? `${10 - phone.length} more digit${10 - phone.length === 1 ? '' : 's'} needed — OTP sends automatically`
+            : 'OTP will be sent automatically when you enter 10 digits'}
+        </p>
+      )}
+      <div id="phone-recaptcha-container" />
+    </div>
+  );
+}
