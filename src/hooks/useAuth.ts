@@ -384,6 +384,12 @@ export function useAuth() {
         if (msg.includes('too-many-requests')) {
           throw new Error('Too many attempts. Please wait a few minutes and try again.');
         }
+        if (msg.includes('operation-not-allowed')) {
+          throw new Error('Registration is not enabled yet. Please contact support.');
+        }
+        if (msg.includes('unauthorized-domain') || msg.includes('auth/unauthorized-domain')) {
+          throw new Error('This website is not authorized for sign-in. Please contact support.');
+        }
 
         throw err instanceof Error ? err : new Error('Registration failed. Please try again.');
       }
