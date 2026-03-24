@@ -10,9 +10,9 @@
 | | |
 |---|---|
 | **Active phase** | Phase 3 — Admin-Centric Product Catalogue |
-| **Last completed** | Migration 4 — admin order flow + vendor directory (2026-03-24) |
+| **Last completed** | Admin Dashboard home page + sidebar update (2026-03-24) |
 | **Business model** | PrimeServe admin controls all order fulfilment. No vendor dashboard. Vendors managed offline via WhatsApp/call. |
-| **Build status** | ✅ `npx tsc --noEmit` passes with zero errors |
+| **Build status** | ✅ `pnpm build` passes — 41 routes, zero TypeScript errors |
 | **Dev server** | `pnpm dev` → `http://localhost:3000` |
 
 ---
@@ -169,19 +169,31 @@ Goal: Users can log in via Phone OTP or Email OTP, and reach their role-based da
 
 ---
 
-### 🔲 Phase 3 — Vendor Onboarding & Product Catalogue
+### 🔲 Phase 3 — Admin-Centric Product Catalogue
 
-Goal: Vendors can apply, get approved, and list products. Buyers can browse.
+Goal: Admin uploads all products; buyers can browse and place orders.
 
-- [ ] Vendor application form (business details, document upload, category selection)
-- [ ] `POST /api/vendors/apply` — submit application
-- [ ] Admin vendor approval UI
-- [ ] `PATCH /api/vendors/:id/approve` and `/reject`
-- [ ] Vendor product list page
-- [ ] Product create/edit form (name, description, category, pricing tiers, images)
-- [ ] `POST /api/products` and `PATCH /api/products/:id`
+#### Admin Dashboard (COMPLETE)
+- [x] `src/components/layout/Sidebar.tsx` — updated: admin nav (8 items), buyer nav (5 items), vendor nav removed
+  - Longest-prefix active-path algorithm replaces old isItemActive (handles /admin/products vs /admin/products/import correctly)
+- [x] `GET /api/admin/stats` — returns stats, pending orders (max 5), recent orders (last 10)
+- [x] `src/app/(dashboard)/admin/page.tsx` — full dashboard: welcome banner, 6 stat cards, pending orders table, activity feed
+- [x] `src/app/(dashboard)/admin/products/page.tsx` — placeholder
+- [x] `src/app/(dashboard)/admin/products/import/page.tsx` — placeholder
+- [x] `src/app/(dashboard)/admin/orders/page.tsx` — placeholder
+- [x] `src/app/(dashboard)/admin/buyers/page.tsx` — placeholder (new route)
+- [x] `src/app/(dashboard)/admin/vendors/page.tsx` — placeholder (updated: Vendor Directory)
+- [x] `src/app/(dashboard)/admin/analytics/page.tsx` — placeholder (new route)
+- [x] `src/app/(dashboard)/admin/settings/page.tsx` — placeholder
+
+#### Remaining Phase 3 tasks
+- [ ] Admin product catalog page — list all products with search/filter
+- [ ] Admin product form — create/edit product (name, category, pricing tiers, images)
+- [ ] `POST /api/products` and `PATCH /api/products/:id` — admin uploads products
 - [ ] Supabase Storage bucket for product images
-- [ ] Public marketplace page with category filter and search
+- [ ] Admin order detail page — review order, approve, forward to vendor, mark dispatched
+- [ ] `PATCH /api/orders/:id/status` — update order status with vendor assignment
+- [ ] Public marketplace page (`/marketplace`) with category filter and search
 - [ ] Product detail page with pricing tier table
 
 ---
@@ -307,6 +319,11 @@ Goal: Buyers and vendors can message each other; admin has full visibility.
 | `supabase/migrations/20260322000003_orders_and_messages.sql` | Migration 3: orders (17 cols), order_items (11 cols), messages (8 cols), order number trigger, 13 indexes, 11 RLS policies |
 | `docs/database/03_orders_messages_schema.md` | Plain-English schema reference for Migration 3 |
 | `supabase/migrations/20260324000001_update_order_status_and_vendor_directory.sql` | Migration 4: new order_status values, 5 new order columns, vendor_directory table, products.vendor_id nullable, products.uploaded_by |
+| `src/app/api/admin/stats/route.ts` | GET /api/admin/stats — admin-only; returns 6 stats, 5 pending orders, 10 recent orders |
+| `src/app/(dashboard)/admin/page.tsx` | Admin dashboard home — welcome banner, stat cards, pending orders table, activity feed |
+| `src/app/(dashboard)/admin/products/import/page.tsx` | Placeholder — Import Products (Excel bulk upload) |
+| `src/app/(dashboard)/admin/buyers/page.tsx` | Placeholder — Buyer accounts list |
+| `src/app/(dashboard)/admin/analytics/page.tsx` | Placeholder — Platform analytics |
 | `src/types/database.ts` | Full `Database` type: 7 tables (Row/Insert/Update for each), 7 enums, typed JSONB helpers |
 | `src/lib/supabase/queries.ts` | 11 typed query functions for all major data access patterns |
 | `TECH_DECISIONS.md` | Architecture decisions log — why we built it the way we did |

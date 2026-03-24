@@ -7,8 +7,8 @@ export default function AdminProductsPage() {
   return (
     <PlaceholderPage
       icon={Package}
-      title="Product Governance"
-      message="Coming in Phase 4 — Flag or remove non-housekeeping listings from the catalogue."
+      title="Product Catalog"
+      message="Browse, search, and manage all products. This section will be built next."
     />
   );
 }

@@ -8,7 +8,7 @@ export default function AdminSettingsPage() {
     <PlaceholderPage
       icon={Settings}
       title="Settings"
-      message="Coming Soon — Platform configuration, commission rates, and feature flags."
+      message="Platform configuration and preferences. This section will be built next."
     />
   );
 }

@@ -7,8 +7,8 @@ export default function AdminOrdersPage() {
   return (
     <PlaceholderPage
       icon={ShoppingCart}
-      title="All Orders"
-      message="Coming in Phase 4 — Monitor every transaction across all buyers and vendors."
+      title="Orders"
+      message="View and manage all orders — approve, forward to vendor, and track dispatch. This section will be built next."
     />
   );
 }

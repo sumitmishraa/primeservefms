@@ -15,13 +15,13 @@ import {
   Package,
   RefreshCw,
   ShoppingCart,
-  MessageSquare,
   User,
   LayoutDashboard,
-  CheckCircle,
   BarChart3,
   Users,
   Settings,
+  Upload,
+  BookUser,
   type LucideIcon,
 } from 'lucide-react';
 import type { UserProfile } from '@/types';
@@ -38,29 +38,21 @@ interface NavItem {
 }
 
 const BUYER_NAV: NavItem[] = [
-  { label: 'Marketplace', href: '/buyer/marketplace', icon: Store },
+  { label: 'Marketplace', href: '/marketplace', icon: Store },
   { label: 'My Orders', href: '/buyer/orders', icon: Package },
   { label: 'Quick Reorder', href: '/buyer/reorder', icon: RefreshCw },
   { label: 'Cart', href: '/buyer/cart', icon: ShoppingCart },
-  { label: 'Messages', href: '/buyer/messages', icon: MessageSquare },
   { label: 'My Profile', href: '/buyer/profile', icon: User },
-];
-
-const VENDOR_NAV: NavItem[] = [
-  { label: 'Dashboard', href: '/vendor', icon: LayoutDashboard },
-  { label: 'My Products', href: '/vendor/products', icon: Package },
-  { label: 'Orders', href: '/vendor/orders', icon: ShoppingCart },
-  { label: 'Messages', href: '/vendor/messages', icon: MessageSquare },
-  { label: 'Analytics', href: '/vendor/analytics', icon: BarChart3 },
-  { label: 'Profile', href: '/vendor/profile', icon: User },
 ];
 
 const ADMIN_NAV: NavItem[] = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { label: 'Vendor Approvals', href: '/admin/vendors', icon: CheckCircle },
-  { label: 'All Products', href: '/admin/products', icon: Package },
-  { label: 'All Orders', href: '/admin/orders', icon: ShoppingCart },
-  { label: 'Users', href: '/admin/users', icon: Users },
+  { label: 'Product Catalog', href: '/admin/products', icon: Package },
+  { label: 'Import Products', href: '/admin/products/import', icon: Upload },
+  { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+  { label: 'Buyers', href: '/admin/buyers', icon: Users },
+  { label: 'Vendor Directory', href: '/admin/vendors', icon: BookUser },
+  { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
@@ -70,12 +62,39 @@ const ADMIN_NAV: NavItem[] = [
 
 /**
  * Returns the correct nav array for the given role.
+ * Vendors have no app dashboard — return empty nav.
  * @param role - The user's role
  */
 function getNavItems(role: UserRole): NavItem[] {
-  if (role === 'vendor') return VENDOR_NAV;
   if (role === 'admin') return ADMIN_NAV;
-  return BUYER_NAV;
+  if (role === 'buyer') return BUYER_NAV;
+  return [];
+}
+
+/**
+ * Finds the single active nav href using longest-prefix matching.
+ * When two nav items could match the same pathname (e.g. /admin/products and
+ * /admin/products/import), the most specific one wins.
+ *
+ * @param pathname - Current URL pathname
+ * @param items - Nav items for the current role
+ * @returns The href of the active item, or null if none match
+ */
+function getActivePath(pathname: string, items: NavItem[]): string | null {
+  // Exact match always wins immediately
+  for (const item of items) {
+    if (pathname === item.href) return item.href;
+  }
+  // Prefix match — pick the longest (most specific) match
+  let best: string | null = null;
+  for (const item of items) {
+    // Root dashboard items only ever match exactly (handled above)
+    if (item.href === '/admin' || item.href === '/vendor' || item.href === '/buyer') continue;
+    if (pathname.startsWith(item.href + '/')) {
+      if (!best || item.href.length > best.length) best = item.href;
+    }
+  }
+  return best;
 }
 
 /**
@@ -98,21 +117,6 @@ function getRoleLabel(role: UserRole): string {
   return 'Buyer';
 }
 
-/**
- * Determines whether a nav item should render as active.
- * Dashboard root items (/vendor, /admin) only match exactly to avoid
- * highlighting them when on sub-pages like /vendor/products.
- *
- * @param pathname - Current URL pathname
- * @param href - Nav item destination
- */
-function isItemActive(pathname: string, href: string): boolean {
-  if (pathname === href) return true;
-  // Root dashboards: exact match only
-  if (href === '/vendor' || href === '/admin') return false;
-  // Sub-pages: match prefix
-  return pathname.startsWith(href + '/');
-}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -135,6 +139,7 @@ interface SidebarProps {
 export default function Sidebar({ user, onNavClick }: SidebarProps) {
   const pathname = usePathname();
   const navItems = getNavItems(user.role);
+  const activePath = getActivePath(pathname, navItems);
   const avatarInitial = user.full_name.charAt(0).toUpperCase();
 
   return (
@@ -173,7 +178,7 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
       >
         {navItems.map((item) => {
           const Icon = item.icon;
-          const active = isItemActive(pathname, item.href);
+          const active = item.href === activePath;
 
           return (
             <Link
