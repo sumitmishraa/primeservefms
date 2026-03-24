@@ -1,10 +1,9 @@
 // CRITICAL: DO NOT import getFirestore or getDatabase anywhere in this file or
 // anywhere that imports from here. Firebase is for Auth ONLY in Primeserve.
-// All data storage uses Supabase PostgreSQL. Violating this rule will introduce
-// two sources of truth and break the architecture.
+// All data storage uses Supabase PostgreSQL.
 //
-// Allowed Firebase auth methods: Phone OTP ONLY.
-// signInWithPhoneNumber, RecaptchaVerifier, PhoneAuthProvider
+// Allowed Firebase auth methods: Email + Password ONLY.
+// Phone OTP will be added in a future iteration.
 
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
@@ -23,9 +22,7 @@ const app: FirebaseApp =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]!;
 
 /**
- * Firebase Auth instance.
- * Phone OTP sign-in ONLY.
- * Do not enable email/password, Google, or any other provider.
+ * Firebase Auth instance — Email + Password sign-in only.
  */
 export const auth: Auth = getAuth(app);
 

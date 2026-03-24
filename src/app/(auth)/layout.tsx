@@ -8,8 +8,6 @@
  * Mobile:
  *   Compact branding strip at top, form content below
  *
- * The hidden #recaptcha-container lives here so it is available to both
- * the login (phone tab) and register (PhoneVerification component) pages.
  */
 
 import Link from 'next/link';
@@ -104,8 +102,6 @@ export default function AuthLayout({
         </div>
       </div>
 
-      {/* Hidden reCAPTCHA container — required for Firebase phone auth */}
-      <div id="recaptcha-container" />
     </div>
   );
 }

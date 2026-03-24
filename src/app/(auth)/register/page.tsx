@@ -1,33 +1,24 @@
 /**
  * Register page — /register
  *
- * Two entry points:
- *   A. Coming from login (phone already verified):
- *      URL has ?phone=XXXXXXXXXX&token=XXXXX
- *      Phone field shows "Phone Verified" badge. No OTP needed.
+ * Email + Password registration. No OTP, no reCAPTCHA.
+ * Phone number is collected as plain text — no verification needed.
  *
- *   B. Direct visit (no URL params):
- *      PhoneVerification component handles phone input + OTP inline.
- *      After verification, onVerified callback gives us the firebaseToken.
- *
- * On submit, calls POST /api/auth/register with { firebase_token, full_name, email, phone, ... }
- * Password is collected for future email+password login support but NOT stored.
+ * Flow:
+ *   1. User fills the form
+ *   2. Firebase createUserWithEmailAndPassword
+ *   3. Get ID token → POST /api/auth/register → session cookie
+ *   4. Redirect to /buyer/marketplace
  */
 
 'use client';
 
-import { useState, useCallback, Suspense } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, User, Briefcase, Loader2, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, Briefcase, Phone, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { PhoneVerification } from '@/components/auth/PhoneVerification';
 import { PasswordStrengthBar } from '@/components/auth/PasswordStrengthBar';
-
-// ---------------------------------------------------------------------------
-// Shared input styles
-// ---------------------------------------------------------------------------
 
 const inputWithIconCls =
   'w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 ' +
@@ -38,36 +29,23 @@ const inputWithIconCls =
 // Password validation
 // ---------------------------------------------------------------------------
 
-const PASSWORD_RULES = {
-  minLength: 8,
-  hasLetter: /[a-zA-Z]/,
-  hasNumber: /[0-9]/,
-};
-
 function validatePassword(pw: string): string | null {
-  if (pw.length < PASSWORD_RULES.minLength) return 'Password must be at least 8 characters.';
-  if (!PASSWORD_RULES.hasLetter.test(pw)) return 'Password must include at least one letter.';
-  if (!PASSWORD_RULES.hasNumber.test(pw)) return 'Password must include at least one number.';
+  if (pw.length < 6) return 'Password must be at least 6 characters.';
   return null;
 }
 
 // ---------------------------------------------------------------------------
-// Inner page (uses useSearchParams — wrapped in Suspense below)
+// Component
 // ---------------------------------------------------------------------------
 
-function RegisterContent() {
-  const searchParams = useSearchParams();
+export default function RegisterPage() {
   const { register } = useAuth();
-
-  // Read URL params set by the login page on 404 (phone not registered)
-  const phoneFromUrl = searchParams.get('phone') ?? '';
-  const tokenFromUrl = searchParams.get('token') ?? '';
-  const comingFromLogin = Boolean(phoneFromUrl && tokenFromUrl);
 
   // ── Form fields ───────────────────────────────────────────────────────────
   const [fullName, setFullName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [newsletterOptIn, setNewsletterOptIn] = useState(false);
@@ -79,22 +57,17 @@ function RegisterContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // ── Phone verification state ──────────────────────────────────────────────
-  // If coming from login, phone and token are already in URL params.
-  // If direct visit, PhoneVerification component calls onVerified to set these.
-  const [phoneVerified, setPhoneVerified] = useState(comingFromLogin);
-  const [verifiedPhone, setVerifiedPhone] = useState(phoneFromUrl); // 10-digit
-  const [firebaseToken, setFirebaseToken] = useState(tokenFromUrl);
+  // ── Form readiness ────────────────────────────────────────────────────────
 
-  // ── Phone verified callback (for direct /register visits) ─────────────────
+  const isFormReady =
+    fullName.trim().length >= 2 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+    /^\d{10}$/.test(phone) &&
+    validatePassword(password) === null &&
+    password === confirmPassword &&
+    termsAccepted;
 
-  const handlePhoneVerified = useCallback((phone: string, token: string) => {
-    setVerifiedPhone(phone);
-    setFirebaseToken(token);
-    setPhoneVerified(true);
-  }, []);
-
-  // ── Field validation ──────────────────────────────────────────────────────
+  // ── Validation ────────────────────────────────────────────────────────────
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -105,8 +78,8 @@ function RegisterContent() {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errors.email = 'Enter a valid email address.';
     }
-    if (!phoneVerified) {
-      errors.phone = 'Please verify your phone number first.';
+    if (!/^\d{10}$/.test(phone)) {
+      errors.phone = 'Enter a valid 10-digit phone number.';
     }
     const pwError = validatePassword(password);
     if (pwError) errors.password = pwError;
@@ -121,39 +94,24 @@ function RegisterContent() {
     return Object.keys(errors).length === 0;
   };
 
-  // ── Is form ready to submit? ──────────────────────────────────────────────
-
-  const isFormReady =
-    fullName.trim().length >= 2 &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
-    phoneVerified &&
-    validatePassword(password) === null &&
-    password === confirmPassword &&
-    termsAccepted;
-
   // ── Submit ────────────────────────────────────────────────────────────────
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    if (!firebaseToken) {
-      toast.error('Phone verification required. Please verify your phone number.');
-      return;
-    }
 
     setIsSubmitting(true);
     try {
       await register({
-        firebase_token: firebaseToken,
         full_name: fullName.trim(),
         email: email.trim(),
-        // verifiedPhone is 10 digits — add +91 prefix for E.164 format
-        phone: '+91' + verifiedPhone,
+        password,
+        phone,
         company_name: businessName.trim() || undefined,
         newsletter_opt_in: newsletterOptIn,
         terms_accepted: termsAccepted,
       });
-      // register() handles toast + redirect to /buyer/marketplace
+      // register() handles toast + redirect
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {
@@ -167,9 +125,7 @@ function RegisterContent() {
     <div className="space-y-6">
       {/* Heading */}
       <div>
-        <h1 className="text-2xl font-heading font-bold text-slate-900">
-          Create Your Account
-        </h1>
+        <h1 className="text-2xl font-heading font-bold text-slate-900">Create Your Account</h1>
         <p className="text-sm text-slate-500 mt-1">
           Join businesses already saving on procurement
         </p>
@@ -193,9 +149,7 @@ function RegisterContent() {
                 setFullName(e.target.value);
                 if (fieldErrors.fullName) setFieldErrors((p) => ({ ...p, fullName: '' }));
               }}
-              className={`${inputWithIconCls} ${
-                fieldErrors.fullName ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''
-              }`}
+              className={`${inputWithIconCls} ${fieldErrors.fullName ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''}`}
             />
           </div>
           {fieldErrors.fullName && (
@@ -239,9 +193,7 @@ function RegisterContent() {
                 setEmail(e.target.value);
                 if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: '' }));
               }}
-              className={`${inputWithIconCls} ${
-                fieldErrors.email ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''
-              }`}
+              className={`${inputWithIconCls} ${fieldErrors.email ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''}`}
             />
           </div>
           {fieldErrors.email ? (
@@ -258,31 +210,34 @@ function RegisterContent() {
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
             Phone Number <span className="text-rose-500">*</span>
           </label>
-
-          {comingFromLogin ? (
-            /* Coming from login redirect — phone already verified */
-            <div className="flex items-center gap-3">
-              <div className="flex items-center px-3 h-12 bg-slate-100 border border-slate-300 rounded-lg text-sm font-semibold text-slate-600 shrink-0">
-                +91
-              </div>
-              <div className="flex-1 h-12 px-4 flex items-center rounded-lg border border-emerald-300 bg-emerald-50 text-slate-700 text-sm font-medium">
-                {phoneFromUrl}
-              </div>
-              <div className="flex items-center gap-1.5 text-emerald-700 text-sm font-medium shrink-0">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                Verified
-              </div>
+          <div className="flex gap-2">
+            <div className="flex items-center px-3 h-12 bg-slate-100 border border-slate-300 rounded-lg text-sm font-semibold text-slate-600 shrink-0">
+              +91
             </div>
+            <div className="relative flex-1">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="10-digit mobile number"
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+                  if (fieldErrors.phone) setFieldErrors((p) => ({ ...p, phone: '' }));
+                }}
+                className={`w-full pl-10 pr-4 py-3 rounded-lg border text-slate-900 placeholder:text-slate-400 text-sm transition-colors bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
+                  fieldErrors.phone ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : 'border-slate-300'
+                }`}
+              />
+            </div>
+          </div>
+          {fieldErrors.phone ? (
+            <p className="mt-1 text-xs text-rose-500">{fieldErrors.phone}</p>
           ) : (
-            /* Direct /register visit — PhoneVerification handles OTP inline */
-            <PhoneVerification
-              onVerified={handlePhoneVerified}
-              defaultVerified={false}
-            />
-          )}
-
-          {fieldErrors.phone && !phoneVerified && (
-            <p className="mt-1.5 text-xs text-rose-500">{fieldErrors.phone}</p>
+            <p className="mt-1 text-xs text-slate-400">
+              We&apos;ll use this to contact you about orders
+            </p>
           )}
         </div>
 
@@ -296,15 +251,13 @@ function RegisterContent() {
             <input
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
-              placeholder="Min. 8 chars, include letters & numbers"
+              placeholder="At least 6 characters"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
                 if (fieldErrors.password) setFieldErrors((p) => ({ ...p, password: '' }));
               }}
-              className={`${inputWithIconCls} pr-10 ${
-                fieldErrors.password ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''
-              }`}
+              className={`${inputWithIconCls} pr-10 ${fieldErrors.password ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''}`}
             />
             <button
               type="button"
@@ -319,9 +272,6 @@ function RegisterContent() {
             <p className="mt-1 text-xs text-rose-500">{fieldErrors.password}</p>
           )}
           <PasswordStrengthBar password={password} />
-          <p className="mt-1 text-xs text-slate-400">
-            Stored for future email login support — not used for login yet
-          </p>
         </div>
 
         {/* ── Confirm Password ──────────────────────────────────────────── */}
@@ -373,13 +323,7 @@ function RegisterContent() {
                 onChange={(e) => setNewsletterOptIn(e.target.checked)}
                 className="sr-only"
               />
-              <div
-                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                  newsletterOptIn
-                    ? 'bg-teal-600 border-teal-600'
-                    : 'border-slate-300 group-hover:border-teal-400'
-                }`}
-              >
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${newsletterOptIn ? 'bg-teal-600 border-teal-600' : 'border-slate-300 group-hover:border-teal-400'}`}>
                 {newsletterOptIn && (
                   <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -405,15 +349,9 @@ function RegisterContent() {
                   }}
                   className="sr-only"
                 />
-                <div
-                  className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                    termsAccepted
-                      ? 'bg-teal-600 border-teal-600'
-                      : fieldErrors.terms
-                      ? 'border-rose-400 group-hover:border-rose-500'
-                      : 'border-slate-300 group-hover:border-teal-400'
-                  }`}
-                >
+                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                  termsAccepted ? 'bg-teal-600 border-teal-600' : fieldErrors.terms ? 'border-rose-400' : 'border-slate-300 group-hover:border-teal-400'
+                }`}>
                   {termsAccepted && (
                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -423,13 +361,9 @@ function RegisterContent() {
               </div>
               <span className="text-sm text-slate-600 leading-snug">
                 I agree to the{' '}
-                <Link href="/terms" className="text-teal-600 hover:underline font-medium">
-                  Terms &amp; Conditions
-                </Link>{' '}
-                and{' '}
-                <Link href="/privacy" className="text-teal-600 hover:underline font-medium">
-                  Privacy Policy
-                </Link>
+                <Link href="/terms" className="text-teal-600 hover:underline font-medium">Terms &amp; Conditions</Link>
+                {' '}and{' '}
+                <Link href="/privacy" className="text-teal-600 hover:underline font-medium">Privacy Policy</Link>
                 {' '}<span className="text-rose-500">*</span>
               </span>
             </label>
@@ -463,27 +397,6 @@ function RegisterContent() {
           Login here
         </Link>
       </p>
-
-      {/* Hidden reCAPTCHA container — required when PhoneVerification is shown */}
-      <div id="recaptcha-container" />
     </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Page export — wraps inner content in Suspense for useSearchParams
-// ---------------------------------------------------------------------------
-
-export default function RegisterPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-7 h-7 text-teal-600 animate-spin" />
-        </div>
-      }
-    >
-      <RegisterContent />
-    </Suspense>
   );
 }
