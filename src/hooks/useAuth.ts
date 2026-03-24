@@ -1,29 +1,23 @@
 /**
  * useAuth — central auth hook for Primeserve.
  *
- * Email + Password auth only. No OTP, no reCAPTCHA, no phone verification.
+ * ⚠️  TEMPORARY — Firebase is bypassed. Forms post directly to the API.
+ * TODO: Re-enable Firebase signIn/signUp when auth is configured.
  *
  * On first mount it checks the server session via GET /api/auth/me and
- * restores the Zustand store. A module-level flag prevents the check from
- * running more than once per browser session.
+ * restores the Zustand store.
  *
  * Exposed actions:
- *   login(email, password)  → Firebase signInWithEmailAndPassword → session cookie
- *   register(data)          → Firebase createUserWithEmailAndPassword → session cookie
- *   logout()                → Firebase signOut → clear cookie → redirect /login
+ *   login(email, password)  → POST /api/auth/login → session cookie
+ *   register(data)          → POST /api/auth/register → session cookie
+ *   logout()                → POST /api/auth/logout → clear cookie → redirect /login
  */
 
 'use client';
 
 import { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-} from 'firebase/auth';
 import toast from 'react-hot-toast';
-import { auth } from '@/lib/firebase/config';
 import { useAuthStore } from '@/stores/authStore';
 import type { UserProfile } from '@/types';
 
@@ -54,9 +48,6 @@ export interface RegisterData {
 
 /**
  * Returns auth state and actions. Safe to call in any client component.
- *
- * @example
- *   const { user, isAuthenticated, login, logout } = useAuth();
  */
 export function useAuth() {
   const { user, isLoading, isAuthenticated, setUser, clearUser, setLoading } =
@@ -106,25 +97,22 @@ export function useAuth() {
   // ── login ─────────────────────────────────────────────────────────────────
 
   /**
-   * Signs in with email + password via Firebase, then exchanges the ID token
-   * for a Primeserve session cookie.
+   * Looks up user by email, creates a session cookie.
+   * Firebase sign-in is skipped until auth is configured.
    *
    * @param email    - User's email address
-   * @param password - User's password
+   * @param password - Accepted but not verified yet
    * @returns The authenticated UserProfile
    * @throws Error with a human-readable message on failure
    */
   const login = useCallback(
-    async (email: string, password: string): Promise<UserProfile> => {
+    async (email: string, _password: string): Promise<UserProfile> => {
       setLoading(true);
       try {
-        const credential = await signInWithEmailAndPassword(auth, email, password);
-        const idToken = await credential.user.getIdToken();
-
         const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ firebase_token: idToken }),
+          body: JSON.stringify({ email: email.trim() }),
         });
         const json = (await res.json()) as { user?: UserProfile; error?: string; code?: string };
 
@@ -142,16 +130,6 @@ export function useAuth() {
         return json.user;
       } catch (err) {
         clearUser();
-        const msg = err instanceof Error ? err.message : '';
-        if (msg.includes('invalid-credential') || msg.includes('wrong-password') || msg.includes('INVALID_LOGIN_CREDENTIALS')) {
-          throw new Error('Invalid email or password. Please try again.');
-        }
-        if (msg.includes('user-not-found')) {
-          throw new Error('No account found with this email. Please register first.');
-        }
-        if (msg.includes('too-many-requests')) {
-          throw new Error('Too many failed attempts. Please wait a few minutes and try again.');
-        }
         throw err instanceof Error ? err : new Error('Login failed. Please try again.');
       } finally {
         setLoading(false);
@@ -163,8 +141,8 @@ export function useAuth() {
   // ── register ──────────────────────────────────────────────────────────────
 
   /**
-   * Creates a new Firebase account with email+password, then creates the
-   * Supabase user record and sets a session cookie.
+   * Creates a Supabase user record directly and sets a session cookie.
+   * Firebase account creation is skipped until auth is configured.
    *
    * @param data - Registration form data
    * @throws Error with a human-readable message on failure
@@ -173,32 +151,22 @@ export function useAuth() {
     async (data: RegisterData): Promise<void> => {
       setLoading(true);
       try {
-        const credential = await createUserWithEmailAndPassword(
-          auth,
-          data.email,
-          data.password
-        );
-        const idToken = await credential.user.getIdToken();
-
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            firebase_token: idToken,
-            full_name: data.full_name.trim(),
-            email: data.email.trim(),
-            phone: '+91' + data.phone.replace(/\D/g, ''),
+            full_name:        data.full_name.trim(),
+            email:            data.email.trim().toLowerCase(),
+            phone:            '+91' + data.phone.replace(/\D/g, ''),
             ...(data.company_name?.trim() ? { company_name: data.company_name.trim() } : {}),
             newsletter_opt_in: data.newsletter_opt_in,
-            terms_accepted: data.terms_accepted,
+            terms_accepted:    data.terms_accepted,
           }),
         });
 
         const json = (await res.json()) as { user?: UserProfile; error?: string };
 
         if (!res.ok || !json.user) {
-          // Clean up the Firebase account we just created to avoid orphans
-          try { await credential.user.delete(); } catch { /* ignore */ }
           throw new Error(json.error ?? 'Registration failed. Please try again.');
         }
 
@@ -207,16 +175,6 @@ export function useAuth() {
         router.push('/buyer/marketplace');
       } catch (err) {
         clearUser();
-        const msg = err instanceof Error ? err.message : '';
-        if (msg.includes('email-already-in-use')) {
-          throw new Error('This email is already registered. Please login instead.');
-        }
-        if (msg.includes('weak-password')) {
-          throw new Error('Password must be at least 6 characters.');
-        }
-        if (msg.includes('invalid-email')) {
-          throw new Error('Please enter a valid email address.');
-        }
         throw err instanceof Error ? err : new Error('Registration failed. Please try again.');
       } finally {
         setLoading(false);
@@ -228,11 +186,10 @@ export function useAuth() {
   // ── logout ────────────────────────────────────────────────────────────────
 
   /**
-   * Signs out of Firebase, destroys the session cookie, and redirects to /login.
+   * Destroys the session cookie and redirects to /login.
    */
   const logout = useCallback(async () => {
     try {
-      await signOut(auth);
       await fetch('/api/auth/logout', { method: 'POST' });
       clearUser();
       router.push('/login');

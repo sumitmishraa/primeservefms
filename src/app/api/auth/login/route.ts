@@ -1,41 +1,38 @@
 /**
  * POST /api/auth/login
  *
- * Authenticates a returning user using a Firebase Phone OTP ID token.
+ * ⚠️  TEMPORARY — Firebase auth is bypassed.
+ * Looks up the user by email directly in Supabase.
+ * No password is verified (passwords are stored in Firebase, not Supabase).
+ *
+ * TODO: Re-enable Firebase token verification when auth is set up.
  *
  * Flow:
- *   1. Verify Firebase ID token → extract firebase_uid (401 on failure)
- *   2. Look up user in Supabase by firebase_uid
- *      → 404 if not found (client redirects to /register)
- *      → 403 if account is deactivated
+ *   1. Accept { email } in request body
+ *   2. Look up user in Supabase by email
+ *      → 404 if not found
+ *      → 403 if deactivated
  *   3. Create session cookie
  *   4. Return { user }
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getFirebaseAuth } from "@/lib/firebase/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSession } from "@/lib/auth/session";
 
-// Force dynamic rendering — never statically analyse this route at build time
 export const dynamic = "force-dynamic";
 
-// ─── Request body shape ───────────────────────────────────────────────────────
-
 interface LoginBody {
-  /** Firebase ID token — from getIdToken() after phone OTP sign-in */
-  firebase_token: string;
+  email: string;
+  /** Accepted but not verified yet — Firebase handles this when auth is enabled */
+  password?: string;
 }
 
-// ─── Handler ──────────────────────────────────────────────────────────────────
-
 /**
- * Logs in an existing user and sets the httpOnly session cookie.
- * Returns the user's role so the client can redirect to the correct dashboard.
+ * Logs in an existing user by email and sets the httpOnly session cookie.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // ── Parse request body ───────────────────────────────────────────────────
     let body: LoginBody;
     try {
       body = (await request.json()) as LoginBody;
@@ -46,42 +43,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const { firebase_token } = body;
+    const { email } = body;
 
-    if (!firebase_token || typeof firebase_token !== "string") {
+    if (!email || typeof email !== "string") {
       return NextResponse.json(
-        { error: "firebase_token is required" },
+        { error: "email is required" },
         { status: 400 }
       );
     }
 
-    // ── 1. Verify Firebase ID token ──────────────────────────────────────────
-    const firebaseAuth = getFirebaseAuth();
-    if (!firebaseAuth) {
-      return NextResponse.json(
-        { error: "Server configuration error. Contact support." },
-        { status: 500 }
-      );
-    }
-
-    let firebaseUid: string;
-    try {
-      const decodedToken = await firebaseAuth.verifyIdToken(firebase_token);
-      firebaseUid = decodedToken.uid;
-      console.log("[LOGIN] Token verified for Firebase UID:", decodedToken.uid);
-    } catch {
-      return NextResponse.json(
-        { error: "Invalid or expired Firebase token. Please sign in again." },
-        { status: 401 }
-      );
-    }
-
-    // ── 2. Look up user in Supabase by firebase_uid ──────────────────────────
+    // ── Look up user by email ────────────────────────────────────────────────
     const supabase = createAdminClient();
     const { data: user, error: lookupError } = await supabase
       .from("users")
       .select("*")
-      .eq("firebase_uid", firebaseUid)
+      .eq("email", email.toLowerCase().trim())
       .maybeSingle();
 
     if (lookupError) {
@@ -94,36 +70,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!user) {
       return NextResponse.json(
-        {
-          error: "Account not found. Please register first.",
-          code: "USER_NOT_FOUND",
-        },
+        { error: "No account found with this email. Please register first.", code: "USER_NOT_FOUND" },
         { status: 404 }
       );
     }
 
     if (!user.is_active) {
       return NextResponse.json(
-        {
-          error: "Your account has been deactivated. Contact support.",
-          code: "ACCOUNT_DEACTIVATED",
-        },
+        { error: "Your account has been deactivated. Contact support.", code: "ACCOUNT_DEACTIVATED" },
         { status: 403 }
       );
     }
 
-    console.log("[LOGIN] User logged in:", user.email ?? user.phone, "role:", user.role);
+    console.log("[LOGIN] User logged in:", user.email, "role:", user.role);
 
-    // ── 3. Create session cookie and return ──────────────────────────────────
+    // ── Create session cookie and return ─────────────────────────────────────
     const response = NextResponse.json(
       {
         user: {
-          id: user.id,
-          role: user.role,
-          full_name: user.full_name,
-          email: user.email,
-          phone: user.phone,
-          company_name: user.company_name,
+          id:                user.id,
+          role:              user.role,
+          full_name:         user.full_name,
+          email:             user.email,
+          phone:             user.phone,
+          company_name:      user.company_name,
           business_verified: user.business_verified,
         },
       },

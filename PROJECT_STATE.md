@@ -10,9 +10,9 @@
 | | |
 |---|---|
 | **Active phase** | Phase 3 — Admin-Centric Product Catalogue |
-| **Last completed** | Admin product catalog — Excel import, CRUD API, catalog manager, product form (2026-03-24) |
+| **Last completed** | Admin Order Management — orders list + detail pages, PATCH API with status transitions (2026-03-24) |
 | **Business model** | PrimeServe admin controls all order fulfilment. No vendor dashboard. Vendors managed offline via WhatsApp/call. |
-| **Build status** | ✅ `pnpm build` passes — 47 routes, zero TypeScript errors |
+| **Build status** | ✅ `pnpm build` passes — 49 routes, zero TypeScript errors |
 | **Dev server** | `pnpm dev` → `http://localhost:3000` |
 
 ---
@@ -199,10 +199,16 @@ Goal: Admin uploads all products; buyers can browse and place orders.
 - [x] `src/components/admin/ProductForm.tsx` — shared form component (all fields + bulk pricing tiers + tags + image placeholder)
 - [x] `xlsx` 0.18.5 installed; `next.config.ts` updated with `serverExternalPackages: ['xlsx']`
 
+#### Admin Order Management (COMPLETE — 2026-03-24)
+- [x] `GET /api/admin/orders` — paginated list, filters (status, date range, search), status_counts for tab badges
+- [x] `GET /api/admin/orders/[id]` — full detail: order + all items + buyer profile
+- [x] `PATCH /api/admin/orders/[id]` — enforced status transitions, auto-timestamps (forwarded_at, dispatched_at, delivered_at), vendor assignment, admin notes, cancellation reason
+- [x] `src/app/(dashboard)/admin/orders/page.tsx` — command centre: status tab bar with counts (amber badge for pending), search, date range filter, orders table with status badges, amber row highlight for pending, pagination (20/page), empty state
+- [x] `src/app/(dashboard)/admin/orders/[id]/page.tsx` — order detail: timeline stepper, action section (changes by status), buyer info card with Call/Email buttons, order items table with GST breakdown, admin notes editor
+- [x] `src/components/ui/ConfirmDialog.tsx` — reusable modal with default and destructive variants, loading state, Escape-to-close
+
 #### Remaining Phase 3 tasks
 - [ ] Supabase Storage bucket for product images (image upload in ProductForm)
-- [ ] Admin order detail page — review order, approve, forward to vendor, mark dispatched
-- [ ] `PATCH /api/orders/:id/status` — update order status with vendor assignment
 - [ ] Public marketplace page (`/marketplace`) with category filter and search
 - [ ] Product detail page with pricing tier table
 
@@ -339,6 +345,11 @@ Goal: Buyers and vendors can message each other; admin has full visibility.
 | `src/app/api/admin/products/import/route.ts` | POST — Excel bulk import (xlsx, 2-sheet, unit/category map, batch insert) |
 | `src/app/api/admin/products/route.ts` | GET (paginated list + filters) + POST (create single) — admin only |
 | `src/app/api/admin/products/[id]/route.ts` | PUT (update any field) + DELETE (soft-delete) — admin only |
+| `src/app/api/admin/orders/route.ts` | GET /api/admin/orders — paginated list, filters, status_counts |
+| `src/app/api/admin/orders/[id]/route.ts` | GET (full detail) + PATCH (status transitions + vendor assignment + notes) |
+| `src/app/(dashboard)/admin/orders/page.tsx` | Orders command centre — status tabs, search, date filter, table, pagination |
+| `src/app/(dashboard)/admin/orders/[id]/page.tsx` | Order detail — timeline, action section (varies by status), buyer card, items table |
+| `src/components/ui/ConfirmDialog.tsx` | Reusable confirm modal (default + destructive variants) |
 | `src/app/(dashboard)/admin/buyers/page.tsx` | Placeholder — Buyer accounts list |
 | `src/app/(dashboard)/admin/analytics/page.tsx` | Placeholder — Platform analytics |
 | `src/types/database.ts` | Full `Database` type: 7 tables (Row/Insert/Update for each), 7 enums, typed JSONB helpers |

@@ -1,57 +1,44 @@
 /**
  * POST /api/auth/register
  *
- * Registers a new buyer account after the browser has verified the user's
- * phone number via Firebase Phone OTP and obtained a Firebase ID token.
+ * ⚠️  TEMPORARY — Firebase auth is bypassed.
+ * Registers a new buyer account directly in Supabase without any Firebase
+ * token verification. A random UUID is used as the firebase_uid placeholder.
+ *
+ * TODO: Re-enable Firebase Phone OTP verification when auth is set up.
  *
  * Flow:
  *   1. Validate request body with Zod (400 on failure)
- *   2. Require terms_accepted === true (400 if false)
- *   3. Verify Firebase ID token → extract firebase_uid (401 on failure)
- *   4. Check for duplicate firebase_uid, email, or phone in Supabase (409 if found)
- *   5. Insert user row — role is always 'buyer' regardless of input
- *   6. Create session cookie
- *   7. Return { user, message }
- *
- * Note: No password is stored. Firebase manages authentication.
- * The password field in the registration form is collected for future
- * email+password login support but is NOT sent to this endpoint.
+ *   2. Require terms_accepted === true
+ *   3. Check for duplicate email or phone in Supabase (409 if found)
+ *   4. Insert user row — role is always 'buyer'
+ *   5. Create session cookie
+ *   6. Return { user, message }
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getFirebaseAuth } from "@/lib/firebase/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSession } from "@/lib/auth/session";
+import { randomUUID } from "crypto";
 
-// Force dynamic rendering — never statically analyse this route at build time
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 // ─── Validation schema ────────────────────────────────────────────────────────
 
 const registerSchema = z.object({
-  /** Firebase ID token obtained after phone OTP verification */
-  firebase_token: z.string().min(1, "firebase_token is required"),
-  /** User's full legal name */
   full_name: z
     .string()
     .min(2, "Full name must be at least 2 characters")
     .max(100, "Full name is too long"),
-  /** Must be a valid email address */
   email: z.string().email("Please enter a valid email address"),
-  /** E.164 format: +91XXXXXXXXXX (13 chars total) */
+  /** E.164 format: +91XXXXXXXXXX */
   phone: z
     .string()
-    .regex(
-      /^\+91[0-9]{10}$/,
-      "Phone must be in +91XXXXXXXXXX format"
-    ),
-  /** Optional — company or organisation name */
+    .regex(/^\+91[0-9]{10}$/, "Phone must be in +91XXXXXXXXXX format"),
   company_name: z.string().max(100).optional(),
-  /** Whether the user opted in to the newsletter */
   newsletter_opt_in: z.boolean(),
-  /** Must be true — user must accept terms before registering */
   terms_accepted: z.boolean(),
 });
 
@@ -66,14 +53,13 @@ type RegisterBody = z.infer<typeof registerSchema>;
 export async function POST(request: NextRequest): Promise<NextResponse> {
   console.log("[REGISTER] Request received");
   try {
-    // ── 1. Parse and validate request body ──────────────────────────────────
+    // ── 1. Parse and validate ────────────────────────────────────────────────
     let body: RegisterBody;
     try {
       const raw: unknown = await request.json();
       const result = registerSchema.safeParse(raw);
       if (!result.success) {
         const firstIssue = result.error.issues[0];
-        console.warn("[REGISTER] Validation failed:", firstIssue?.message);
         return NextResponse.json(
           { error: firstIssue?.message ?? "Invalid request body" },
           { status: 400 }
@@ -87,9 +73,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const { firebase_token, full_name, email, phone, company_name, terms_accepted } = body;
+    const { full_name, email, phone, company_name, terms_accepted } = body;
 
-    // ── 2. Terms & Conditions must be accepted ───────────────────────────────
+    // ── 2. Terms must be accepted ────────────────────────────────────────────
     if (!terms_accepted) {
       return NextResponse.json(
         { error: "You must accept the Terms & Conditions" },
@@ -97,57 +83,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // ── 3. Verify Firebase ID token ──────────────────────────────────────────
-    console.log("[REGISTER] Verifying Firebase token...");
-    const firebaseAuth = getFirebaseAuth();
-    if (!firebaseAuth) {
-      console.error("[REGISTER] Firebase Admin not initialised — check FIREBASE_ADMIN_* env vars");
-      return NextResponse.json(
-        { error: "Server configuration error. Contact support." },
-        { status: 500 }
-      );
-    }
-
-    let firebaseUid: string;
-    try {
-      const decoded = await firebaseAuth.verifyIdToken(firebase_token);
-      firebaseUid = decoded.uid;
-      console.log("[REGISTER] Token verified, uid:", firebaseUid);
-    } catch (tokenErr) {
-      console.error("[REGISTER] Token verification failed:", tokenErr);
-      return NextResponse.json(
-        { error: "Invalid or expired Firebase token. Please sign in again." },
-        { status: 401 }
-      );
-    }
-
-    // ── 4. Check for duplicates (firebase_uid, email, phone) ─────────────────
-    console.log("[REGISTER] Checking for existing user...");
+    // ── 3. Check for duplicates ──────────────────────────────────────────────
     const supabase = createAdminClient();
 
-    const { data: duplicateByUid } = await supabase
-      .from("users")
-      .select("id")
-      .eq("firebase_uid", firebaseUid)
-      .maybeSingle();
-
-    if (duplicateByUid) {
-      return NextResponse.json(
-        { error: "An account already exists for this phone number. Please login instead." },
-        { status: 409 }
-      );
-    }
-
-    const { data: duplicateByEmail, error: emailCheckErr } = await supabase
+    const { data: duplicateByEmail } = await supabase
       .from("users")
       .select("id")
       .eq("email", email)
       .maybeSingle();
-
-    if (emailCheckErr) {
-      console.error("[REGISTER] Email duplicate check error:", emailCheckErr);
-      return NextResponse.json({ error: "Database error. Please try again." }, { status: 500 });
-    }
 
     if (duplicateByEmail) {
       return NextResponse.json(
@@ -156,16 +99,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const { data: duplicateByPhone, error: phoneCheckErr } = await supabase
+    const { data: duplicateByPhone } = await supabase
       .from("users")
       .select("id")
       .eq("phone", phone)
       .maybeSingle();
-
-    if (phoneCheckErr) {
-      console.error("[REGISTER] Phone duplicate check error:", phoneCheckErr);
-      return NextResponse.json({ error: "Database error. Please try again." }, { status: 500 });
-    }
 
     if (duplicateByPhone) {
       return NextResponse.json(
@@ -174,12 +112,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // ── 5. Insert new user — role is ALWAYS 'buyer' ──────────────────────────
+    // ── 4. Insert new user — role is ALWAYS 'buyer' ──────────────────────────
     console.log("[REGISTER] Creating user in Supabase...");
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
-        firebase_uid: firebaseUid,
+        // Placeholder — replaced with real Firebase UID when auth is enabled
+        firebase_uid: randomUUID(),
         role: "buyer",
         email,
         phone,
@@ -199,18 +138,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    console.log("[REGISTER] User created in Supabase:", newUser.id);
+    console.log("[REGISTER] User created:", newUser.id, email);
 
-    // ── 6. Create session and return ─────────────────────────────────────────
+    // ── 5. Create session and return ─────────────────────────────────────────
     const response = NextResponse.json(
       {
         user: {
-          id: newUser.id,
-          role: newUser.role,
-          full_name: newUser.full_name,
-          email: newUser.email,
-          phone: newUser.phone,
-          company_name: newUser.company_name,
+          id:                newUser.id,
+          role:              newUser.role,
+          full_name:         newUser.full_name,
+          email:             newUser.email,
+          phone:             newUser.phone,
+          company_name:      newUser.company_name,
           business_verified: newUser.business_verified,
         },
         message: "Registration successful",
@@ -219,12 +158,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
 
     createSession(response, newUser.id, newUser.role);
-    console.log("[REGISTER] Success — buyer registered:", email);
     return response;
   } catch (error: unknown) {
-    const err = error as { message?: string; stack?: string };
-    console.error("[REGISTER] FULL ERROR:", error);
-    console.error("[REGISTER] Error message:", err?.message);
+    const err = error as { message?: string };
+    console.error("[REGISTER] Error:", err?.message);
     return NextResponse.json(
       { error: "Registration failed: " + (err?.message ?? "Unknown error") },
       { status: 500 }
