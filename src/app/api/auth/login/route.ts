@@ -1,15 +1,12 @@
 /**
  * POST /api/auth/login
  *
- * Authenticates a returning user using a Firebase ID token.
- * Supports both login methods:
- *   - Email + password  → client calls signInWithEmailAndPassword → getIdToken()
- *   - Phone OTP         → client calls signInWithPhoneNumber → verifyOtp() → getIdToken()
+ * Authenticates a returning user using a Firebase Phone OTP ID token.
  *
  * Flow:
  *   1. Verify Firebase ID token → extract firebase_uid (401 on failure)
  *   2. Look up user in Supabase by firebase_uid
- *      → 404 if not found (direct user to /register)
+ *      → 404 if not found (client redirects to /register)
  *      → 403 if account is deactivated
  *   3. Create session cookie
  *   4. Return { user }
@@ -26,7 +23,7 @@ export const dynamic = "force-dynamic";
 // ─── Request body shape ───────────────────────────────────────────────────────
 
 interface LoginBody {
-  /** Firebase ID token — from getIdToken() after email+password or phone OTP sign-in */
+  /** Firebase ID token — from getIdToken() after phone OTP sign-in */
   firebase_token: string;
 }
 
@@ -69,8 +66,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     let firebaseUid: string;
     try {
-      const decoded = await firebaseAuth.verifyIdToken(firebase_token);
-      firebaseUid = decoded.uid;
+      const decodedToken = await firebaseAuth.verifyIdToken(firebase_token);
+      firebaseUid = decodedToken.uid;
+      console.log("[LOGIN] Token verified for Firebase UID:", decodedToken.uid);
     } catch {
       return NextResponse.json(
         { error: "Invalid or expired Firebase token. Please sign in again." },
@@ -114,7 +112,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    console.log("[LOGIN] User logged in:", user.email, "role:", user.role);
+    console.log("[LOGIN] User logged in:", user.email ?? user.phone, "role:", user.role);
 
     // ── 3. Create session cookie and return ──────────────────────────────────
     const response = NextResponse.json(
@@ -124,6 +122,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           role: user.role,
           full_name: user.full_name,
           email: user.email,
+          phone: user.phone,
           company_name: user.company_name,
           business_verified: user.business_verified,
         },

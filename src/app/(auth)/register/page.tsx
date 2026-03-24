@@ -1,31 +1,25 @@
 /**
  * Register page — /register
  *
- * Single-page form — all fields visible at once. No multi-step flow.
+ * Two entry points:
+ *   A. Coming from login (phone already verified):
+ *      URL has ?phone=XXXXXXXXXX&token=XXXXX
+ *      Phone field shows "Phone Verified" badge. No OTP needed.
  *
- * Fields:
- *   1. Full Name *
- *   2. Business Name (optional)
- *   3. Email *
- *   4. Phone Number * — inline OTP verification via PhoneVerification component
- *   5. Create Password * (with strength bar)
- *   6. Confirm Password *
- *   7. Newsletter checkbox
- *   8. Terms & Conditions checkbox *
+ *   B. Direct visit (no URL params):
+ *      PhoneVerification component handles phone input + OTP inline.
+ *      After verification, onVerified callback gives us the firebaseToken.
  *
- * The "Create Account" button is disabled until:
- *   - All required fields are valid
- *   - Phone is verified (PhoneVerification called onVerified)
- *   - Terms checkbox is checked
- *
- * After success → toast + redirect to /buyer/marketplace
+ * On submit, calls POST /api/auth/register with { firebase_token, full_name, email, phone, ... }
+ * Password is collected for future email+password login support but NOT stored.
  */
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Suspense } from 'react';
 import Link from 'next/link';
-import { Mail, Lock, Eye, EyeOff, User, Briefcase, Loader2 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Mail, Lock, Eye, EyeOff, User, Briefcase, Loader2, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { PhoneVerification } from '@/components/auth/PhoneVerification';
@@ -34,11 +28,6 @@ import { PasswordStrengthBar } from '@/components/auth/PasswordStrengthBar';
 // ---------------------------------------------------------------------------
 // Shared input styles
 // ---------------------------------------------------------------------------
-
-const inputCls =
-  'w-full px-4 py-3 rounded-lg border border-slate-300 ' +
-  'focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ' +
-  'text-slate-900 placeholder:text-slate-400 text-sm transition-colors bg-white';
 
 const inputWithIconCls =
   'w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 ' +
@@ -63,17 +52,22 @@ function validatePassword(pw: string): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Inner page (uses useSearchParams — wrapped in Suspense below)
 // ---------------------------------------------------------------------------
 
-export default function RegisterPage() {
+function RegisterContent() {
+  const searchParams = useSearchParams();
   const { register } = useAuth();
+
+  // Read URL params set by the login page on 404 (phone not registered)
+  const phoneFromUrl = searchParams.get('phone') ?? '';
+  const tokenFromUrl = searchParams.get('token') ?? '';
+  const comingFromLogin = Boolean(phoneFromUrl && tokenFromUrl);
 
   // ── Form fields ───────────────────────────────────────────────────────────
   const [fullName, setFullName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [newsletterOptIn, setNewsletterOptIn] = useState(false);
@@ -85,16 +79,18 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // ── Phone verification state (from PhoneVerification component) ───────────
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [verificationId, setVerificationId] = useState('');
-  const [verifiedOtp, setVerifiedOtp] = useState('');
+  // ── Phone verification state ──────────────────────────────────────────────
+  // If coming from login, phone and token are already in URL params.
+  // If direct visit, PhoneVerification component calls onVerified to set these.
+  const [phoneVerified, setPhoneVerified] = useState(comingFromLogin);
+  const [verifiedPhone, setVerifiedPhone] = useState(phoneFromUrl); // 10-digit
+  const [firebaseToken, setFirebaseToken] = useState(tokenFromUrl);
 
-  // ── Phone verified callback ───────────────────────────────────────────────
+  // ── Phone verified callback (for direct /register visits) ─────────────────
 
-  const handlePhoneVerified = useCallback((vid: string, otp: string) => {
-    setVerificationId(vid);
-    setVerifiedOtp(otp);
+  const handlePhoneVerified = useCallback((phone: string, token: string) => {
+    setVerifiedPhone(phone);
+    setFirebaseToken(token);
     setPhoneVerified(true);
   }, []);
 
@@ -109,11 +105,8 @@ export default function RegisterPage() {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errors.email = 'Enter a valid email address.';
     }
-    if (!/^\d{10}$/.test(phone)) {
-      errors.phone = 'Enter a valid 10-digit phone number.';
-    }
     if (!phoneVerified) {
-      errors.phone = 'Please verify your phone number.';
+      errors.phone = 'Please verify your phone number first.';
     }
     const pwError = validatePassword(password);
     if (pwError) errors.password = pwError;
@@ -133,7 +126,6 @@ export default function RegisterPage() {
   const isFormReady =
     fullName.trim().length >= 2 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
-    /^\d{10}$/.test(phone) &&
     phoneVerified &&
     validatePassword(password) === null &&
     password === confirmPassword &&
@@ -144,25 +136,24 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
+    if (!firebaseToken) {
+      toast.error('Phone verification required. Please verify your phone number.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      if (!verificationId) {
-        toast.error('Phone verification required. Please verify your phone number.');
-        return;
-      }
       await register({
-        email: email.trim(),
-        password,
+        firebase_token: firebaseToken,
         full_name: fullName.trim(),
-        phone: phone,
+        email: email.trim(),
+        // verifiedPhone is 10 digits — add +91 prefix for E.164 format
+        phone: '+91' + verifiedPhone,
         company_name: businessName.trim() || undefined,
         newsletter_opt_in: newsletterOptIn,
         terms_accepted: termsAccepted,
-        verificationId,
-        otp: verifiedOtp,
       });
-      // register() handles the toast + redirect to /buyer/marketplace
+      // register() handles toast + redirect to /buyer/marketplace
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {
@@ -174,14 +165,13 @@ export default function RegisterPage() {
 
   return (
     <div className="space-y-6">
-      {/* Hidden reCAPTCHA container — required by Firebase Phone Auth */}
-      <div id="recaptcha-container" className="hidden" />
-
       {/* Heading */}
       <div>
-        <h1 className="text-2xl font-heading font-bold text-slate-900">Create Your Account</h1>
+        <h1 className="text-2xl font-heading font-bold text-slate-900">
+          Create Your Account
+        </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Join 100+ businesses already saving on procurement
+          Join businesses already saving on procurement
         </p>
       </div>
 
@@ -203,7 +193,9 @@ export default function RegisterPage() {
                 setFullName(e.target.value);
                 if (fieldErrors.fullName) setFieldErrors((p) => ({ ...p, fullName: '' }));
               }}
-              className={`${inputWithIconCls} ${fieldErrors.fullName ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''}`}
+              className={`${inputWithIconCls} ${
+                fieldErrors.fullName ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''
+              }`}
             />
           </div>
           {fieldErrors.fullName && (
@@ -247,58 +239,47 @@ export default function RegisterPage() {
                 setEmail(e.target.value);
                 if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: '' }));
               }}
-              className={`${inputWithIconCls} ${fieldErrors.email ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''}`}
+              className={`${inputWithIconCls} ${
+                fieldErrors.email ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''
+              }`}
             />
           </div>
           {fieldErrors.email ? (
             <p className="mt-1 text-xs text-rose-500">{fieldErrors.email}</p>
           ) : (
             <p className="mt-1 text-xs text-slate-400">
-              Order confirmations & invoices will be sent here
+              Order confirmations &amp; invoices will be sent here
             </p>
           )}
         </div>
 
-        {/* ── Phone Number with inline verification ─────────────────────── */}
+        {/* ── Phone Number ──────────────────────────────────────────────── */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
             Phone Number <span className="text-rose-500">*</span>
           </label>
 
-          {/* Phone input row */}
-          <div className="flex gap-2 mb-3">
-            <div className="flex items-center px-3 h-12 bg-slate-100 border border-slate-300 rounded-lg text-sm font-semibold text-slate-600 shrink-0">
-              🇮🇳 +91
+          {comingFromLogin ? (
+            /* Coming from login redirect — phone already verified */
+            <div className="flex items-center gap-3">
+              <div className="flex items-center px-3 h-12 bg-slate-100 border border-slate-300 rounded-lg text-sm font-semibold text-slate-600 shrink-0">
+                +91
+              </div>
+              <div className="flex-1 h-12 px-4 flex items-center rounded-lg border border-emerald-300 bg-emerald-50 text-slate-700 text-sm font-medium">
+                {phoneFromUrl}
+              </div>
+              <div className="flex items-center gap-1.5 text-emerald-700 text-sm font-medium shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                Verified
+              </div>
             </div>
-            <input
-              type="tel"
-              inputMode="numeric"
-              maxLength={10}
-              placeholder="10-digit mobile number"
-              value={phone}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-                setPhone(val);
-                if (phoneVerified) {
-                  setPhoneVerified(false);
-                  setVerificationId('');
-                  setVerifiedOtp('');
-                }
-                if (fieldErrors.phone) setFieldErrors((p) => ({ ...p, phone: '' }));
-              }}
-              disabled={phoneVerified}
-              className={`flex-1 h-12 px-4 rounded-lg border text-sm text-slate-900 bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 transition-colors ${
-                fieldErrors.phone ? 'border-rose-400' : 'border-slate-300'
-              }`}
+          ) : (
+            /* Direct /register visit — PhoneVerification handles OTP inline */
+            <PhoneVerification
+              onVerified={handlePhoneVerified}
+              defaultVerified={false}
             />
-          </div>
-
-          {/* Inline verification */}
-          <PhoneVerification
-            phone={phone}
-            onVerified={handlePhoneVerified}
-            disabled={isSubmitting}
-          />
+          )}
 
           {fieldErrors.phone && !phoneVerified && (
             <p className="mt-1.5 text-xs text-rose-500">{fieldErrors.phone}</p>
@@ -321,7 +302,9 @@ export default function RegisterPage() {
                 setPassword(e.target.value);
                 if (fieldErrors.password) setFieldErrors((p) => ({ ...p, password: '' }));
               }}
-              className={`${inputWithIconCls} pr-10 ${fieldErrors.password ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''}`}
+              className={`${inputWithIconCls} pr-10 ${
+                fieldErrors.password ? 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''
+              }`}
             />
             <button
               type="button"
@@ -336,6 +319,9 @@ export default function RegisterPage() {
             <p className="mt-1 text-xs text-rose-500">{fieldErrors.password}</p>
           )}
           <PasswordStrengthBar password={password} />
+          <p className="mt-1 text-xs text-slate-400">
+            Stored for future email login support — not used for login yet
+          </p>
         </div>
 
         {/* ── Confirm Password ──────────────────────────────────────────── */}
@@ -402,7 +388,7 @@ export default function RegisterPage() {
               </div>
             </div>
             <span className="text-sm text-slate-600 leading-snug">
-              Subscribe to our newsletter and blog updates
+              Subscribe to newsletter and blog updates
             </span>
           </label>
 
@@ -477,6 +463,27 @@ export default function RegisterPage() {
           Login here
         </Link>
       </p>
+
+      {/* Hidden reCAPTCHA container — required when PhoneVerification is shown */}
+      <div id="recaptcha-container" />
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page export — wraps inner content in Suspense for useSearchParams
+// ---------------------------------------------------------------------------
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-7 h-7 text-teal-600 animate-spin" />
+        </div>
+      }
+    >
+      <RegisterContent />
+    </Suspense>
   );
 }

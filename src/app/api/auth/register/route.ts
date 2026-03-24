@@ -1,22 +1,21 @@
 /**
  * POST /api/auth/register
  *
- * Registers a new buyer account after the browser has:
- *   1. Verified the user's phone number via Firebase OTP
- *   2. Created a Firebase account with email+password
- *   3. Linked the phone credential to that Firebase account
+ * Registers a new buyer account after the browser has verified the user's
+ * phone number via Firebase Phone OTP and obtained a Firebase ID token.
  *
  * Flow:
  *   1. Validate request body with Zod (400 on failure)
  *   2. Require terms_accepted === true (400 if false)
  *   3. Verify Firebase ID token → extract firebase_uid (401 on failure)
- *   4. Check for duplicate email OR phone in Supabase (409 if found)
+ *   4. Check for duplicate firebase_uid, email, or phone in Supabase (409 if found)
  *   5. Insert user row — role is always 'buyer' regardless of input
  *   6. Create session cookie
  *   7. Return { user, message }
  *
- * Note: newsletter_opt_in is accepted in the request for UX purposes but
- * is not persisted until the `users` table schema includes that column.
+ * Note: No password is stored. Firebase manages authentication.
+ * The password field in the registration form is collected for future
+ * email+password login support but is NOT sent to this endpoint.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -32,7 +31,7 @@ export const runtime = "nodejs";
 // ─── Validation schema ────────────────────────────────────────────────────────
 
 const registerSchema = z.object({
-  /** Firebase ID token obtained after creating the account on the client */
+  /** Firebase ID token obtained after phone OTP verification */
   firebase_token: z.string().min(1, "firebase_token is required"),
   /** User's full legal name */
   full_name: z
@@ -41,12 +40,12 @@ const registerSchema = z.object({
     .max(100, "Full name is too long"),
   /** Must be a valid email address */
   email: z.string().email("Please enter a valid email address"),
-  /** Must match E.164 or Indian 10-digit format */
+  /** E.164 format: +91XXXXXXXXXX (13 chars total) */
   phone: z
     .string()
     .regex(
-      /^\+?[0-9]{10,15}$/,
-      "Please enter a valid phone number (10–15 digits)"
+      /^\+91[0-9]{10}$/,
+      "Phone must be in +91XXXXXXXXXX format"
     ),
   /** Optional — company or organisation name */
   company_name: z.string().max(100).optional(),
@@ -68,11 +67,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   console.log("[REGISTER] Request received");
   try {
     // ── 1. Parse and validate request body ──────────────────────────────────
-    console.log("[REGISTER] Step 2: Validating fields...");
     let body: RegisterBody;
     try {
       const raw: unknown = await request.json();
-      console.log("[REGISTER] Step 1: Received request body:", JSON.stringify(raw));
       const result = registerSchema.safeParse(raw);
       if (!result.success) {
         const firstIssue = result.error.issues[0];
@@ -90,10 +87,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const { firebase_token, full_name, email, phone, company_name, terms_accepted } =
-      body;
-
-    console.log("[REGISTER] Step 1: validated body for email:", email);
+    const { firebase_token, full_name, email, phone, company_name, terms_accepted } = body;
 
     // ── 2. Terms & Conditions must be accepted ───────────────────────────────
     if (!terms_accepted) {
@@ -104,7 +98,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // ── 3. Verify Firebase ID token ──────────────────────────────────────────
-    console.log("[REGISTER] Step 3: Verifying Firebase token...");
+    console.log("[REGISTER] Verifying Firebase token...");
     const firebaseAuth = getFirebaseAuth();
     if (!firebaseAuth) {
       console.error("[REGISTER] Firebase Admin not initialised — check FIREBASE_ADMIN_* env vars");
@@ -118,7 +112,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
       const decoded = await firebaseAuth.verifyIdToken(firebase_token);
       firebaseUid = decoded.uid;
-      console.log("[REGISTER] Step 3: token verified, uid:", firebaseUid);
+      console.log("[REGISTER] Token verified, uid:", firebaseUid);
     } catch (tokenErr) {
       console.error("[REGISTER] Token verification failed:", tokenErr);
       return NextResponse.json(
@@ -127,9 +121,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // ── 4. Check for duplicate email OR phone ────────────────────────────────
-    console.log("[REGISTER] Step 4: Checking for existing user...");
+    // ── 4. Check for duplicates (firebase_uid, email, phone) ─────────────────
+    console.log("[REGISTER] Checking for existing user...");
     const supabase = createAdminClient();
+
+    const { data: duplicateByUid } = await supabase
+      .from("users")
+      .select("id")
+      .eq("firebase_uid", firebaseUid)
+      .maybeSingle();
+
+    if (duplicateByUid) {
+      return NextResponse.json(
+        { error: "An account already exists for this phone number. Please login instead." },
+        { status: 409 }
+      );
+    }
 
     const { data: duplicateByEmail, error: emailCheckErr } = await supabase
       .from("users")
@@ -168,7 +175,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // ── 5. Insert new user — role is ALWAYS 'buyer' ──────────────────────────
-    console.log("[REGISTER] Step 5: Creating user in Supabase...");
+    console.log("[REGISTER] Creating user in Supabase...");
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
@@ -192,10 +199,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    console.log("[REGISTER] Step 5: user inserted, id:", newUser.id);
+    console.log("[REGISTER] User created in Supabase:", newUser.id);
 
     // ── 6. Create session and return ─────────────────────────────────────────
-    console.log("[REGISTER] Step 6: Creating session...");
     const response = NextResponse.json(
       {
         user: {
@@ -203,6 +209,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           role: newUser.role,
           full_name: newUser.full_name,
           email: newUser.email,
+          phone: newUser.phone,
           company_name: newUser.company_name,
           business_verified: newUser.business_verified,
         },
@@ -218,7 +225,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const err = error as { message?: string; stack?: string };
     console.error("[REGISTER] FULL ERROR:", error);
     console.error("[REGISTER] Error message:", err?.message);
-    console.error("[REGISTER] Error stack:", err?.stack);
     return NextResponse.json(
       { error: "Registration failed: " + (err?.message ?? "Unknown error") },
       { status: 500 }
