@@ -75,7 +75,6 @@ export function useAuth() {
   const { user, isLoading, isAuthenticated, setUser, clearUser, setLoading } =
     useAuthStore();
   const router = useRouter();
-  const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
   const confirmationResultRef = useRef<ConfirmationResult | null>(null);
 
   // ── Restore session on mount ──────────────────────────────────────────────
@@ -102,14 +101,6 @@ export function useAuth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Cleanup reCAPTCHA verifier on unmount ─────────────────────────────────
-
-  useEffect(() => {
-    return () => {
-      recaptchaRef.current?.clear();
-      recaptchaRef.current = null;
-    };
-  }, []);
 
   // ── Dashboard redirect helper ─────────────────────────────────────────────
 
@@ -145,35 +136,60 @@ export function useAuth() {
    */
   const sendOTP = useCallback(
     async (phoneNumber: string): Promise<ConfirmationResult> => {
-      // Create verifier lazily — reuse if already exists
-      if (!recaptchaRef.current) {
-        recaptchaRef.current = new RecaptchaVerifier(
-          auth,
-          'recaptcha-container',
-          { size: 'invisible', callback: () => {} }
-        );
+      // Always clear and recreate the verifier — reusing a stale verifier
+      // causes reCAPTCHA Enterprise "hostname match not found" 400 errors.
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch { /* ignore */ }
+        window.recaptchaVerifier = null;
       }
 
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        'recaptcha-container',
+        {
+          size: 'invisible',
+          callback: () => {
+            console.log('[RECAPTCHA] Solved successfully');
+          },
+          'expired-callback': () => {
+            console.log('[RECAPTCHA] Expired — will recreate on next sendOTP');
+            if (window.recaptchaVerifier) {
+              try { window.recaptchaVerifier.clear(); } catch { /* ignore */ }
+              window.recaptchaVerifier = null;
+            }
+          },
+        }
+      );
+
       try {
+        const formattedPhone = '+91' + phoneNumber;
+        console.log('[OTP] Sending to:', formattedPhone);
         const result = await signInWithPhoneNumber(
           auth,
-          '+91' + phoneNumber,
-          recaptchaRef.current
+          formattedPhone,
+          window.recaptchaVerifier
         );
         confirmationResultRef.current = result;
+        console.log('[OTP] Confirmation result received');
         return result;
       } catch (err) {
-        // Clear verifier on error so it can be freshly re-created on retry
-        recaptchaRef.current?.clear();
-        recaptchaRef.current = null;
+        // Clear verifier on error so the next attempt gets a clean slate
+        if (window.recaptchaVerifier) {
+          try { window.recaptchaVerifier.clear(); } catch { /* ignore */ }
+          window.recaptchaVerifier = null;
+        }
         confirmationResultRef.current = null;
 
         const msg = err instanceof Error ? err.message : '';
+        console.error('[OTP] Send failed:', msg);
         if (msg.includes('too-many-requests')) {
           throw new Error('Too many OTP requests. Please wait and try again.');
         }
         if (msg.includes('invalid-phone-number')) {
           throw new Error('Invalid phone number. Please use a 10-digit Indian mobile number.');
+        }
+        if (msg.includes('invalid-app-credential') || msg.includes('CAPTCHA')) {
+          throw new Error('reCAPTCHA verification failed. Please try again.');
         }
         throw new Error('Failed to send OTP. Please try again.');
       }
@@ -200,8 +216,11 @@ export function useAuth() {
 
       setLoading(true);
       try {
+        console.log('[OTP] Verifying code...');
         const credential = await confirmationResultRef.current.confirm(otpCode);
+        console.log('[OTP] Verified! Firebase UID:', credential.user.uid);
         const idToken = await credential.user.getIdToken();
+        console.log('[OTP] Got Firebase ID token');
         const phone = credential.user.phoneNumber ?? '';
 
         const res = await fetch('/api/auth/login', {
