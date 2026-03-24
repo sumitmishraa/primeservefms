@@ -42,8 +42,10 @@ export type Subcategory = Tables<'subcategories'>;
 export type Product = Tables<'products'>;
 
 /**
- * A purchase order placed by a buyer to a vendor.
- * Financial record — never deleted (ON DELETE RESTRICT on buyer_id and vendor_id).
+ * A purchase order placed by a buyer.
+ * Fulfilled by PrimeServe admin who assigns an offline vendor.
+ * Tracks the full admin-centric flow: pending → approved → forwarded_to_vendor → dispatched → delivered.
+ * Financial record — never deleted.
  */
 export type Order = Tables<'orders'>;
 
@@ -64,6 +66,13 @@ export type Message = Tables<'messages'>;
  * A vendor onboarding application submitted for admin review.
  */
 export type VendorApplication = Tables<'vendor_applications'>;
+
+/**
+ * An entry in the admin's internal vendor contact book.
+ * NOT a platform account — vendors are managed offline via WhatsApp/phone.
+ * Admin uses this to look up who to forward an order to.
+ */
+export type VendorContact = Tables<'vendor_directory'>;
 
 // ---------------------------------------------------------------------------
 // Embedded / JSONB shape interfaces

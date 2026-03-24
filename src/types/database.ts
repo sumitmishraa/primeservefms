@@ -1,11 +1,12 @@
 /**
- * Supabase database types — hand-written to match all 3 migrations exactly.
+ * Supabase database types — hand-written to match all 4 migrations exactly.
  * Re-generate by running: pnpm supabase gen types typescript --project-id <id>
  *
- * Table inventory (7 tables, 7 enums):
+ * Table inventory (8 tables, 7 enums):
  *   users, subcategories, vendor_applications   ← Migration 1
  *   products                                    ← Migration 2
  *   orders, order_items, messages               ← Migration 3
+ *   vendor_directory                            ← Migration 4
  */
 
 // ---------------------------------------------------------------------------
@@ -193,7 +194,8 @@ export type Database = {
       products: {
         Row: {
           id: string;
-          vendor_id: string;
+          vendor_id: string | null;
+          uploaded_by: string | null;
           name: string;
           slug: string;
           description: string | null;
@@ -225,7 +227,8 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          vendor_id: string;
+          vendor_id?: string | null;
+          uploaded_by?: string | null;
           name: string;
           slug?: string;
           description?: string | null;
@@ -280,6 +283,11 @@ export type Database = {
           notes: string | null;
           cancelled_reason: string | null;
           delivered_at: string | null;
+          assigned_vendor_name: string | null;
+          assigned_vendor_phone: string | null;
+          admin_notes: string | null;
+          forwarded_at: string | null;
+          dispatched_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -287,7 +295,7 @@ export type Database = {
           id?: string;
           order_number?: string;
           buyer_id: string;
-          vendor_id: string;
+          vendor_id?: string | null;
           status?: Database['public']['Enums']['order_status'];
           payment_status?: Database['public']['Enums']['payment_status'];
           subtotal?: number;
@@ -299,6 +307,11 @@ export type Database = {
           notes?: string | null;
           cancelled_reason?: string | null;
           delivered_at?: string | null;
+          assigned_vendor_name?: string | null;
+          assigned_vendor_phone?: string | null;
+          admin_notes?: string | null;
+          forwarded_at?: string | null;
+          dispatched_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -338,6 +351,45 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['order_items']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // vendor_directory — internal admin contact book for offline vendors
+      // Migration 4
+      // -----------------------------------------------------------------------
+      vendor_directory: {
+        Row: {
+          id: string;
+          name: string;
+          company_name: string;
+          phone: string;
+          whatsapp: string | null;
+          email: string | null;
+          address: string | null;
+          city: string;
+          categories: Database['public']['Enums']['product_category'][];
+          notes: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          company_name: string;
+          phone: string;
+          whatsapp?: string | null;
+          email?: string | null;
+          address?: string | null;
+          city?: string;
+          categories?: Database['public']['Enums']['product_category'][];
+          notes?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['vendor_directory']['Insert']>;
         Relationships: never[];
       };
 
@@ -387,14 +439,21 @@ export type Database = {
         | 'facility_and_tools'
         | 'printing_solution';
 
-      /** Order lifecycle from placement to delivery */
+      /**
+       * Order lifecycle — admin-centric flow (Migration 4).
+       * Active values: pending → approved → forwarded_to_vendor → dispatched → delivered (or cancelled).
+       * Legacy values (confirmed, processing, shipped) remain in DB but are no longer used.
+       */
       order_status:
         | 'pending'
-        | 'confirmed'
-        | 'processing'
-        | 'shipped'
+        | 'approved'
+        | 'forwarded_to_vendor'
+        | 'dispatched'
         | 'delivered'
-        | 'cancelled';
+        | 'cancelled'
+        | 'confirmed'    // legacy — do not use
+        | 'processing'   // legacy — do not use
+        | 'shipped';     // legacy — do not use
 
       /** Payment state alongside order status */
       payment_status: 'pending' | 'paid' | 'failed' | 'refunded';

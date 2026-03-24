@@ -9,8 +9,9 @@
 
 | | |
 |---|---|
-| **Active phase** | Phase 3 — Vendor Onboarding & Product Catalogue |
-| **Last completed** | Phase 2.5 Dashboard Shell — layout.tsx, Navbar, Sidebar, MobileMenu, UserMenu, 20 placeholder pages (buyer/vendor/admin) |
+| **Active phase** | Phase 3 — Admin-Centric Product Catalogue |
+| **Last completed** | Migration 4 — admin order flow + vendor directory (2026-03-24) |
+| **Business model** | PrimeServe admin controls all order fulfilment. No vendor dashboard. Vendors managed offline via WhatsApp/call. |
 | **Build status** | ✅ `npx tsc --noEmit` passes with zero errors |
 | **Dev server** | `pnpm dev` → `http://localhost:3000` |
 
@@ -106,8 +107,23 @@ Doc:  `docs/database/03_orders_messages_schema.md`
 - [x] `src/lib/supabase/queries.ts` — 11 query functions: getUserById, getUserByFirebaseUid, getProducts, getVendorProducts, getProductBySlug, getSubcategories, getOrders, getOrderById, getMessages, getVendorApplications, getDashboardStats
 - [x] Supabase clients (client.ts, server.ts, admin.ts) already typed with `Database` generic
 
+#### Migration 4 — Admin Order Flow & Vendor Directory (COMPLETE)
+File: `supabase/migrations/20260324000001_update_order_status_and_vendor_directory.sql`
+
+**Business model change:** PrimeServe admin manages all fulfilment. No vendor login/dashboard.
+
+- [x] `order_status` enum extended: `approved`, `forwarded_to_vendor`, `dispatched` added. Old values (confirmed, processing, shipped) remain in DB but unused.
+- [x] New order flow: `pending → approved → forwarded_to_vendor → dispatched → delivered` (cancelled at any stage)
+- [x] `orders` table — 5 new columns: `assigned_vendor_name`, `assigned_vendor_phone`, `admin_notes`, `forwarded_at`, `dispatched_at`
+- [x] `vendor_directory` table — internal admin contact book (NOT a login table). Admin-only RLS.
+- [x] `products.vendor_id` — made nullable (admin uploads products now)
+- [x] `products.uploaded_by` — new FK to `users.id` (records which admin uploaded the product)
+- [x] `src/types/database.ts` — updated: vendor_directory table type, order_status enum, new order columns, nullable vendor_id, uploaded_by
+- [x] `src/types/index.ts` — added `VendorContact` type alias; updated `Order` jsdoc
+- [x] `src/lib/constants/categories.ts` — added `OrderStatusMeta` interface and `ORDER_STATUSES` array (6 active statuses with color + description)
+
 #### Remaining Phase 1 tasks
-- [ ] Seed script with 3 test buyers, 2 test vendors, 10 test products (optional — can be done alongside Phase 2)
+- [ ] Seed script with 3 test buyers, 10 test products (optional — can be done alongside Phase 3)
 
 ---
 
@@ -290,6 +306,7 @@ Goal: Buyers and vendors can message each other; admin has full visibility.
 | `docs/database/02_products_schema.md` | Plain-English schema reference for Migration 2 |
 | `supabase/migrations/20260322000003_orders_and_messages.sql` | Migration 3: orders (17 cols), order_items (11 cols), messages (8 cols), order number trigger, 13 indexes, 11 RLS policies |
 | `docs/database/03_orders_messages_schema.md` | Plain-English schema reference for Migration 3 |
+| `supabase/migrations/20260324000001_update_order_status_and_vendor_directory.sql` | Migration 4: new order_status values, 5 new order columns, vendor_directory table, products.vendor_id nullable, products.uploaded_by |
 | `src/types/database.ts` | Full `Database` type: 7 tables (Row/Insert/Update for each), 7 enums, typed JSONB helpers |
 | `src/lib/supabase/queries.ts` | 11 typed query functions for all major data access patterns |
 | `TECH_DECISIONS.md` | Architecture decisions log — why we built it the way we did |

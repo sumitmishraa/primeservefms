@@ -14,11 +14,22 @@
  *   - The `subcategories` table (seeded in Migration 1 with 44 rows)
  */
 
-import type { ProductCategory } from '@/types/index';
+import type { ProductCategory, OrderStatus } from '@/types/index';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+export interface OrderStatusMeta {
+  /** Value stored in the DB — matches order_status enum */
+  value: OrderStatus;
+  /** Human-readable label for UI display */
+  label: string;
+  /** Tailwind colour token (without prefix) — e.g. 'yellow' → use text-yellow-600 */
+  color: string;
+  /** Plain-English description of what this status means */
+  description: string;
+}
 
 export interface ProductCategoryMeta {
   /** Value stored in the DB — matches product_category enum */
@@ -175,6 +186,54 @@ export const SUBCATEGORIES: Record<ProductCategory, SubcategoryMeta[]> = {
   // No subcategories yet — rows will be added when printing products are onboarded
   printing_solution: [],
 };
+
+// ---------------------------------------------------------------------------
+// Order status metadata — admin-centric flow (Migration 4)
+// ---------------------------------------------------------------------------
+
+/**
+ * All active order statuses with display metadata.
+ * Legacy DB values (confirmed, processing, shipped) are excluded — they will
+ * never appear in new orders but may exist in historical data.
+ */
+export const ORDER_STATUSES: OrderStatusMeta[] = [
+  {
+    value: 'pending',
+    label: 'Pending',
+    color: 'yellow',
+    description: 'Buyer placed order, awaiting admin review',
+  },
+  {
+    value: 'approved',
+    label: 'Approved',
+    color: 'blue',
+    description: 'Admin reviewed and accepted the order',
+  },
+  {
+    value: 'forwarded_to_vendor',
+    label: 'Forwarded to Vendor',
+    color: 'purple',
+    description: 'Admin sent the order to a vendor for fulfilment',
+  },
+  {
+    value: 'dispatched',
+    label: 'Dispatched',
+    color: 'orange',
+    description: 'Vendor has shipped the products',
+  },
+  {
+    value: 'delivered',
+    label: 'Delivered',
+    color: 'green',
+    description: 'Buyer confirmed receipt of products',
+  },
+  {
+    value: 'cancelled',
+    label: 'Cancelled',
+    color: 'red',
+    description: 'Order was cancelled at any stage',
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Helper functions
