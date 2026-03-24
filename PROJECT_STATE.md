@@ -10,9 +10,9 @@
 | | |
 |---|---|
 | **Active phase** | Phase 3 — Admin-Centric Product Catalogue |
-| **Last completed** | Admin Dashboard home page + sidebar update (2026-03-24) |
+| **Last completed** | Admin product catalog — Excel import, CRUD API, catalog manager, product form (2026-03-24) |
 | **Business model** | PrimeServe admin controls all order fulfilment. No vendor dashboard. Vendors managed offline via WhatsApp/call. |
-| **Build status** | ✅ `pnpm build` passes — 41 routes, zero TypeScript errors |
+| **Build status** | ✅ `pnpm build` passes — 47 routes, zero TypeScript errors |
 | **Dev server** | `pnpm dev` → `http://localhost:3000` |
 
 ---
@@ -186,11 +186,21 @@ Goal: Admin uploads all products; buyers can browse and place orders.
 - [x] `src/app/(dashboard)/admin/analytics/page.tsx` — placeholder (new route)
 - [x] `src/app/(dashboard)/admin/settings/page.tsx` — placeholder
 
+#### Admin Product Catalog (COMPLETE — 2026-03-24)
+- [x] `POST /api/admin/products/import` — Excel bulk import (xlsx, 2-sheet, section-header skip, unit/category/subcategory mapping, batch insert, duplicate skip by slug)
+- [x] `GET /api/admin/products` — paginated list (25/page), filters: category, subcategory, search, stock status
+- [x] `POST /api/admin/products` — create single product (admin-only, auto-slug, uploaded_by)
+- [x] `PUT /api/admin/products/[id]` — update any product field
+- [x] `DELETE /api/admin/products/[id]` — soft-delete (is_active = false)
+- [x] `src/app/(dashboard)/admin/products/import/page.tsx` — drag-and-drop Excel upload, progress, summary card, row error table
+- [x] `src/app/(dashboard)/admin/products/page.tsx` — full catalog manager: search, category/subcategory/stock filters, inline price editing (click-to-edit, red ₹0), stock toggle, bulk select/delete, pagination, amber row highlight for unpriced items
+- [x] `src/app/(dashboard)/admin/products/[id]/edit/page.tsx` — pre-filled edit form with all fields
+- [x] `src/app/(dashboard)/admin/products/new/page.tsx` — empty form to manually add a product
+- [x] `src/components/admin/ProductForm.tsx` — shared form component (all fields + bulk pricing tiers + tags + image placeholder)
+- [x] `xlsx` 0.18.5 installed; `next.config.ts` updated with `serverExternalPackages: ['xlsx']`
+
 #### Remaining Phase 3 tasks
-- [ ] Admin product catalog page — list all products with search/filter
-- [ ] Admin product form — create/edit product (name, category, pricing tiers, images)
-- [ ] `POST /api/products` and `PATCH /api/products/:id` — admin uploads products
-- [ ] Supabase Storage bucket for product images
+- [ ] Supabase Storage bucket for product images (image upload in ProductForm)
 - [ ] Admin order detail page — review order, approve, forward to vendor, mark dispatched
 - [ ] `PATCH /api/orders/:id/status` — update order status with vendor assignment
 - [ ] Public marketplace page (`/marketplace`) with category filter and search
@@ -321,7 +331,14 @@ Goal: Buyers and vendors can message each other; admin has full visibility.
 | `supabase/migrations/20260324000001_update_order_status_and_vendor_directory.sql` | Migration 4: new order_status values, 5 new order columns, vendor_directory table, products.vendor_id nullable, products.uploaded_by |
 | `src/app/api/admin/stats/route.ts` | GET /api/admin/stats — admin-only; returns 6 stats, 5 pending orders, 10 recent orders |
 | `src/app/(dashboard)/admin/page.tsx` | Admin dashboard home — welcome banner, stat cards, pending orders table, activity feed |
-| `src/app/(dashboard)/admin/products/import/page.tsx` | Placeholder — Import Products (Excel bulk upload) |
+| `src/app/(dashboard)/admin/products/import/page.tsx` | Excel import page — drag-and-drop .xlsx upload, progress, summary card, error table |
+| `src/app/(dashboard)/admin/products/page.tsx` | Product Catalog Manager — search/filter, inline price edit, stock toggle, bulk actions, pagination |
+| `src/app/(dashboard)/admin/products/[id]/edit/page.tsx` | Edit product — pre-filled ProductForm, PUT on save |
+| `src/app/(dashboard)/admin/products/new/page.tsx` | Add new product — empty ProductForm, POST on save |
+| `src/components/admin/ProductForm.tsx` | Shared product form: all fields, bulk pricing tiers, tags, image placeholder |
+| `src/app/api/admin/products/import/route.ts` | POST — Excel bulk import (xlsx, 2-sheet, unit/category map, batch insert) |
+| `src/app/api/admin/products/route.ts` | GET (paginated list + filters) + POST (create single) — admin only |
+| `src/app/api/admin/products/[id]/route.ts` | PUT (update any field) + DELETE (soft-delete) — admin only |
 | `src/app/(dashboard)/admin/buyers/page.tsx` | Placeholder — Buyer accounts list |
 | `src/app/(dashboard)/admin/analytics/page.tsx` | Placeholder — Platform analytics |
 | `src/types/database.ts` | Full `Database` type: 7 tables (Row/Insert/Update for each), 7 enums, typed JSONB helpers |
@@ -380,6 +397,7 @@ Goal: Buyers and vendors can message each other; admin has full visibility.
 | `date-fns` | 4.1.0 | Date formatting |
 | `date-fns-tz` | 3.2.0 | IST timezone conversion |
 | `zod` | 4.3.6 | Schema validation |
+| `xlsx` | 0.18.5 | Parse .xlsx files for bulk product import (server-side, SheetJS) |
 
 ---
 
