@@ -155,9 +155,10 @@ export function useAuth() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            full_name:        data.full_name.trim(),
-            email:            data.email.trim().toLowerCase(),
-            phone:            '+91' + data.phone.replace(/\D/g, ''),
+            full_name:         data.full_name.trim(),
+            email:             data.email.trim().toLowerCase(),
+            phone:             '+91' + data.phone.replace(/\D/g, ''),
+            password:          data.password,
             ...(data.company_name?.trim() ? { company_name: data.company_name.trim() } : {}),
             newsletter_opt_in: data.newsletter_opt_in,
             terms_accepted:    data.terms_accepted,
