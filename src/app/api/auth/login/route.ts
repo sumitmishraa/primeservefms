@@ -1,90 +1,101 @@
 /**
  * POST /api/auth/login
  *
- * ⚠️  TEMPORARY — Firebase auth is bypassed.
- * Looks up the user by email directly in Supabase.
- * No password is verified (passwords are stored in Firebase, not Supabase).
- *
- * TODO: Re-enable Firebase token verification when auth is set up.
+ * Email + password login — no Firebase involved.
  *
  * Flow:
- *   1. Accept { email } in request body
- *   2. Look up user in Supabase by email
- *      → 404 if not found
- *      → 403 if deactivated
- *   3. Create session cookie
- *   4. Return { user }
+ *   1. Validate body: { email, password }
+ *   2. Look up user by email in Supabase
+ *   3. Check account is active
+ *   4. Compare password against bcrypt hash
+ *   5. Create session cookie
+ *   6. Return { user }
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createSession } from "@/lib/auth/session";
+import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { createSession } from '@/lib/auth/session';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 interface LoginBody {
-  email: string;
-  /** Accepted but not verified yet — Firebase handles this when auth is enabled */
-  password?: string;
+  email:    string;
+  password: string;
 }
 
 /**
- * Logs in an existing user by email and sets the httpOnly session cookie.
+ * Authenticates an existing user via email + bcrypt password comparison.
+ * Sets an httpOnly session cookie on success.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // 1. Parse body
     let body: LoginBody;
     try {
       body = (await request.json()) as LoginBody;
     } catch {
-      return NextResponse.json(
-        { error: "Request body must be valid JSON" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Request body must be valid JSON' }, { status: 400 });
     }
 
-    const { email } = body;
+    const { email, password } = body;
 
-    if (!email || typeof email !== "string") {
-      return NextResponse.json(
-        { error: "email is required" },
-        { status: 400 }
-      );
+    if (!email || typeof email !== 'string') {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+    if (!password || typeof password !== 'string') {
+      return NextResponse.json({ error: 'Password is required' }, { status: 400 });
     }
 
-    // ── Look up user by email ────────────────────────────────────────────────
+    // 2. Look up user by email
     const supabase = createAdminClient();
     const { data: user, error: lookupError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email.toLowerCase().trim())
+      .from('users')
+      .select('*')
+      .eq('email', email.toLowerCase().trim())
       .maybeSingle();
 
     if (lookupError) {
-      console.error("[LOGIN] DB lookup error:", lookupError);
-      return NextResponse.json(
-        { error: "Internal server error" },
-        { status: 500 }
-      );
+      console.error('[LOGIN] DB lookup error:', lookupError);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 
     if (!user) {
       return NextResponse.json(
-        { error: "No account found with this email. Please register first.", code: "USER_NOT_FOUND" },
+        { error: 'No account found with this email. Please register first.', code: 'USER_NOT_FOUND' },
         { status: 404 }
       );
     }
 
+    // 3. Check account active
     if (!user.is_active) {
       return NextResponse.json(
-        { error: "Your account has been deactivated. Contact support.", code: "ACCOUNT_DEACTIVATED" },
+        { error: 'Your account has been deactivated. Contact support.', code: 'ACCOUNT_DEACTIVATED' },
         { status: 403 }
       );
     }
 
-    console.log("[LOGIN] User logged in:", user.email, "role:", user.role);
+    // 4. Verify password
+    if (!user.password_hash) {
+      // Account was created before password auth was added — prompt re-registration
+      return NextResponse.json(
+        { error: 'This account has no password set. Please register again or contact support.' },
+        { status: 401 }
+      );
+    }
 
-    // ── Create session cookie and return ─────────────────────────────────────
+    const isValid = await bcrypt.compare(password, user.password_hash);
+    if (!isValid) {
+      return NextResponse.json(
+        { error: 'Invalid email or password.' },
+        { status: 401 }
+      );
+    }
+
+    console.log('[LOGIN] User authenticated:', user.email, 'role:', user.role);
+
+    // 5. Session + response
     const response = NextResponse.json(
       {
         user: {
@@ -103,10 +114,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     createSession(response, user.id, user.role);
     return response;
   } catch (error) {
-    console.error("[LOGIN] Error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('[LOGIN] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

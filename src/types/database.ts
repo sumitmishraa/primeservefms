@@ -65,7 +65,7 @@ export type Database = {
       users: {
         Row: {
           id: string;
-          firebase_uid: string;
+          firebase_uid: string | null;
           role: Database['public']['Enums']['user_role'];
           email: string | null;
           phone: string | null;
@@ -82,13 +82,14 @@ export type Database = {
           city: string | null;
           state: string | null;
           pincode: string | null;
+          password_hash: string | null;
           is_active: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
-          firebase_uid: string;
+          firebase_uid?: string | null;
           role?: Database['public']['Enums']['user_role'];
           email?: string | null;
           phone?: string | null;
@@ -105,6 +106,7 @@ export type Database = {
           city?: string | null;
           state?: string | null;
           pincode?: string | null;
+          password_hash?: string | null;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;

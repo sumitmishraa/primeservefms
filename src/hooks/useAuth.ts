@@ -106,13 +106,13 @@ export function useAuth() {
    * @throws Error with a human-readable message on failure
    */
   const login = useCallback(
-    async (email: string, _password: string): Promise<UserProfile> => {
+    async (email: string, password: string): Promise<UserProfile> => {
       setLoading(true);
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.trim() }),
+          body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
         });
         const json = (await res.json()) as { user?: UserProfile; error?: string; code?: string };
 
