@@ -32,13 +32,23 @@ export function getFirebaseAdmin(): App | null {
     return adminApp;
   }
 
-  adminApp = initializeApp({
-    credential: cert({
-      projectId,
-      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    }),
-  });
+  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+  const privateKey  = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+  console.log(
+    "[FIREBASE_ADMIN] Init — projectId:", !!projectId,
+    "clientEmail:", !!clientEmail,
+    "privateKey:", !!privateKey,
+  );
+
+  try {
+    adminApp = initializeApp({
+      credential: cert({ projectId, clientEmail, privateKey }),
+    });
+  } catch (err) {
+    console.error("[FIREBASE_ADMIN] initializeApp failed:", err);
+    return null;
+  }
 
   return adminApp;
 }
