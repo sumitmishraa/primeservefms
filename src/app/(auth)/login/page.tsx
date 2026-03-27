@@ -1,23 +1,30 @@
 /**
  * Login page — /login
  *
- * Email + Password only. No OTP, no reCAPTCHA, no phone verification.
+ * Two tabs:
+ *   1. Email + Password  — existing accounts with email/password
+ *   2. Phone OTP         — enter phone → Firebase sends SMS → enter 6-digit OTP
  *
- * Flow:
- *   1. User enters email + password
- *   2. Firebase signInWithEmailAndPassword
- *   3. Get ID token → POST /api/auth/login → session cookie
- *   4. Redirect to role dashboard
+ * Flow (Phone OTP):
+ *   1. User enters phone number
+ *   2. sendPhoneOTP() → Firebase invisible reCAPTCHA → SMS sent
+ *   3. OTP input appears; user types 6-digit code
+ *   4. confirmation.confirm(otp) → Firebase UserCredential → get ID token
+ *   5. POST /api/auth/verify { idToken } → session cookie
+ *   6. Redirect to role dashboard
  */
 
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Phone, Loader2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { OTPInput } from '@/components/auth/OTPInput';
+import { sendPhoneOTP, clearRecaptchaVerifier } from '@/lib/firebase/config';
+import type { ConfirmationResult } from 'firebase/auth';
 
 const inputCls =
   'w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 ' +
@@ -25,24 +32,19 @@ const inputCls =
   'text-slate-900 placeholder:text-slate-400 text-sm transition-colors bg-white';
 
 // ---------------------------------------------------------------------------
-// Inner page (uses useSearchParams — wrapped in Suspense below)
+// Email + Password tab
 // ---------------------------------------------------------------------------
 
-function LoginContent() {
-  const searchParams = useSearchParams();
+function EmailPasswordTab({ redirectTo }: { redirectTo: string | null }) {
   const { login, redirectAfterLogin } = useAuth();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const redirectTo = searchParams.get('redirect');
+  const [email, setEmail]             = useState('');
+  const [password, setPassword]       = useState('');
+  const [showPw, setShowPw]           = useState(false);
+  const [isLoading, setIsLoading]     = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password) return;
-
     setIsLoading(true);
     try {
       const user = await login(email.trim(), password);
@@ -56,6 +58,254 @@ function LoginContent() {
   };
 
   return (
+    <form onSubmit={handleLogin} className="space-y-4">
+      {/* Email */}
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="email"
+            autoComplete="email"
+            placeholder="your@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className={inputCls}
+          />
+        </div>
+      </div>
+
+      {/* Password */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="block text-sm font-medium text-slate-700">Password</label>
+          <button
+            type="button"
+            onClick={() => toast('Password reset coming soon', { icon: '🔒' })}
+            className="text-xs text-teal-600 hover:underline"
+          >
+            Forgot Password?
+          </button>
+        </div>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type={showPw ? 'text' : 'password'}
+            autoComplete="current-password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className={`${inputCls} pr-10`}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPw((v) => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          >
+            {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={isLoading || !email || !password}
+        className="w-full h-12 flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-sm"
+      >
+        {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Logging in…</> : 'Login'}
+      </button>
+    </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Phone OTP tab
+// ---------------------------------------------------------------------------
+
+type PhoneStage = 'input' | 'sending' | 'otp' | 'verifying';
+
+function PhoneOTPTab({ redirectTo }: { redirectTo: string | null }) {
+  const { loginWithPhone, redirectAfterLogin } = useAuth();
+
+  const [phone, setPhone]               = useState('');
+  const [stage, setStage]               = useState<PhoneStage>('input');
+  const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
+  const [otpError, setOtpError]         = useState(false);
+  const [otpResetKey, setOtpResetKey]   = useState(0);
+  const [resendTimer, setResendTimer]   = useState(0);
+  const timerRef                        = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startTimer = useCallback(() => {
+    setResendTimer(30);
+    timerRef.current = setInterval(() => {
+      setResendTimer((t) => {
+        if (t <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+  }, []);
+
+  const handleSend = useCallback(async () => {
+    if (!/^\d{10}$/.test(phone)) {
+      toast.error('Enter a valid 10-digit mobile number.');
+      return;
+    }
+    setStage('sending');
+    try {
+      const result = await sendPhoneOTP('+91' + phone, 'login-phone-btn');
+      setConfirmation(result);
+      setStage('otp');
+      startTimer();
+      toast.success('OTP sent to +91 ' + phone);
+    } catch (err) {
+      setStage('input');
+      clearRecaptchaVerifier();
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('invalid-phone-number')) toast.error('Invalid phone number.');
+      else if (msg.includes('too-many-requests')) toast.error('Too many attempts. Please wait and try again.');
+      else toast.error('Could not send OTP. Please try again.');
+    }
+  }, [phone, startTimer]);
+
+  const handleVerify = useCallback(async (otp: string) => {
+    if (!confirmation) return;
+    setStage('verifying');
+    setOtpError(false);
+    try {
+      const credential = await confirmation.confirm(otp);
+      const idToken    = await credential.user.getIdToken();
+      const user       = await loginWithPhone(idToken);
+      toast.success(`Welcome back, ${user.full_name.split(' ')[0]}!`);
+      redirectAfterLogin(user, redirectTo);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('No account found')) {
+        toast.error('No account with this phone. Please register first.');
+      } else {
+        setOtpError(true);
+        setOtpResetKey((k) => k + 1);
+        toast.error('Wrong OTP. Please try again.');
+      }
+      setStage('otp');
+    }
+  }, [confirmation, loginWithPhone, redirectAfterLogin, redirectTo]);
+
+  const handleResend = useCallback(async () => {
+    if (resendTimer > 0) return;
+    clearRecaptchaVerifier();
+    setConfirmation(null);
+    setOtpError(false);
+    setOtpResetKey((k) => k + 1);
+    setStage('input');
+    setTimeout(() => handleSend(), 100);
+  }, [resendTimer, handleSend]);
+
+  return (
+    <div className="space-y-4">
+      {/* Phone number input */}
+      {(stage === 'input' || stage === 'sending') && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Mobile Number
+            </label>
+            <div className="flex gap-2">
+              <div className="flex items-center px-3 h-12 bg-slate-100 border border-slate-300 rounded-lg text-sm font-semibold text-slate-600 shrink-0">
+                +91
+              </div>
+              <div className="relative flex-1">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="10-digit mobile number"
+                  value={phone}
+                  disabled={stage === 'sending'}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 text-slate-900 placeholder:text-slate-400 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            id="login-phone-btn"
+            type="button"
+            onClick={handleSend}
+            disabled={stage === 'sending' || phone.length !== 10}
+            className="w-full h-12 flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-sm"
+          >
+            {stage === 'sending'
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending OTP…</>
+              : 'Send OTP'}
+          </button>
+        </>
+      )}
+
+      {/* OTP entry */}
+      {(stage === 'otp' || stage === 'verifying') && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { setStage('input'); clearRecaptchaVerifier(); setConfirmation(null); }}
+              className="p-1 text-slate-400 hover:text-slate-600"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <p className="text-sm text-slate-600">
+              OTP sent to <span className="font-semibold">+91 {phone}</span>
+            </p>
+          </div>
+
+          <OTPInput
+            onComplete={handleVerify}
+            error={otpError}
+            isLoading={stage === 'verifying'}
+            resetKey={otpResetKey}
+          />
+
+          {stage === 'verifying' && (
+            <p className="text-center text-sm text-slate-500 flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Verifying…
+            </p>
+          )}
+
+          <div className="text-center">
+            {resendTimer > 0 ? (
+              <span className="text-xs text-slate-400">Resend OTP in {resendTimer}s</span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResend}
+                className="text-xs text-teal-600 hover:underline"
+              >
+                Resend OTP
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Inner page content (uses useSearchParams — wrapped in Suspense below)
+// ---------------------------------------------------------------------------
+
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const redirectTo   = searchParams.get('redirect');
+  const [tab, setTab] = useState<'email' | 'phone'>('phone');
+
+  return (
     <div className="space-y-6">
       {/* Heading */}
       <div>
@@ -63,78 +313,37 @@ function LoginContent() {
         <p className="text-sm text-slate-500 mt-1">Login to your PrimeServe account</p>
       </div>
 
-      <form onSubmit={handleLogin} className="space-y-4">
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            Email
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="email"
-              autoComplete="email"
-              placeholder="your@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className={inputCls}
-            />
-          </div>
-        </div>
-
-        {/* Password */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-sm font-medium text-slate-700">
-              Password
-            </label>
-            <button
-              type="button"
-              onClick={() => toast('Password reset coming soon', { icon: '🔒' })}
-              className="text-xs text-teal-600 hover:underline"
-            >
-              Forgot Password?
-            </button>
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="current-password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className={`${inputCls} pr-10`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-            >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Login button */}
+      {/* Tab switcher */}
+      <div className="flex rounded-lg border border-slate-200 p-1 bg-slate-50">
         <button
-          type="submit"
-          disabled={isLoading || !email || !password}
-          className="w-full h-12 flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-sm"
+          type="button"
+          onClick={() => setTab('phone')}
+          className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+            tab === 'phone'
+              ? 'bg-white text-teal-700 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
         >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Logging in…
-            </>
-          ) : (
-            'Login'
-          )}
+          Phone OTP
         </button>
-      </form>
+        <button
+          type="button"
+          onClick={() => setTab('email')}
+          className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+            tab === 'email'
+              ? 'bg-white text-teal-700 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Email + Password
+        </button>
+      </div>
+
+      {/* Tab content */}
+      {tab === 'phone'
+        ? <PhoneOTPTab redirectTo={redirectTo} />
+        : <EmailPasswordTab redirectTo={redirectTo} />
+      }
 
       {/* Divider */}
       <div className="relative">
@@ -158,7 +367,7 @@ function LoginContent() {
 }
 
 // ---------------------------------------------------------------------------
-// Page export — wraps inner content in Suspense for useSearchParams
+// Page export
 // ---------------------------------------------------------------------------
 
 export default function LoginPage() {
