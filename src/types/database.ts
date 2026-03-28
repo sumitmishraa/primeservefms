@@ -1,12 +1,13 @@
 /**
- * Supabase database types — hand-written to match all 4 migrations exactly.
+ * Supabase database types — hand-written to match all 5 migrations exactly.
  * Re-generate by running: pnpm supabase gen types typescript --project-id <id>
  *
- * Table inventory (8 tables, 7 enums):
+ * Table inventory (10 tables, 7 enums):
  *   users, subcategories, vendor_applications   ← Migration 1
  *   products                                    ← Migration 2
  *   orders, order_items, messages               ← Migration 3
  *   vendor_directory                            ← Migration 4
+ *   clients, branches                           ← Migration 5
  */
 
 // ---------------------------------------------------------------------------
@@ -84,6 +85,8 @@ export type Database = {
           pincode: string | null;
           password_hash: string | null;
           is_active: boolean;
+          client_id: string | null;
+          branch_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -108,6 +111,8 @@ export type Database = {
           pincode?: string | null;
           password_hash?: string | null;
           is_active?: boolean;
+          client_id?: string | null;
+          branch_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -290,6 +295,8 @@ export type Database = {
           admin_notes: string | null;
           forwarded_at: string | null;
           dispatched_at: string | null;
+          client_id: string | null;
+          branch_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -314,6 +321,8 @@ export type Database = {
           admin_notes?: string | null;
           forwarded_at?: string | null;
           dispatched_at?: string | null;
+          client_id?: string | null;
+          branch_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -392,6 +401,92 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['vendor_directory']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // clients — company accounts (Blinkit, Zomato, Taj Hotels)
+      // Migration 5
+      // -----------------------------------------------------------------------
+      clients: {
+        Row: {
+          id: string;
+          name: string;
+          display_name: string;
+          industry: string | null;
+          logo_url: string | null;
+          contact_person: string | null;
+          contact_email: string | null;
+          contact_phone: string | null;
+          address: string | null;
+          city: string;
+          gst_number: string | null;
+          notes: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          display_name: string;
+          industry?: string | null;
+          logo_url?: string | null;
+          contact_person?: string | null;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          address?: string | null;
+          city?: string;
+          gst_number?: string | null;
+          notes?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['clients']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // branches — locations under a client (e.g. Blinkit Koramangala)
+      // Migration 5
+      // -----------------------------------------------------------------------
+      branches: {
+        Row: {
+          id: string;
+          client_id: string;
+          name: string;
+          branch_code: string | null;
+          address: string | null;
+          city: string;
+          area: string | null;
+          pincode: string | null;
+          contact_person: string | null;
+          contact_phone: string | null;
+          contact_email: string | null;
+          notes: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          client_id: string;
+          name: string;
+          branch_code?: string | null;
+          address?: string | null;
+          city?: string;
+          area?: string | null;
+          pincode?: string | null;
+          contact_person?: string | null;
+          contact_phone?: string | null;
+          contact_email?: string | null;
+          notes?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['branches']['Insert']>;
         Relationships: never[];
       };
 

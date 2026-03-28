@@ -22,6 +22,7 @@ import {
   Settings,
   Upload,
   BookUser,
+  Building2,
   type LucideIcon,
 } from 'lucide-react';
 import type { UserProfile } from '@/types';
@@ -47,6 +48,7 @@ const BUYER_NAV: NavItem[] = [
 
 const ADMIN_NAV: NavItem[] = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { label: 'Clients', href: '/admin/clients', icon: Building2 },
   { label: 'Product Catalog', href: '/admin/products', icon: Package },
   { label: 'Import Products', href: '/admin/products/import', icon: Upload },
   { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },

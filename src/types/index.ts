@@ -25,6 +25,7 @@ export type UnitOfMeasure = Enums<'unit_of_measure'>;
 /**
  * A registered user in Primeserve.
  * Authenticated via Firebase OTP; all profile data lives in Supabase.
+ * client_id and branch_id link buyers to their company and location (Migration 5).
  */
 export type UserProfile = Tables<'users'>;
 
@@ -73,6 +74,18 @@ export type VendorApplication = Tables<'vendor_applications'>;
  * Admin uses this to look up who to forward an order to.
  */
 export type VendorContact = Tables<'vendor_directory'>;
+
+/**
+ * A client company in the Primeserve system (e.g. Blinkit, Zomato, Taj Hotels).
+ * Admin assigns registered buyers to a client for B2B order tracking.
+ */
+export type Client = Tables<'clients'>;
+
+/**
+ * A branch/location under a client (e.g. Blinkit Koramangala, Blinkit HSR Layout).
+ * Buyers are assigned to a specific branch so orders are tracked per location.
+ */
+export type Branch = Tables<'branches'>;
 
 // ---------------------------------------------------------------------------
 // Embedded / JSONB shape interfaces
@@ -301,6 +314,32 @@ export interface BuyerDashboardStats {
   pending_orders: number;
   delivered_orders: number;
   total_spent: number;
+}
+
+/** Stats computed for a single client */
+export interface ClientStats {
+  total_branches: number;
+  total_orders: number;
+  total_revenue: number;
+  pending_amount: number;
+  last_order_date: string | null;
+}
+
+/** Client with computed stats — returned by GET /api/admin/clients */
+export interface ClientWithStats extends Client {
+  total_branches: number;
+  total_orders: number;
+  total_revenue: number;
+  pending_amount: number;
+  last_order_date: string | null;
+}
+
+/** Branch with computed stats */
+export interface BranchWithStats extends Branch {
+  total_orders: number;
+  total_revenue: number;
+  pending_amount: number;
+  last_order_date: string | null;
 }
 
 // ---------------------------------------------------------------------------

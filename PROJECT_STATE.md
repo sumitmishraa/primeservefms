@@ -10,9 +10,9 @@
 | | |
 |---|---|
 | **Active phase** | Phase 3 — Admin-Centric Product Catalogue |
-| **Last completed** | Admin Order Management — orders list + detail pages, PATCH API with status transitions (2026-03-24) |
+| **Last completed** | Client/Branch tracking, Dashboard Filters, functional marketplace — 2026-03-28 |
 | **Business model** | PrimeServe admin controls all order fulfilment. No vendor dashboard. Vendors managed offline via WhatsApp/call. |
-| **Build status** | ✅ `pnpm build` passes — 49 routes, zero TypeScript errors |
+| **Build status** | ✅ `pnpm build` passes — 45 routes (incl. all client/branch routes), zero TypeScript errors |
 | **Dev server** | `pnpm dev` → `http://localhost:3000` |
 
 ---
@@ -207,10 +207,57 @@ Goal: Admin uploads all products; buyers can browse and place orders.
 - [x] `src/app/(dashboard)/admin/orders/[id]/page.tsx` — order detail: timeline stepper, action section (changes by status), buyer info card with Call/Email buttons, order items table with GST breakdown, admin notes editor
 - [x] `src/components/ui/ConfirmDialog.tsx` — reusable modal with default and destructive variants, loading state, Escape-to-close
 
+#### Migration 5 — Clients & Branches (RUN IN SUPABASE SQL EDITOR)
+File: `supabase/migrations/20260328000001_clients_and_branches.sql`
+
+- [ ] **ACTION REQUIRED:** Run this migration in Supabase → SQL Editor before testing client features
+- Creates `clients` table (id, name, display_name, industry, contact info, city, gst_number, is_active)
+- Creates `branches` table (id, client_id FK, name, branch_code, area, address, contact info, is_active)
+- `ALTER TABLE users ADD COLUMN client_id, branch_id`
+- `ALTER TABLE orders ADD COLUMN client_id, branch_id`
+- RLS policies: admin full access; buyers view own assignment
+- `src/types/database.ts` — updated: clients + branches types; client_id/branch_id on users + orders
+- `src/types/index.ts` — added `Client`, `Branch`, `ClientStats`, `ClientWithStats`, `BranchWithStats`
+
+#### Client Management (COMPLETE — 2026-03-28)
+- [x] `GET /api/admin/clients` — list all clients with branch counts + order revenue/pending stats
+- [x] `POST /api/admin/clients` — create new client
+- [x] `GET /api/admin/clients/[id]` — full detail: branches, recent orders, aggregate stats
+- [x] `PUT /api/admin/clients/[id]` — update client
+- [x] `DELETE /api/admin/clients/[id]` — soft-delete
+- [x] `GET /api/admin/clients/[id]/branches` — branches with per-branch stats
+- [x] `POST /api/admin/clients/[id]/branches` — add branch
+- [x] `PUT /api/admin/clients/[id]/branches/[branchId]` — update branch
+- [x] `DELETE /api/admin/clients/[id]/branches/[branchId]` — soft-delete branch
+- [x] `src/app/(dashboard)/admin/clients/page.tsx` — client cards with stats, search, "Add Client"
+- [x] `src/app/(dashboard)/admin/clients/new/page.tsx` — create client form
+- [x] `src/app/(dashboard)/admin/clients/[id]/page.tsx` — client detail: branch breakdown, recent orders, stats
+- [x] `src/components/admin/AddBranchModal.tsx` — modal form to add a branch to a client
+- [x] `src/components/layout/Sidebar.tsx` — "Clients" nav item added to admin nav
+
+#### Buyer Management (COMPLETE — 2026-03-28)
+- [x] `GET /api/admin/buyers` — all buyers with client/branch names; supports `?search=`
+- [x] `PATCH /api/admin/buyers/[id]` — update buyer's client_id + branch_id assignment
+- [x] `src/app/(dashboard)/admin/buyers/page.tsx` — buyers table with assign action, unassigned count badge
+- [x] `src/components/admin/AssignClientModal.tsx` — modal to assign/reassign buyer to client + branch
+
+#### Dashboard Filters (COMPLETE — 2026-03-28)
+- [x] `GET /api/admin/dashboard` — filtered stats endpoint (replaces /api/admin/stats for dashboard)
+  - Params: client_id, branch_id, date_from, date_to, status
+  - Returns: total_products, total_orders, pending_orders, registered_buyers, revenue, orders_today, pending_orders_list, recent_activity
+- [x] `src/components/admin/DashboardFilters.tsx` — filter bar: client/branch dropdowns (fetched), date range presets (7 options + custom date pickers), status dropdown, mobile collapsible, Clear Filters button
+- [x] `src/app/(dashboard)/admin/page.tsx` — uses new dashboard route + DashboardFilters component
+
+#### Public Marketplace (COMPLETE — 2026-03-28)
+- [x] `GET /api/products` — public (no auth), paginated, filters: category, subcategory, search, stock_status
+- [x] `src/app/marketplace/page.tsx` — full listing with ProductFilters, grid, skeleton, pagination, URL-synced filters
+- [x] `src/app/marketplace/[slug]/page.tsx` — product detail: image gallery, specs, pricing tiers, "Add to Cart" (Phase 4)
+
 #### Remaining Phase 3 tasks
+- [ ] **Run Migration 5** in Supabase SQL Editor (clients + branches tables)
 - [ ] Supabase Storage bucket for product images (image upload in ProductForm)
-- [ ] Public marketplace page (`/marketplace`) with category filter and search
-- [ ] Product detail page with pricing tier table
+- [ ] Wire order creation to auto-set client_id/branch_id from buyer profile (Section 6.1 of the big request)
+- [ ] Add client/branch columns to orders list page + orders API filter params
 
 ---
 

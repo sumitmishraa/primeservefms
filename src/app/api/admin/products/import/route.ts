@@ -1,7 +1,7 @@
 /**
  * POST /api/admin/products/import
  *
- * Accepts a multipart form with a single .xlsx file and bulk-imports all
+ * Accepts a multipart form with a single .xlsx file and bulk-upserts all
  * product rows into the products table.
  *
  * Logic per sheet:
@@ -11,10 +11,11 @@
  *      section-header rows like "BROOMS & CLOTH" that appear in the catalog
  *   4. Map each product row to our DB schema (unit enum, category enum, slug)
  *   5. Look up subcategory_id from the subcategories table by slug
- *   6. Skip products whose generated slug already exists (duplicate check)
- *   7. Batch-insert all new products; capture per-row errors
+ *   6. UPSERT on slug: update if slug exists, insert if not
+ *   7. Additional columns handled: Image URL, Color, HSN Code, GST Rate, Description
  *
- * Returns: { imported, skipped, errors: [{ row, reason }] }
+ * Returns:
+ *   { imported, updated, skipped, errors: [{ row, name, reason }] }
  *
  * Admin-only — returns 403 for non-admin sessions.
  */
@@ -138,12 +139,25 @@ function isSizeVariant(value: string): boolean {
   return /\d/.test(value);
 }
 
+/**
+ * Validates a GST rate. Only 0, 5, 12, 18, and 28 are valid Indian GST slabs.
+ * Returns 0 for any invalid value.
+ *
+ * @param raw - Raw parsed number from Excel
+ * @returns Valid GST rate or 0
+ */
+function parseGstRate(raw: number): number {
+  const valid = [0, 5, 12, 18, 28];
+  return valid.includes(raw) ? raw : 0;
+}
+
 // ---------------------------------------------------------------------------
 // Row error type used in the response
 // ---------------------------------------------------------------------------
 
 interface RowError {
-  row: number;
+  row:    number;
+  name:   string;
   reason: string;
 }
 
@@ -152,8 +166,9 @@ interface RowError {
 // ---------------------------------------------------------------------------
 
 /**
- * Processes an uploaded .xlsx file and bulk-inserts products into Supabase.
- * Returns a summary of imported, skipped, and errored rows.
+ * Processes an uploaded .xlsx file and bulk-upserts products into Supabase.
+ * New products are inserted; products whose slug already exists are updated.
+ * Returns a summary of inserted, updated, and errored rows.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -202,17 +217,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       supabase.from('products').select('slug'),
     ]);
 
-    const subcats = subcatsResult.data ?? [];
+    const subcats      = subcatsResult.data ?? [];
     const existingSlugs = new Set((existingResult.data ?? []).map((p) => p.slug));
 
     // Accumulators
-    let totalImported = 0;
-    let totalSkipped = 0;
+    let totalInserted = 0;
+    let totalUpdated  = 0;
     const allErrors: RowError[] = [];
 
     // 5. Process each sheet
     for (const sheetName of workbook.SheetNames) {
-      const sheet = workbook.Sheets[sheetName];
+      const sheet   = workbook.Sheets[sheetName];
       const rawRows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1 });
 
       // Find the header row
@@ -240,11 +255,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         unit:        headerRow.findIndex((h) => typeof h === 'string' && (h.toLowerCase().includes('unit') || h.toLowerCase() === 'qty')),
         category:    headerRow.findIndex((h) => typeof h === 'string' && h.toLowerCase() === 'category'),
         subcategory: headerRow.findIndex((h) => typeof h === 'string' && h.toLowerCase().includes('sub')),
+        // Enhanced columns
+        imageUrl:    headerRow.findIndex((h) => typeof h === 'string' && (
+          h.toLowerCase().includes('image url') ||
+          h.toLowerCase() === 'image_url' ||
+          h.toLowerCase() === 'image urls'
+        )),
+        color:       headerRow.findIndex((h) => typeof h === 'string' && h.toLowerCase() === 'color'),
+        hsnCode:     headerRow.findIndex((h) => typeof h === 'string' && (
+          h.toLowerCase() === 'hsn code' || h.toLowerCase() === 'hsn_code'
+        )),
+        gstRate:     headerRow.findIndex((h) => typeof h === 'string' && (
+          h.toLowerCase() === 'gst rate' || h.toLowerCase() === 'gst_rate'
+        )),
+        description: headerRow.findIndex((h) => typeof h === 'string' && h.toLowerCase() === 'description'),
       };
 
       const dataRows = rawRows.slice(headerRowIndex + 1);
 
-      // Count product rows (numeric SL.No) for logging
       const productRowCount = dataRows.filter((row) => {
         const slValue = Array.isArray(row) ? row[colIdx.slNo === -1 ? 0 : colIdx.slNo] : undefined;
         return typeof slValue === 'number' && isFinite(slValue);
@@ -252,48 +280,52 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       console.log('[IMPORT] Processing sheet:', sheetName, '— found', productRowCount, 'product rows');
 
-      // Rows to insert for this sheet
+      // Rows to insert/update for this sheet
       const toInsert: Array<{
-        uploaded_by: string;
-        name: string;
-        slug: string;
-        category: Enums<'product_category'>;
-        subcategory_id: string | null;
+        uploaded_by:      string;
+        name:             string;
+        slug:             string;
+        category:         Enums<'product_category'>;
+        subcategory_id:   string | null;
         subcategory_slug: string | null;
-        brand: string | null;
-        size_variant: string | null;
-        unit_of_measure: Enums<'unit_of_measure'>;
-        base_price: number;
-        moq: number;
-        stock_status: Enums<'stock_status'>;
-        is_approved: boolean;
-        is_active: boolean;
+        brand:            string | null;
+        size_variant:     string | null;
+        unit_of_measure:  Enums<'unit_of_measure'>;
+        base_price:       number;
+        moq:              number;
+        stock_status:     Enums<'stock_status'>;
+        is_approved:      boolean;
+        is_active:        boolean;
+        thumbnail_url:    string | null;
+        images:           string[];
+        specifications:   Record<string, string>;
+        hsn_code:         string | null;
+        gst_rate:         number;
+        description:      string | null;
       }> = [];
 
-      let sheetSkipped = 0;
-      let sheetImported = 0;
+      const toUpdate: Array<typeof toInsert[number]> = [];
+
+      // Track slugs processed in this batch to avoid within-file duplicates
+      const batchSlugs = new Set<string>();
 
       dataRows.forEach((rawRow, index) => {
-        const row = rawRow as unknown[];
-        const absoluteRow = headerRowIndex + 2 + index; // 1-based row number in Excel
+        const row          = rawRow as unknown[];
+        const absoluteRow  = headerRowIndex + 2 + index; // 1-based Excel row number
 
-        // Guard: row must be an array
         if (!Array.isArray(row)) return;
 
-        // Get SL.No from column A (index 0) or from the detected column
         const slNoCol = colIdx.slNo === -1 ? 0 : colIdx.slNo;
         const slValue = row[slNoCol];
 
-        // Skip section-header rows — they have non-numeric SL.No
-        if (typeof slValue !== 'number' || !isFinite(slValue)) {
-          return; // silently skip section headers
-        }
+        // Skip section-header rows — non-numeric SL.No
+        if (typeof slValue !== 'number' || !isFinite(slValue)) return;
 
         // Extract name
         const nameRaw = colIdx.name !== -1 ? row[colIdx.name] : undefined;
-        const name = typeof nameRaw === 'string' ? nameRaw.trim() : '';
+        const name    = typeof nameRaw === 'string' ? nameRaw.trim() : '';
         if (!name) {
-          allErrors.push({ row: absoluteRow, reason: 'Empty product name' });
+          allErrors.push({ row: absoluteRow, name: '', reason: 'Empty product name' });
           return;
         }
 
@@ -319,7 +351,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         const category = mapCategory(categoryRaw);
         if (!category) {
           allErrors.push({
-            row: absoluteRow,
+            row:    absoluteRow,
+            name,
             reason: `Unrecognised category: "${categoryRaw}"`,
           });
           return;
@@ -331,63 +364,148 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             ? String(row[colIdx.subcategory]).trim()
             : '';
         const subcategorySlug = subcategoryRaw ? subcategoryToSlug(subcategoryRaw) : null;
-        const matchedSubcat = subcategorySlug
+        const matchedSubcat   = subcategorySlug
           ? subcats.find((s) => s.slug === subcategorySlug)
           : null;
-        const subcategoryId = matchedSubcat?.id ?? null;
+        const subcategoryId   = matchedSubcat?.id ?? null;
 
-        // Slug — skip if already exists (duplicate)
+        // Image URL (enhanced)
+        const imageUrlRaw =
+          colIdx.imageUrl !== -1 && row[colIdx.imageUrl] != null
+            ? String(row[colIdx.imageUrl]).trim()
+            : '';
+        const thumbnailUrl = imageUrlRaw || null;
+        const images: string[] = imageUrlRaw ? [imageUrlRaw] : [];
+
+        // Color → specifications (enhanced)
+        const colorRaw =
+          colIdx.color !== -1 && row[colIdx.color] != null
+            ? String(row[colIdx.color]).trim()
+            : '';
+        const specifications: Record<string, string> = colorRaw ? { color: colorRaw } : {};
+
+        // HSN Code (enhanced)
+        const hsnRaw =
+          colIdx.hsnCode !== -1 && row[colIdx.hsnCode] != null
+            ? String(row[colIdx.hsnCode]).trim()
+            : '';
+        const hsnCode = hsnRaw || null;
+
+        // GST Rate (enhanced) — validate against Indian GST slabs
+        const gstRaw =
+          colIdx.gstRate !== -1 && row[colIdx.gstRate] != null
+            ? parseFloat(String(row[colIdx.gstRate]))
+            : 0;
+        const gstRate = parseGstRate(isNaN(gstRaw) ? 0 : gstRaw);
+
+        // Description (enhanced)
+        const descriptionRaw =
+          colIdx.description !== -1 && row[colIdx.description] != null
+            ? String(row[colIdx.description]).trim()
+            : '';
+        const description = descriptionRaw || null;
+
+        // Slug — generate from name
         const slug = nameToSlug(name);
-        if (existingSlugs.has(slug)) {
-          sheetSkipped++;
-          return;
-        }
-        // Reserve slug so we don't insert duplicates within the same batch
-        existingSlugs.add(slug);
 
-        toInsert.push({
-          uploaded_by:    user.id,
+        // Skip within-batch duplicates
+        if (batchSlugs.has(slug)) return;
+        batchSlugs.add(slug);
+
+        const record = {
+          uploaded_by:      user.id,
           name,
           slug,
           category,
           subcategory_id:   subcategoryId,
           subcategory_slug: subcategorySlug,
           brand,
-          size_variant:   sizeVariant,
-          unit_of_measure: unitOfMeasure,
-          base_price:     0,     // admin sets prices later
-          moq:            1,
-          stock_status:   'in_stock',
-          is_approved:    true,
-          is_active:      true,
-        });
-        sheetImported++;
+          size_variant:     sizeVariant,
+          unit_of_measure:  unitOfMeasure,
+          base_price:       0,         // admin sets prices after import
+          moq:              1,
+          stock_status:     'in_stock' as Enums<'stock_status'>,
+          is_approved:      true,
+          is_active:        true,
+          thumbnail_url:    thumbnailUrl,
+          images,
+          specifications,
+          hsn_code:         hsnCode,
+          gst_rate:         gstRate,
+          description,
+        };
+
+        // Route to insert or update list based on whether slug already exists
+        if (existingSlugs.has(slug)) {
+          toUpdate.push(record);
+        } else {
+          existingSlugs.add(slug); // reserve for dedup across sheets
+          toInsert.push(record);
+        }
       });
 
-      // Batch insert for this sheet (chunked at 500 rows to stay within limits)
+      // -----------------------------------------------------------------------
+      // Batch INSERT new products (chunked at 500 rows)
+      // -----------------------------------------------------------------------
       const CHUNK = 500;
+      let sheetInserted = 0;
+
       for (let i = 0; i < toInsert.length; i += CHUNK) {
         const chunk = toInsert.slice(i, i + CHUNK);
         const { error: insertError } = await supabase.from('products').insert(chunk);
         if (insertError) {
           console.error('[IMPORT] Batch insert error on sheet:', sheetName, insertError.message);
-          // Mark all rows in this chunk as errored
           chunk.forEach((p) => {
-            allErrors.push({ row: 0, reason: `DB insert failed for "${p.name}": ${insertError.message}` });
+            allErrors.push({
+              row:    0,
+              name:   p.name,
+              reason: `DB insert failed: ${insertError.message}`,
+            });
           });
-          sheetImported -= chunk.length;
+        } else {
+          sheetInserted += chunk.length;
         }
       }
 
-      console.log('[IMPORT] Sheet', sheetName, '→ imported:', sheetImported, 'skipped:', sheetSkipped);
-      totalImported += sheetImported;
-      totalSkipped  += sheetSkipped;
+      // -----------------------------------------------------------------------
+      // Batch UPDATE existing products (one upsert call per chunk)
+      // We use upsert with onConflict:'slug' so existing rows are updated.
+      // -----------------------------------------------------------------------
+      let sheetUpdated = 0;
+
+      for (let i = 0; i < toUpdate.length; i += CHUNK) {
+        const chunk = toUpdate.slice(i, i + CHUNK);
+        const { error: upsertError } = await supabase
+          .from('products')
+          .upsert(chunk, { onConflict: 'slug', ignoreDuplicates: false });
+        if (upsertError) {
+          console.error('[IMPORT] Batch upsert error on sheet:', sheetName, upsertError.message);
+          chunk.forEach((p) => {
+            allErrors.push({
+              row:    0,
+              name:   p.name,
+              reason: `DB update failed: ${upsertError.message}`,
+            });
+          });
+        } else {
+          sheetUpdated += chunk.length;
+        }
+      }
+
+      console.log(
+        '[IMPORT] Sheet', sheetName,
+        '→ inserted:', sheetInserted,
+        'updated:',  sheetUpdated,
+      );
+      totalInserted += sheetInserted;
+      totalUpdated  += sheetUpdated;
     }
 
     return NextResponse.json({
       data: {
-        imported: totalImported,
-        skipped:  totalSkipped,
+        imported: totalInserted,
+        updated:  totalUpdated,
+        skipped:  0,          // skipping is no longer done — we upsert instead
         errors:   allErrors,
       },
       error: null,
