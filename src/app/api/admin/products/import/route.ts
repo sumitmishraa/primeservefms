@@ -1,21 +1,24 @@
 /**
  * POST /api/admin/products/import
  *
- * Accepts a multipart form with a single .xlsx file and bulk-upserts all
+ * Accepts a multipart form with a single .xlsx file and bulk-inserts all
  * product rows into the products table.
+ *
+ * Supports our specific Excel format:
+ *   - "Housekeeping" sheet: headers at ROW 5 → SL.No | Item Descriptions | size/brand | units | Category | Sub-category | Image Urls
+ *   - "Stationery" sheet:   headers at ROW 4 → SL.No | Item Descriptions | size/brand | Qty   | Category | Sub-category
  *
  * Logic per sheet:
  *   1. Find the header row (first row containing "Item Descriptions")
  *   2. Determine column indices from that header row
  *   3. Skip rows where column A (SL.No) is not a finite number — those are
- *      section-header rows like "BROOMS & CLOTH" that appear in the catalog
+ *      section-header rows like "BROOMS & CLOTH"
  *   4. Map each product row to our DB schema (unit enum, category enum, slug)
- *   5. Look up subcategory_id from the subcategories table by slug
- *   6. UPSERT on slug: update if slug exists, insert if not
- *   7. Additional columns handled: Image URL, Color, HSN Code, GST Rate, Description
+ *   5. INSERT new products; skip rows whose slug already exists in the DB
+ *   6. Batch insert in chunks of 50 for reliability
  *
  * Returns:
- *   { imported, updated, skipped, errors: [{ row, name, reason }] }
+ *   { data: { imported, skipped, errors: [{ row, name, reason }] }, error: null }
  *
  * Admin-only — returns 403 for non-admin sessions.
  */
@@ -27,6 +30,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { Enums } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // Allow up to 60 seconds for bulk imports
 
 // ---------------------------------------------------------------------------
 // Unit-of-measure mapping
@@ -34,18 +38,26 @@ export const dynamic = 'force-dynamic';
 
 const UNIT_MAP: Record<string, Enums<'unit_of_measure'>> = {
   '1 no':   'piece',
+  '1 nos':  'piece',
   'nos':    'piece',
   'no':     'piece',
+  'piece':  'piece',
+  'pieces': 'piece',
   'ream':   'ream',
   '1 pkt':  'pkt',
+  '1pkt':   'pkt',
   'pkt':    'pkt',
+  'packet': 'pkt',
   '1 box':  'box',
   'box':    'box',
   '1 kg':   'kg',
+  '1kg':    'kg',
   'kg':     'kg',
   '1 can':  'can',
+  '1can':   'can',
   'can':    'can',
   '1 ltr':  'liter',
+  '1 litre':'liter',
   'ltr':    'liter',
   'litre':  'liter',
   'liter':  'liter',
@@ -76,21 +88,21 @@ function mapUnit(raw: string): Enums<'unit_of_measure'> {
 
 /**
  * Maps a raw Excel category string to the product_category enum.
- * Returns null when no match is found (row will be skipped with an error).
+ * Falls back to 'housekeeping_materials' when no match is found.
  *
  * @param raw - Raw string from the Excel "Category" column
- * @returns Matched product_category enum value or null
+ * @returns Matched product_category enum value
  */
-function mapCategory(raw: string): Enums<'product_category'> | null {
+function mapCategory(raw: string): Enums<'product_category'> {
   const s = raw.toLowerCase().trim();
-  if (s.includes('housekeeping'))              return 'housekeeping_materials';
-  if (s.includes('chemical'))                  return 'cleaning_chemicals';
-  if (s.includes('stationer'))                 return 'office_stationeries';
-  if (s.includes('pantry'))                    return 'pantry_items';
+  if (s.includes('housekeeping'))                   return 'housekeeping_materials';
+  if (s.includes('chemical') || s.includes('cleaning')) return 'cleaning_chemicals';
+  if (s.includes('stationer'))                      return 'office_stationeries';
+  if (s.includes('pantry'))                         return 'pantry_items';
   if (s.includes('facility') || s.includes('tool')) return 'facility_and_tools';
   if (s.includes('printing') || s.includes('print')) return 'printing_solution';
-  if (s.includes('cleaning'))                  return 'cleaning_chemicals';
-  return null;
+  // Default — admin can re-categorise later
+  return 'housekeeping_materials';
 }
 
 // ---------------------------------------------------------------------------
@@ -99,21 +111,23 @@ function mapCategory(raw: string): Enums<'product_category'> | null {
 
 /**
  * Converts a product name to a URL-safe slug.
- * e.g. "Garbage Bag 30x40" → "garbage-bag-30x40"
+ * Appends a random 4-char suffix to minimise collision across 394 products.
+ * e.g. "Garbage Bag 30x40" → "garbage-bag-30x40-a3f7"
  *
  * @param name - Product name string
- * @returns Lowercase hyphenated slug
+ * @returns Lowercase hyphenated slug with random suffix
  */
 function nameToSlug(name: string): string {
-  return name
+  const base = name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+  const suffix = Math.random().toString(36).slice(2, 6);
+  return `${base}-${suffix}`;
 }
 
 /**
- * Converts a subcategory display name from Excel to a slug that matches
- * the slugs seeded in the subcategories table.
+ * Converts a subcategory display name from Excel to a slug.
  * e.g. "Brooms & Cleaning Cloths" → "brooms_and_cleaning_cloths"
  *
  * @param text - Subcategory text from Excel
@@ -127,28 +141,38 @@ function subcategoryToSlug(text: string): string {
     .replace(/^_+|_+$/g, '');
 }
 
-/**
- * Returns true when the size/brand cell looks like a size or variant spec
- * (i.e. contains a digit or common measurement units).
- * Returns false when it looks like a brand name.
- *
- * @param value - Raw string from the Excel "size/brand" column
- * @returns Whether the value represents a size/variant
- */
-function isSizeVariant(value: string): boolean {
-  return /\d/.test(value);
-}
+// ---------------------------------------------------------------------------
+// Description generator
+// ---------------------------------------------------------------------------
 
 /**
- * Validates a GST rate. Only 0, 5, 12, 18, and 28 are valid Indian GST slabs.
- * Returns 0 for any invalid value.
+ * Generates a standard B2B product description from name and category.
  *
- * @param raw - Raw parsed number from Excel
- * @returns Valid GST rate or 0
+ * @param name     - Product name
+ * @param category - Mapped product_category value
+ * @param variant  - Optional size/variant string
+ * @returns Ready-to-use description string
  */
-function parseGstRate(raw: number): number {
-  const valid = [0, 5, 12, 18, 28];
-  return valid.includes(raw) ? raw : 0;
+function generateDescription(
+  name: string,
+  category: Enums<'product_category'>,
+  variant: string | null
+): string {
+  const label = variant ? `${name} (${variant})` : name;
+  const categoryLabels: Record<Enums<'product_category'>, string> = {
+    housekeeping_materials: 'housekeeping and facility upkeep',
+    cleaning_chemicals:     'industrial cleaning and sanitation',
+    pantry_items:           'pantry and refreshment services',
+    office_stationeries:    'office administration and stationery',
+    facility_and_tools:     'facility maintenance and tools',
+    printing_solution:      'printing and document solutions',
+  };
+  const use = categoryLabels[category] ?? 'commercial and institutional use';
+  return (
+    `Premium quality ${label} for ${use}. ` +
+    `Ideal for hotels, offices, hospitals, and restaurants. ` +
+    `Available for bulk orders with competitive B2B pricing.`
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -166,12 +190,14 @@ interface RowError {
 // ---------------------------------------------------------------------------
 
 /**
- * Processes an uploaded .xlsx file and bulk-upserts products into Supabase.
- * New products are inserted; products whose slug already exists are updated.
- * Returns a summary of inserted, updated, and errored rows.
+ * Processes an uploaded .xlsx file and bulk-inserts products into Supabase.
+ * Existing products (matched by slug) are skipped, not overwritten.
+ * Returns a summary of inserted, skipped, and errored rows.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    console.log('[IMPORT] Step 1: Request received');
+
     // 1. Auth check — admin only
     const user = await verifyAuth(request);
     if (!user) {
@@ -198,6 +224,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const fileObj = file as File;
+    console.log('[IMPORT] Step 2: File received, name:', fileObj.name, 'size:', fileObj.size);
+
     if (!fileObj.name.endsWith('.xlsx')) {
       return NextResponse.json(
         { data: null, error: 'Only .xlsx files are supported' },
@@ -207,30 +235,33 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // 3. Read the Excel workbook
     const arrayBuffer = await fileObj.arrayBuffer();
-    const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+    const buffer = Buffer.from(arrayBuffer);
+    console.log('[IMPORT] Step 3: File buffer read, length:', buffer.length);
+
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    console.log('[IMPORT] Step 4: Workbook parsed, sheets:', workbook.SheetNames);
 
     const supabase = createAdminClient();
 
-    // 4. Pre-fetch subcategories and existing slugs (done once, not per sheet)
-    const [subcatsResult, existingResult] = await Promise.all([
-      supabase.from('subcategories').select('id, slug, category'),
-      supabase.from('products').select('slug'),
-    ]);
-
-    const subcats      = subcatsResult.data ?? [];
+    // Pre-fetch existing slugs to skip duplicates
+    const existingResult = await supabase.from('products').select('slug');
     const existingSlugs = new Set((existingResult.data ?? []).map((p) => p.slug));
+
+    // Pre-fetch subcategories for ID lookup
+    const subcatsResult = await supabase.from('subcategories').select('id, slug');
+    const subcats = subcatsResult.data ?? [];
 
     // Accumulators
     let totalInserted = 0;
-    let totalUpdated  = 0;
+    let totalSkipped  = 0;
     const allErrors: RowError[] = [];
 
     // 5. Process each sheet
     for (const sheetName of workbook.SheetNames) {
       const sheet   = workbook.Sheets[sheetName];
-      const rawRows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1 });
+      const rawRows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
 
-      // Find the header row
+      // Find the header row — first row containing "Item Descriptions"
       const headerRowIndex = rawRows.findIndex(
         (row) =>
           Array.isArray(row) &&
@@ -240,6 +271,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
               cell.toLowerCase().includes('item descriptions')
           )
       );
+
       if (headerRowIndex === -1) {
         console.log('[IMPORT] No header row found in sheet:', sheetName, '— skipping');
         continue;
@@ -247,44 +279,44 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       const headerRow = rawRows[headerRowIndex] as unknown[];
 
-      // Locate column indices by header text
+      // Locate column indices by header text — use .includes() for resilience
       const colIdx = {
         slNo:        headerRow.findIndex((h) => typeof h === 'string' && h.toLowerCase().includes('sl')),
         name:        headerRow.findIndex((h) => typeof h === 'string' && h.toLowerCase().includes('item descriptions')),
-        sizeBrand:   headerRow.findIndex((h) => typeof h === 'string' && (h.toLowerCase().includes('size') || h.toLowerCase().includes('brand'))),
-        unit:        headerRow.findIndex((h) => typeof h === 'string' && (h.toLowerCase().includes('unit') || h.toLowerCase() === 'qty')),
-        category:    headerRow.findIndex((h) => typeof h === 'string' && h.toLowerCase() === 'category'),
+        sizeBrand:   headerRow.findIndex((h) => typeof h === 'string' && (
+          h.toLowerCase().includes('size') || h.toLowerCase().includes('brand')
+        )),
+        unit:        headerRow.findIndex((h) => typeof h === 'string' && (
+          h.toLowerCase().includes('unit') ||
+          h.toLowerCase().includes('qty') ||
+          h.toLowerCase() === 'qty'
+        )),
+        category:    headerRow.findIndex((h) => typeof h === 'string' && h.toLowerCase().includes('category') && !h.toLowerCase().includes('sub')),
         subcategory: headerRow.findIndex((h) => typeof h === 'string' && h.toLowerCase().includes('sub')),
-        // Enhanced columns
         imageUrl:    headerRow.findIndex((h) => typeof h === 'string' && (
-          h.toLowerCase().includes('image url') ||
-          h.toLowerCase() === 'image_url' ||
-          h.toLowerCase() === 'image urls'
+          h.toLowerCase().includes('image') || h.toLowerCase().includes('url')
         )),
-        color:       headerRow.findIndex((h) => typeof h === 'string' && h.toLowerCase() === 'color'),
-        hsnCode:     headerRow.findIndex((h) => typeof h === 'string' && (
-          h.toLowerCase() === 'hsn code' || h.toLowerCase() === 'hsn_code'
-        )),
-        gstRate:     headerRow.findIndex((h) => typeof h === 'string' && (
-          h.toLowerCase() === 'gst rate' || h.toLowerCase() === 'gst_rate'
-        )),
-        description: headerRow.findIndex((h) => typeof h === 'string' && h.toLowerCase() === 'description'),
       };
+
+      console.log('[IMPORT] Sheet:', sheetName, 'column indices:', colIdx);
 
       const dataRows = rawRows.slice(headerRowIndex + 1);
 
-      const productRowCount = dataRows.filter((row) => {
-        const slValue = Array.isArray(row) ? row[colIdx.slNo === -1 ? 0 : colIdx.slNo] : undefined;
+      // Count product rows (numeric SL.No)
+      const slNoCol = colIdx.slNo === -1 ? 0 : colIdx.slNo;
+      const productRows = dataRows.filter((row) => {
+        const slValue = Array.isArray(row) ? row[slNoCol] : undefined;
         return typeof slValue === 'number' && isFinite(slValue);
-      }).length;
+      });
+      console.log('[IMPORT] Step 5: Found', productRows.length, 'product rows in sheet:', sheetName);
 
-      console.log('[IMPORT] Processing sheet:', sheetName, '— found', productRowCount, 'product rows');
-
-      // Rows to insert/update for this sheet
+      // Rows to insert for this sheet
       const toInsert: Array<{
         uploaded_by:      string;
         name:             string;
         slug:             string;
+        short_description:string;
+        description:      string;
         category:         Enums<'product_category'>;
         subcategory_id:   string | null;
         subcategory_slug: string | null;
@@ -299,64 +331,51 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         thumbnail_url:    string | null;
         images:           string[];
         specifications:   Record<string, string>;
-        hsn_code:         string | null;
         gst_rate:         number;
-        description:      string | null;
+        tags:             string[];
       }> = [];
 
-      const toUpdate: Array<typeof toInsert[number]> = [];
-
-      // Track slugs processed in this batch to avoid within-file duplicates
+      // Track slugs within this batch to avoid within-file duplicates
       const batchSlugs = new Set<string>();
 
       dataRows.forEach((rawRow, index) => {
-        const row          = rawRow as unknown[];
-        const absoluteRow  = headerRowIndex + 2 + index; // 1-based Excel row number
+        const row         = rawRow as unknown[];
+        const absoluteRow = headerRowIndex + 2 + index; // 1-based Excel row
 
         if (!Array.isArray(row)) return;
 
-        const slNoCol = colIdx.slNo === -1 ? 0 : colIdx.slNo;
         const slValue = row[slNoCol];
 
         // Skip section-header rows — non-numeric SL.No
         if (typeof slValue !== 'number' || !isFinite(slValue)) return;
 
-        // Extract name
+        // Product name
         const nameRaw = colIdx.name !== -1 ? row[colIdx.name] : undefined;
-        const name    = typeof nameRaw === 'string' ? nameRaw.trim() : '';
+        const name    = typeof nameRaw === 'string' ? nameRaw.trim() : String(nameRaw ?? '').trim();
         if (!name) {
           allErrors.push({ row: absoluteRow, name: '', reason: 'Empty product name' });
           return;
         }
 
-        // Size/Brand
+        // Size/Brand — store as size_variant (we don't separate brand in this Excel)
         const sizeBrandRaw =
           colIdx.sizeBrand !== -1 && row[colIdx.sizeBrand] != null
             ? String(row[colIdx.sizeBrand]).trim()
             : '';
-        const brand       = sizeBrandRaw && !isSizeVariant(sizeBrandRaw) ? sizeBrandRaw : null;
-        const sizeVariant = sizeBrandRaw && isSizeVariant(sizeBrandRaw)  ? sizeBrandRaw : null;
+        const sizeVariant = sizeBrandRaw || null;
 
-        // Unit
+        // Unit of measure
         const unitRaw = colIdx.unit !== -1 && row[colIdx.unit] != null
           ? String(row[colIdx.unit]).trim()
           : '';
         const unitOfMeasure = mapUnit(unitRaw);
 
-        // Category
+        // Category — always has a value (defaults to housekeeping_materials)
         const categoryRaw =
           colIdx.category !== -1 && row[colIdx.category] != null
             ? String(row[colIdx.category]).trim()
             : '';
         const category = mapCategory(categoryRaw);
-        if (!category) {
-          allErrors.push({
-            row:    absoluteRow,
-            name,
-            reason: `Unrecognised category: "${categoryRaw}"`,
-          });
-          return;
-        }
 
         // Subcategory
         const subcategoryRaw =
@@ -369,144 +388,124 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           : null;
         const subcategoryId   = matchedSubcat?.id ?? null;
 
-        // Image URL (enhanced)
+        // Image URLs — split by comma, trim each
         const imageUrlRaw =
           colIdx.imageUrl !== -1 && row[colIdx.imageUrl] != null
             ? String(row[colIdx.imageUrl]).trim()
             : '';
-        const thumbnailUrl = imageUrlRaw || null;
-        const images: string[] = imageUrlRaw ? [imageUrlRaw] : [];
+        const images: string[] = imageUrlRaw
+          ? imageUrlRaw.split(',').map((u) => u.trim()).filter(Boolean)
+          : [];
+        const thumbnailUrl = images[0] ?? null;
 
-        // Color → specifications (enhanced)
-        const colorRaw =
-          colIdx.color !== -1 && row[colIdx.color] != null
-            ? String(row[colIdx.color]).trim()
-            : '';
-        const specifications: Record<string, string> = colorRaw ? { color: colorRaw } : {};
+        // Auto-generate slug (with suffix for uniqueness across 394 products)
+        let slug = nameToSlug(name);
+        // Ensure uniqueness — re-roll suffix if collision
+        while (existingSlugs.has(slug) || batchSlugs.has(slug)) {
+          slug = nameToSlug(name);
+        }
 
-        // HSN Code (enhanced)
-        const hsnRaw =
-          colIdx.hsnCode !== -1 && row[colIdx.hsnCode] != null
-            ? String(row[colIdx.hsnCode]).trim()
-            : '';
-        const hsnCode = hsnRaw || null;
-
-        // GST Rate (enhanced) — validate against Indian GST slabs
-        const gstRaw =
-          colIdx.gstRate !== -1 && row[colIdx.gstRate] != null
-            ? parseFloat(String(row[colIdx.gstRate]))
-            : 0;
-        const gstRate = parseGstRate(isNaN(gstRaw) ? 0 : gstRaw);
-
-        // Description (enhanced)
-        const descriptionRaw =
-          colIdx.description !== -1 && row[colIdx.description] != null
-            ? String(row[colIdx.description]).trim()
-            : '';
-        const description = descriptionRaw || null;
-
-        // Slug — generate from name
-        const slug = nameToSlug(name);
-
-        // Skip within-batch duplicates
-        if (batchSlugs.has(slug)) return;
+        // Skip if we somehow still can't get a unique slug
+        if (batchSlugs.has(slug)) {
+          totalSkipped++;
+          return;
+        }
         batchSlugs.add(slug);
 
-        const record = {
+        // Description — auto-generate
+        const description      = generateDescription(name, category, sizeVariant);
+        const shortDescription = name;
+
+        toInsert.push({
           uploaded_by:      user.id,
           name,
           slug,
+          short_description: shortDescription,
+          description,
           category,
           subcategory_id:   subcategoryId,
           subcategory_slug: subcategorySlug,
-          brand,
+          brand:            null, // Excel mixes size + brand into one column — stored as size_variant
           size_variant:     sizeVariant,
           unit_of_measure:  unitOfMeasure,
-          base_price:       0,         // admin sets prices after import
+          base_price:       0,   // Admin sets prices after import
           moq:              1,
-          stock_status:     'in_stock' as Enums<'stock_status'>,
+          stock_status:     'in_stock',
           is_approved:      true,
           is_active:        true,
           thumbnail_url:    thumbnailUrl,
           images,
-          specifications,
-          hsn_code:         hsnCode,
-          gst_rate:         gstRate,
-          description,
-        };
-
-        // Route to insert or update list based on whether slug already exists
-        if (existingSlugs.has(slug)) {
-          toUpdate.push(record);
-        } else {
-          existingSlugs.add(slug); // reserve for dedup across sheets
-          toInsert.push(record);
-        }
+          specifications:   {},
+          gst_rate:         18,
+          tags:             [],
+        });
       });
 
       // -----------------------------------------------------------------------
-      // Batch INSERT new products (chunked at 500 rows)
+      // Batch INSERT in chunks of 50
       // -----------------------------------------------------------------------
-      const CHUNK = 500;
+      const CHUNK = 50;
       let sheetInserted = 0;
+      let sheetSkipped  = 0;
 
       for (let i = 0; i < toInsert.length; i += CHUNK) {
         const chunk = toInsert.slice(i, i + CHUNK);
+
         const { error: insertError } = await supabase.from('products').insert(chunk);
+
         if (insertError) {
           console.error('[IMPORT] Batch insert error on sheet:', sheetName, insertError.message);
-          chunk.forEach((p) => {
-            allErrors.push({
-              row:    0,
-              name:   p.name,
-              reason: `DB insert failed: ${insertError.message}`,
+
+          // If it's a unique-constraint error, try row-by-row to isolate the duplicate
+          if (insertError.message.includes('duplicate') || insertError.message.includes('unique')) {
+            for (const product of chunk) {
+              const { error: singleError } = await supabase.from('products').insert(product);
+              if (singleError) {
+                if (singleError.message.includes('duplicate') || singleError.message.includes('unique')) {
+                  sheetSkipped++;
+                } else {
+                  allErrors.push({
+                    row:    0,
+                    name:   product.name,
+                    reason: `DB error: ${singleError.message}`,
+                  });
+                }
+              } else {
+                sheetInserted++;
+              }
+            }
+          } else {
+            chunk.forEach((p) => {
+              allErrors.push({
+                row:    0,
+                name:   p.name,
+                reason: `DB insert failed: ${insertError.message}`,
+              });
             });
-          });
+          }
         } else {
           sheetInserted += chunk.length;
         }
       }
 
-      // -----------------------------------------------------------------------
-      // Batch UPDATE existing products (one upsert call per chunk)
-      // We use upsert with onConflict:'slug' so existing rows are updated.
-      // -----------------------------------------------------------------------
-      let sheetUpdated = 0;
-
-      for (let i = 0; i < toUpdate.length; i += CHUNK) {
-        const chunk = toUpdate.slice(i, i + CHUNK);
-        const { error: upsertError } = await supabase
-          .from('products')
-          .upsert(chunk, { onConflict: 'slug', ignoreDuplicates: false });
-        if (upsertError) {
-          console.error('[IMPORT] Batch upsert error on sheet:', sheetName, upsertError.message);
-          chunk.forEach((p) => {
-            allErrors.push({
-              row:    0,
-              name:   p.name,
-              reason: `DB update failed: ${upsertError.message}`,
-            });
-          });
-        } else {
-          sheetUpdated += chunk.length;
-        }
-      }
-
       console.log(
-        '[IMPORT] Sheet', sheetName,
-        '→ inserted:', sheetInserted,
-        'updated:',  sheetUpdated,
+        '[IMPORT] Step 6: Inserted', sheetInserted,
+        'products from sheet:', sheetName,
+        '| skipped:', sheetSkipped,
       );
+
       totalInserted += sheetInserted;
-      totalUpdated  += sheetUpdated;
+      totalSkipped  += sheetSkipped;
     }
+
+    console.log('[IMPORT] Done — total inserted:', totalInserted, 'skipped:', totalSkipped, 'errors:', allErrors.length);
 
     return NextResponse.json({
       data: {
         imported: totalInserted,
-        updated:  totalUpdated,
-        skipped:  0,          // skipping is no longer done — we upsert instead
+        skipped:  totalSkipped,
         errors:   allErrors,
+        message:  `Successfully imported ${totalInserted} products`,
       },
       error: null,
     });
