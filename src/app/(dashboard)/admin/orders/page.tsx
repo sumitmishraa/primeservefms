@@ -24,6 +24,7 @@ import {
   ShoppingCart,
   Calendar,
   Eye,
+  Download,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatINR, formatDate } from '@/lib/utils/formatting';
@@ -212,6 +213,14 @@ export default function AdminOrdersPage() {
           >
             <RefreshCw className="h-4 w-4" />
             Refresh
+          </button>
+          <button
+            type="button"
+            onClick={() => toast('Export coming soon! CSV download will be available in the next update.', { icon: '📥' })}
+            className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
           </button>
         </div>
 

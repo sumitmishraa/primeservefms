@@ -9,10 +9,11 @@
 
 | | |
 |---|---|
-| **Active phase** | Phase 3 — Admin-Centric Product Catalogue |
-| **Last completed** | Client/Branch tracking, Dashboard Filters, functional marketplace — 2026-03-28 |
+| **Active phase** | Phase 3 — Admin-Centric Product Catalogue (COMPLETE) |
+| **Last completed** | Analytics, Dashboard Filters, Marketplace price-filter, Buyer Activity, Low Stock Alerts, Export Buttons — 2026-04-08 |
 | **Business model** | PrimeServe admin controls all order fulfilment. No vendor dashboard. Vendors managed offline via WhatsApp/call. |
-| **Build status** | ✅ `pnpm build` passes — 45 routes (incl. all client/branch routes), zero TypeScript errors |
+| **Build status** | ✅ `pnpm build` passes — 45 routes, zero TypeScript errors |
+| **Next phase** | Phase 4 — Buyer Cart & Checkout |
 | **Dev server** | `pnpm dev` → `http://localhost:3000` |
 
 ---
@@ -252,6 +253,25 @@ File: `supabase/migrations/20260328000001_clients_and_branches.sql`
 - [x] `GET /api/products` — public (no auth), paginated, filters: category, subcategory, search, stock_status
 - [x] `src/app/marketplace/page.tsx` — full listing with ProductFilters, grid, skeleton, pagination, URL-synced filters
 - [x] `src/app/marketplace/[slug]/page.tsx` — product detail: image gallery, specs, pricing tiers, "Add to Cart" (Phase 4)
+
+#### Analytics Dashboard (COMPLETE — 2026-04-08)
+- [x] `GET /api/admin/analytics` — full analytics: overview (revenue, orders, avg order, active buyers, products, pending payments), orders_by_status, top_products (top 10), top_clients (top 10), top_buyers (top 10), monthly_orders (last 6 months), category_breakdown
+- [x] `src/app/(dashboard)/admin/analytics/page.tsx` — full dashboard: date range filter bar, stat cards, orders-by-status horizontal bar chart (Tailwind), monthly trend bar chart (Tailwind), top products table, category breakdown cards with progress bars, top clients + top buyers tables. Empty state when no orders yet.
+
+#### Marketplace Price Filter (COMPLETE — 2026-04-08)
+- [x] `GET /api/products` — now filters `base_price > 0`; products with ₹0 price are hidden from marketplace
+
+#### Buyer Activity Indicator (COMPLETE — 2026-04-08)
+- [x] `GET /api/admin/buyers` — now returns `last_order_date` field per buyer
+- [x] `src/app/(dashboard)/admin/buyers/page.tsx` — new "Last Active" column with colour-coded badges: green (this week), yellow (this month), red (30+ days ago), gray (never ordered)
+
+#### Low Stock Alerts on Dashboard (COMPLETE — 2026-04-08)
+- [x] `GET /api/admin/dashboard` — now returns `low_stock_products` array (top 10 out_of_stock + low_stock products)
+- [x] `src/app/(dashboard)/admin/page.tsx` — "Products Running Low" amber section appears below "Orders Requiring Action" when any low/out-of-stock products exist
+
+#### Export Buttons (COMPLETE — 2026-04-08)
+- [x] `src/app/(dashboard)/admin/orders/page.tsx` — "Export CSV" button with toast "coming soon"
+- [x] `src/app/(dashboard)/admin/analytics/page.tsx` — "Export CSV" button with alert "coming soon"
 
 #### Remaining Phase 3 tasks
 - [ ] **Run Migration 5** in Supabase SQL Editor (clients + branches tables)

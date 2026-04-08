@@ -32,6 +32,7 @@ import {
   XCircle,
   AlertCircle,
   RefreshCw,
+  AlertTriangle,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -354,6 +355,49 @@ export default function AdminDashboardPage() {
           )}
         </div>
       </section>
+
+      {/* ── Low stock alerts ────────────────────────────────────────────── */}
+      {!isLoading && (data?.low_stock_products.length ?? 0) > 0 && (
+        <section className="bg-white rounded-xl border border-amber-200">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-amber-100">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-500" aria-hidden="true" />
+              <h2 className="font-semibold text-slate-900 text-sm">Products Running Low</h2>
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full">
+                {data!.low_stock_products.length}
+              </span>
+            </div>
+            <Link href="/admin/products" className="text-xs text-teal-600 hover:text-teal-700 font-medium inline-flex items-center gap-1">
+              Update Stock <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="px-5 py-3 divide-y divide-slate-50">
+            {data!.low_stock_products.map((p) => (
+              <div key={p.id} className="flex items-center justify-between py-2.5">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-800 truncate">{p.name}</p>
+                  <p className="text-xs text-slate-400 capitalize">{p.category.replace(/_/g, ' ')}</p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0 ml-4">
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    p.stock_status === 'out_of_stock'
+                      ? 'bg-rose-100 text-rose-700'
+                      : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {p.stock_status === 'out_of_stock' ? 'Out of Stock' : 'Low Stock'}
+                  </span>
+                  <Link
+                    href={`/admin/products?search=${encodeURIComponent(p.name)}`}
+                    className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+                  >
+                    Update
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Recent activity feed ────────────────────────────────────────── */}
       <section className="bg-white rounded-xl border border-slate-200">

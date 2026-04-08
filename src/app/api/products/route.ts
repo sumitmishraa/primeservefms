@@ -80,9 +80,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         { count: 'exact' }
       );
 
-    // Always filter to approved + active for the public marketplace
+    // Always filter to approved + active + priced for the public marketplace
     if (isApproved) query = query.eq('is_approved', true);
     if (isActive)   query = query.eq('is_active', true);
+    // Hide products with no price set — they're not ready for the marketplace
+    query = query.gt('base_price', 0);
 
     // Category filter
     if (category && category !== '') {

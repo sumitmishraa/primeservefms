@@ -29,6 +29,8 @@ export interface BuyerRow {
   branch_id: string | null;
   client_name: string | null;
   branch_name: string | null;
+  /** ISO datetime of the most recent order placed by this buyer, or null if none */
+  last_order_date: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -93,8 +95,28 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ data: null, error: 'Failed to fetch buyers' }, { status: 500 });
     }
 
-    // Flatten the joined client/branch names
-    const buyers: BuyerRow[] = ((data ?? []) as unknown as RawBuyerRow[]).map((row) => ({
+    // Fetch last order date per buyer in one query
+    const rawRows = (data ?? []) as unknown as RawBuyerRow[];
+    const buyerIds = rawRows.map((r) => r.id);
+    let lastOrderMap: Record<string, string> = {};
+
+    if (buyerIds.length > 0) {
+      const { data: orderRows } = await supabase
+        .from('orders')
+        .select('buyer_id, created_at')
+        .in('buyer_id', buyerIds)
+        .order('created_at', { ascending: false });
+
+      // Keep only the most recent order per buyer
+      for (const row of (orderRows ?? []) as { buyer_id: string; created_at: string }[]) {
+        if (!lastOrderMap[row.buyer_id]) {
+          lastOrderMap[row.buyer_id] = row.created_at;
+        }
+      }
+    }
+
+    // Flatten the joined client/branch names + last_order_date
+    const buyers: BuyerRow[] = rawRows.map((row) => ({
       id: row.id,
       full_name: row.full_name,
       email: row.email,
@@ -106,6 +128,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       branch_id: row.branch_id,
       client_name: row.client?.name ?? null,
       branch_name: row.branch?.name ?? null,
+      last_order_date: lastOrderMap[row.id] ?? null,
     }));
 
     return NextResponse.json({ data: buyers, error: null });

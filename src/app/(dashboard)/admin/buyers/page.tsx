@@ -23,6 +23,46 @@ import AssignClientModal from '@/components/admin/AssignClientModal';
 import type { BuyerRow } from '@/app/api/admin/buyers/route';
 
 // ---------------------------------------------------------------------------
+// Last active indicator
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns colour-coded "Last Active" badge based on most recent order date.
+ * Green = ordered this week, Yellow = this month, Red = 30+ days, Gray = never.
+ */
+function LastActiveBadge({ dateStr }: { dateStr: string | null }) {
+  if (!dateStr) {
+    return <span className="text-xs text-slate-400">Never ordered</span>;
+  }
+  const now  = Date.now();
+  const diff = now - new Date(dateStr).getTime();
+  const days = diff / (1000 * 60 * 60 * 24);
+
+  if (days <= 7) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+        This week
+      </span>
+    );
+  }
+  if (days <= 30) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700">
+        <span className="h-2 w-2 rounded-full bg-amber-500" />
+        This month
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-700">
+      <span className="h-2 w-2 rounded-full bg-rose-500" />
+      {Math.floor(days)}d ago
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Status badge
 // ---------------------------------------------------------------------------
 
@@ -206,6 +246,7 @@ export default function AdminBuyersPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Contact</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Client</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Branch</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Last Active</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Joined</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
                     <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Actions</th>
@@ -238,6 +279,9 @@ export default function AdminBuyersPage() {
                       </td>
                       <td className="px-4 py-3 text-slate-600">
                         {buyer.branch_name ?? <span className="text-slate-400">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <LastActiveBadge dateStr={buyer.last_order_date} />
                       </td>
                       <td className="px-4 py-3 text-xs text-slate-500">
                         {formatDate(buyer.created_at)}

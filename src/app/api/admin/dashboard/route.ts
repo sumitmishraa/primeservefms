@@ -43,6 +43,14 @@ export interface RecentOrderRow {
   created_at: string;
 }
 
+export interface LowStockProduct {
+  id: string;
+  name: string;
+  category: string;
+  stock_status: string;
+  slug: string;
+}
+
 export interface DashboardData {
   total_products: number;
   total_orders: number;
@@ -52,6 +60,7 @@ export interface DashboardData {
   orders_today: number;
   pending_orders_list: PendingOrderRow[];
   recent_activity: RecentOrderRow[];
+  low_stock_products: LowStockProduct[];
 }
 
 // ---------------------------------------------------------------------------
@@ -235,6 +244,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       buyersResult,
       pendingListResult,
       recentResult,
+      lowStockResult,
     ] = await Promise.all([
       // Products are always the global unfiltered count
       supabase
@@ -248,6 +258,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       buyersQuery,
       pendingListQuery,
       recentQuery,
+      // Low/out-of-stock products — always unfiltered, top 10
+      supabase
+        .from('products')
+        .select('id, name, category, stock_status, slug')
+        .eq('is_active', true)
+        .in('stock_status', ['out_of_stock', 'low_stock'])
+        .order('stock_status', { ascending: true })
+        .limit(10),
     ]);
 
     // 5. Compute revenue from delivered order rows
@@ -282,6 +300,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       created_at: order.created_at,
     }));
 
+    const lowStockProducts: LowStockProduct[] = (
+      (lowStockResult.data ?? []) as LowStockProduct[]
+    );
+
     const data: DashboardData = {
       total_products: productsResult.count ?? 0,
       total_orders: totalOrdersResult.count ?? 0,
@@ -291,6 +313,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       orders_today: ordersTodayResult.count ?? 0,
       pending_orders_list: pendingOrdersList,
       recent_activity: recentActivity,
+      low_stock_products: lowStockProducts,
     };
 
     return NextResponse.json({ data, error: null });
