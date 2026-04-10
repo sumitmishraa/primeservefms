@@ -176,15 +176,38 @@ export interface OrderItemInput {
 
 /**
  * A product in the buyer's shopping cart (Zustand cartStore).
- * Not persisted — lives in memory until the buyer checks out.
+ * Flat/denormalized so the cart can be persisted to localStorage without
+ * embedding the full Product record. Prices recalculate when quantity changes.
  */
 export interface CartItem {
-  /** Full product record */
-  product: Product;
-  /** Number of units the buyer wants to purchase */
+  /** products.id */
+  product_id: string;
+  /** Snapshot of product name at add-to-cart time */
+  product_name: string;
+  /** products.slug — used to link back to the product page */
+  product_slug: string;
+  /** Brand label, e.g. "Scotch-Brite" */
+  brand: string | null;
+  /** Size or variant label, e.g. "500ml" */
+  size_variant: string | null;
+  /** Primary image thumbnail URL */
+  thumbnail_url: string | null;
+  /** Top-level product category enum */
+  category: ProductCategory;
+  /** Unit of measure enum, e.g. "piece", "litre" */
+  unit_of_measure: UnitOfMeasure;
+  /** Listed base price in INR (before tier discounts) */
+  base_price: number;
+  /** Applicable GST rate as a percentage (0 | 5 | 12 | 18 | 28) */
+  gst_rate: number;
+  /** Minimum order quantity — enforced on add and update */
+  moq: number;
+  /** Buyer's chosen quantity (must be >= moq) */
   quantity: number;
-  /** Resolved per-unit price — from pricing_tiers or base_price */
-  selected_price: number;
+  /** Resolved price per unit based on current quantity and pricing_tiers */
+  unit_price: number;
+  /** Full pricing tier array — kept so price can recalculate on qty change */
+  pricing_tiers: PricingTier[];
 }
 
 // ---------------------------------------------------------------------------

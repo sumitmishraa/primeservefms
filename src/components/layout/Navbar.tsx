@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { Menu, Search, ShoppingCart, Bell } from 'lucide-react';
 import type { UserProfile } from '@/types';
 import UserMenu from './UserMenu';
+import { useCartStore } from '@/stores/cartStore';
 
 interface NavbarProps {
   /** Authenticated user — drives role-based visibility (e.g. cart icon) */
@@ -35,8 +36,7 @@ export default function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
   const router = useRouter();
 
-  // Placeholders — wired to stores in later phases
-  const cartCount = 0;
+  const cartCount = useCartStore((state) => state.items.length);
   const notificationCount = 0;
 
   const dashboardHref =
@@ -119,8 +119,8 @@ export default function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
           >
             <ShoppingCart className="w-5 h-5" aria-hidden="true" />
             {cartCount > 0 && (
-              <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-teal-600 text-white text-xs rounded-full flex items-center justify-center px-1 font-mono leading-none">
-                {cartCount}
+              <span className="absolute top-1 right-1 min-w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center px-1 font-mono leading-none">
+                {cartCount > 99 ? '99+' : cartCount}
               </span>
             )}
           </Link>

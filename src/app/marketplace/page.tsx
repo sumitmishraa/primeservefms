@@ -19,24 +19,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ShoppingBag, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import ProductCard from '@/components/marketplace/ProductCard';
 import ProductFilters from '@/components/marketplace/ProductFilters';
+import type { CartableProduct } from '@/components/marketplace/AddToCartButton';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-interface MarketplaceProduct {
-  id: string;
-  slug: string;
-  name: string;
-  brand: string | null;
-  size_variant: string | null;
-  base_price: number;
-  unit_of_measure: string;
-  moq: number;
-  thumbnail_url: string | null;
-  category: string;
-  stock_status: string;
-}
+// Re-use the CartableProduct shape so ProductCard gets everything it needs
+// (pricing_tiers, gst_rate) for the Add to Cart modal without a second fetch.
+type MarketplaceProduct = CartableProduct;
 
 interface ProductsApiResponse {
   products: MarketplaceProduct[];

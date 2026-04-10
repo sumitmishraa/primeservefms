@@ -25,12 +25,12 @@ import { use } from 'react';
 import {
   Package,
   ChevronRight,
-  ShoppingCart,
   AlertCircle,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatINR } from '@/lib/utils/formatting';
 import { getCategoryLabel } from '@/lib/constants/categories';
+import AddToCartButton from '@/components/marketplace/AddToCartButton';
 import type { Tables } from '@/types/database';
 
 // ---------------------------------------------------------------------------
@@ -293,20 +293,23 @@ export default function ProductDetailPage({
             {/* Stock status */}
             <StockBadge status={product.stock_status} />
 
-            {/* Price */}
+            {/* Base price label (shown above the interactive quantity selector) */}
             <div>
-              <p className="font-mono text-3xl font-bold text-teal-700">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Starting price
+              </p>
+              <p className="font-mono text-2xl font-bold text-teal-700">
                 {formatINR(product.base_price)}
-                <span className="ml-1 text-base font-normal text-slate-500">
+                <span className="ml-1 text-sm font-normal text-slate-500">
                   / {product.unit_of_measure}
                 </span>
               </p>
             </div>
 
-            {/* MOQ */}
+            {/* MOQ notice */}
             <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5">
               <span className="text-sm font-medium text-amber-800">
-                Minimum Order: {product.moq} {product.unit_of_measure}
+                Minimum Order: {product.moq}&nbsp;{product.unit_of_measure}
               </span>
             </div>
 
@@ -319,25 +322,25 @@ export default function ProductDetailPage({
               <p className="text-xs text-slate-500">Verified B2B Supplier</p>
             </div>
 
-            {/* Add to Cart — disabled until Phase 4 */}
-            <div className="group relative">
-              <button
-                type="button"
-                disabled
-                className="w-full cursor-not-allowed rounded-lg bg-slate-200 py-3 text-sm font-semibold text-slate-400"
-                aria-disabled="true"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <ShoppingCart className="h-4 w-4" aria-hidden="true" />
-                  Add to Cart
-                </span>
-              </button>
-              {/* Tooltip */}
-              <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 rounded-lg bg-slate-800 px-3 py-2 text-xs text-white shadow-lg group-hover:block">
-                Login to order — coming in Phase 4
-                <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
-              </div>
-            </div>
+            {/* Quantity selector + Add to Cart (live price, tier hints, subtotal) */}
+            <AddToCartButton
+              product={{
+                id:               product.id,
+                slug:             product.slug,
+                name:             product.name,
+                brand:            product.brand,
+                size_variant:     product.size_variant,
+                base_price:       product.base_price,
+                gst_rate:         product.gst_rate,
+                moq:              product.moq,
+                unit_of_measure:  product.unit_of_measure,
+                thumbnail_url:    product.thumbnail_url,
+                category:         product.category,
+                stock_status:     product.stock_status,
+                pricing_tiers:    pricingTiers,
+              }}
+              variant="detail"
+            />
 
             {/* Description */}
             {product.description && (
