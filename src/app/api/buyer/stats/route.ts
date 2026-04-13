@@ -26,18 +26,42 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
     const supabase = createAdminClient();
 
-    const { data: orders, error } = await supabase
+    // Fetch orders (no join — avoids Supabase relationship type error)
+    const { data: orders, error: ordersError } = await supabase
       .from('orders')
-      .select('id, order_number, status, total_amount, created_at, order_items(product_id, product_name, quantity)')
+      .select('id, order_number, status, total_amount, created_at')
       .eq('buyer_id', user.id)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (ordersError) throw ordersError;
 
     const all = orders ?? [];
-    const ACTIVE_STATUSES = new Set(['pending', 'approved', 'forwarded_to_vendor', 'dispatched']);
 
-    // Month boundaries
+    if (all.length === 0) {
+      return NextResponse.json({
+        data: { active_orders: 0, total_this_month: 0, total_orders: 0, recent_orders: [], top_products: [] },
+        error: null,
+      });
+    }
+
+    // Fetch all order_items for this buyer's orders in one query
+    const orderIds = all.map((o) => o.id);
+    const { data: allItems, error: itemsError } = await supabase
+      .from('order_items')
+      .select('order_id, product_id, product_name, quantity')
+      .in('order_id', orderIds);
+
+    if (itemsError) throw itemsError;
+
+    // Group items by order_id
+    const itemsByOrder = new Map<string, { product_id: string; product_name: string; quantity: number }[]>();
+    for (const item of allItems ?? []) {
+      const list = itemsByOrder.get(item.order_id) ?? [];
+      list.push({ product_id: item.product_id, product_name: item.product_name, quantity: item.quantity });
+      itemsByOrder.set(item.order_id, list);
+    }
+
+    const ACTIVE_STATUSES = new Set(['pending', 'approved', 'forwarded_to_vendor', 'dispatched']);
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
@@ -46,11 +70,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       .filter((o) => o.created_at >= monthStart)
       .reduce((s, o) => s + (o.total_amount ?? 0), 0);
 
-    // Aggregate product frequencies across ALL orders
+    // Aggregate product frequencies
     const freqMap = new Map<string, ProductFrequency>();
     for (const order of all) {
-      const items = order.order_items as { product_id: string; product_name: string; quantity: number }[];
-      for (const item of items ?? []) {
+      const items = itemsByOrder.get(order.id) ?? [];
+      for (const item of items) {
         const existing = freqMap.get(item.product_id);
         if (existing) {
           existing.times_ordered += 1;
@@ -83,7 +107,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
           status: o.status,
           total_amount: o.total_amount,
           created_at: o.created_at,
-          item_count: (o.order_items as unknown[]).length,
+          item_count: (itemsByOrder.get(o.id) ?? []).length,
         })),
         top_products: topProducts,
       },

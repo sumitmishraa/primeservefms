@@ -22,9 +22,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
     const supabase = createAdminClient();
 
+    // Fetch orders without join to avoid Supabase relationship type error
     let query = supabase
       .from('orders')
-      .select('id, order_number, status, payment_status, subtotal, gst_amount, shipping_amount, total_amount, created_at, notes, order_items(id, product_name, quantity)')
+      .select('id, order_number, status, payment_status, subtotal, gst_amount, shipping_amount, total_amount, created_at, notes', { count: 'exact' })
       .eq('buyer_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -35,13 +36,35 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
     if (error) throw error;
 
+    if (!orders || orders.length === 0) {
+      return NextResponse.json({ data: { orders: [], total: 0, page, per_page: perPage }, error: null });
+    }
+
+    // Fetch order_items for these orders separately
+    const orderIds = orders.map((o) => o.id);
+    const { data: allItems, error: itemsError } = await supabase
+      .from('order_items')
+      .select('order_id, id, product_name, quantity')
+      .in('order_id', orderIds);
+
+    if (itemsError) throw itemsError;
+
+    // Group items by order_id
+    const itemsByOrder = new Map<string, { id: string; product_name: string; quantity: number }[]>();
+    for (const item of allItems ?? []) {
+      const list = itemsByOrder.get(item.order_id) ?? [];
+      list.push({ id: item.id, product_name: item.product_name, quantity: item.quantity });
+      itemsByOrder.set(item.order_id, list);
+    }
+
+    // Merge items into orders
+    const ordersWithItems = orders.map((o) => ({
+      ...o,
+      order_items: itemsByOrder.get(o.id) ?? [],
+    }));
+
     return NextResponse.json({
-      data: {
-        orders: orders ?? [],
-        total: count ?? 0,
-        page,
-        per_page: perPage,
-      },
+      data: { orders: ordersWithItems, total: count ?? 0, page, per_page: perPage },
       error: null,
     });
   } catch (error) {
