@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import type { UserProfile } from '@/types';
 import type { UserRole } from '@/types';
+import { useCartStore } from '@/stores/cartStore';
 
 // ---------------------------------------------------------------------------
 // Nav item definitions per role
@@ -143,14 +144,15 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
   const navItems = getNavItems(user.role);
   const activePath = getActivePath(pathname, navItems);
   const avatarInitial = user.full_name.charAt(0).toUpperCase();
+  const cartCount = useCartStore((s) => s.getItemCount());
 
   return (
-    <div className="h-full bg-white border-r border-slate-200 w-[260px] flex flex-col">
+    <div className="h-full bg-white border-r border-slate-200 w-65 flex flex-col">
       {/* ── User info ─────────────────────────────────────────────────────── */}
       <div className="p-5 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <div
-            className="w-12 h-12 rounded-full bg-teal-600 text-white font-bold text-lg flex items-center justify-center flex-shrink-0 select-none"
+            className="w-12 h-12 rounded-full bg-teal-600 text-white font-bold text-lg flex items-center justify-center shrink-0 select-none"
             aria-hidden="true"
           >
             {avatarInitial}
@@ -181,6 +183,7 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = item.href === activePath;
+          const isCart = item.href === '/buyer/cart';
 
           return (
             <Link
@@ -197,15 +200,21 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
               {/* Active indicator bar */}
               {active && (
                 <span
-                  className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] bg-teal-600 rounded-r-full"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.75 bg-teal-600 rounded-r-full"
                   aria-hidden="true"
                 />
               )}
               <Icon
-                className={`w-4 h-4 flex-shrink-0 ${active ? 'text-teal-600' : 'text-slate-400'}`}
+                className={`w-4 h-4 shrink-0 ${active ? 'text-teal-600' : 'text-slate-400'}`}
                 aria-hidden="true"
               />
               {item.label}
+              {/* Cart item count badge */}
+              {isCart && cartCount > 0 && (
+                <span className="ml-auto min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full bg-teal-600 text-white text-xs font-bold">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
             </Link>
           );
         })}

@@ -87,6 +87,7 @@ export type Database = {
           is_active: boolean;
           client_id: string | null;
           branch_id: string | null;
+          saved_addresses: Json | null;
           created_at: string;
           updated_at: string;
         };
@@ -113,6 +114,7 @@ export type Database = {
           is_active?: boolean;
           client_id?: string | null;
           branch_id?: string | null;
+          saved_addresses?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -297,6 +299,9 @@ export type Database = {
           dispatched_at: string | null;
           client_id: string | null;
           branch_id: string | null;
+          razorpay_order_id: string | null;
+          razorpay_payment_id: string | null;
+          gst_number: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -323,6 +328,9 @@ export type Database = {
           dispatched_at?: string | null;
           client_id?: string | null;
           branch_id?: string | null;
+          razorpay_order_id?: string | null;
+          razorpay_payment_id?: string | null;
+          gst_number?: string | null;
           created_at?: string;
           updated_at?: string;
         };
