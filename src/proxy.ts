@@ -178,7 +178,7 @@ export function proxy(request: NextRequest): NextResponse {
   const requiresBuyer = pathname.startsWith("/buyer");
 
   const hasAccess =
-    (requiresAdmin && role === "admin") ||
+    role === "admin" || // admins can browse all sections for review/testing
     (requiresVendor && role === "vendor") ||
     (requiresBuyer && role === "buyer") ||
     // Non-role-prefixed protected routes (e.g. future /account/*) — allow any role
