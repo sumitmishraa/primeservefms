@@ -20,7 +20,7 @@ interface SavedAddress {
   is_default: boolean;
 }
 
-interface ProfileWithMeta extends UserProfile {
+interface ProfileWithMeta extends Omit<UserProfile, 'saved_addresses'> {
   client_name: string | null;
   branch_name: string | null;
   saved_addresses: SavedAddress[] | null;
