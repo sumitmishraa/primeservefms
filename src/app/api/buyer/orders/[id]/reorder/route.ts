@@ -24,10 +24,10 @@ export async function GET(
     const { id } = await params;
     const supabase = createAdminClient();
 
-    // Verify ownership and get order items
+    // Verify ownership
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .select('id, order_items(product_id, quantity)')
+      .select('id')
       .eq('id', id)
       .eq('buyer_id', user.id)
       .single();
@@ -36,7 +36,15 @@ export async function GET(
       return NextResponse.json({ data: null, error: 'Order not found' }, { status: 404 });
     }
 
-    const items = order.order_items as { product_id: string; quantity: number }[];
+    // Fetch order items separately (avoids Supabase relationship type issue)
+    const { data: itemRows, error: itemsError } = await supabase
+      .from('order_items')
+      .select('product_id, quantity')
+      .eq('order_id', id);
+
+    if (itemsError) throw itemsError;
+
+    const items = (itemRows ?? []) as { product_id: string; quantity: number }[];
     const productIds = items.map((i) => i.product_id);
 
     // Build quantity map for the client
