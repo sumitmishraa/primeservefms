@@ -1,14 +1,12 @@
 'use client';
 
-import PlaceholderPage from '@/components/ui/PlaceholderPage';
-import { Store } from 'lucide-react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function BuyerMarketplacePage() {
-  return (
-    <PlaceholderPage
-      icon={Store}
-      title="Marketplace"
-      message="Coming in Phase 4 — Browse and order housekeeping supplies from verified vendors."
-    />
-  );
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/marketplace');
+  }, [router]);
+  return null;
 }
