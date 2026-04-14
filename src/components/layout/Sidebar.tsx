@@ -64,12 +64,16 @@ const ADMIN_NAV: NavItem[] = [
 // ---------------------------------------------------------------------------
 
 /**
- * Returns the correct nav array for the given role.
- * Vendors have no app dashboard — return empty nav.
+ * Returns the correct nav array for the given role and current path.
+ * Admins browsing /buyer/* see buyer nav so they can review buyer flows.
  * @param role - The user's role
+ * @param pathname - Current URL pathname
  */
-function getNavItems(role: UserRole): NavItem[] {
-  if (role === 'admin') return ADMIN_NAV;
+function getNavItems(role: UserRole, pathname: string): NavItem[] {
+  if (role === 'admin') {
+    if (pathname.startsWith('/buyer')) return BUYER_NAV;
+    return ADMIN_NAV;
+  }
   if (role === 'buyer') return BUYER_NAV;
   return [];
 }
@@ -141,8 +145,9 @@ interface SidebarProps {
  */
 export default function Sidebar({ user, onNavClick }: SidebarProps) {
   const pathname = usePathname();
-  const navItems = getNavItems(user.role);
+  const navItems = getNavItems(user.role, pathname);
   const activePath = getActivePath(pathname, navItems);
+  const isAdminViewingBuyer = user.role === 'admin' && pathname.startsWith('/buyer');
   const avatarInitial = user.full_name.charAt(0).toUpperCase();
   const cartCount = useCartStore((s) => s.getItemCount());
 
@@ -174,6 +179,20 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
           </div>
         </div>
       </div>
+
+      {/* ── Admin-in-buyer-view banner ────────────────────────────────────── */}
+      {isAdminViewingBuyer && (
+        <div className="mx-3 mt-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-xs text-amber-700 font-medium">Viewing as Buyer</p>
+          <Link
+            href="/admin"
+            onClick={onNavClick}
+            className="text-xs text-teal-600 hover:underline font-medium"
+          >
+            ← Back to Admin
+          </Link>
+        </div>
+      )}
 
       {/* ── Navigation ────────────────────────────────────────────────────── */}
       <nav
