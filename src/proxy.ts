@@ -9,7 +9,12 @@
  *   /login         Auth pages
  *   /register
  *   /marketplace   Public product catalogue (all sub-paths)
+ *   /pro           Pro Plan pricing page
+ *   /about         About Us page
+ *   /contact       Contact page
+ *   /categories    Category overview page
  *   /api/auth/*    Auth endpoints (login, register, logout, me)
+ *   /api/products  Public product API (read-only catalogue)
  *   /_next/*       Next.js static assets
  *   /favicon.ico
  *
@@ -114,10 +119,23 @@ function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/_next/") || pathname === "/favicon.ico") {
     return true;
   }
-  // Public API routes (auth endpoints)
+  // Public API routes (auth endpoints + read-only product catalogue
+  // + public landing-page form submissions)
   if (pathname.startsWith("/api/auth/")) return true;
+  if (pathname.startsWith("/api/products")) return true;
+  if (pathname === "/api/contact") return true;
+  if (pathname === "/api/newsletter") return true;
   // Public pages and all their sub-paths
-  const publicPrefixes = ["/", "/login", "/register", "/marketplace"];
+  const publicPrefixes = [
+    "/",
+    "/login",
+    "/register",
+    "/marketplace",
+    "/pro",
+    "/about",
+    "/contact",
+    "/categories",
+  ];
   for (const prefix of publicPrefixes) {
     if (prefix === "/") {
       if (pathname === "/") return true;

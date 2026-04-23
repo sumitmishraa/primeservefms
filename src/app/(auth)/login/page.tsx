@@ -322,18 +322,38 @@ function LoginContent() {
 
   return (
     <div className="space-y-6">
+      {/* Sign In / Register switcher — matches marketing pages */}
+      <div className="flex border-b border-slate-200">
+        <div className="relative flex-1 pb-3 text-center">
+          <span className="font-heading text-xl font-bold text-slate-900">
+            Sign In
+          </span>
+          <div className="absolute -bottom-px left-0 right-0 h-0.5 bg-teal-600" />
+        </div>
+        <Link
+          href="/register"
+          className="flex-1 pb-3 text-center font-heading text-xl font-bold text-slate-400 transition-colors hover:text-slate-600"
+        >
+          Register
+        </Link>
+      </div>
+
       {/* Heading */}
       <div>
-        <h1 className="text-2xl font-heading font-bold text-slate-900">Welcome Back</h1>
-        <p className="text-sm text-slate-500 mt-1">Login to your PrimeServe account</p>
+        <h1 className="font-heading text-2xl font-bold text-slate-900">
+          Welcome Back
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Login to your PrimeServe account
+        </p>
       </div>
 
       {/* Tab switcher */}
-      <div className="flex rounded-lg border border-slate-200 p-1 bg-slate-50 gap-1">
+      <div className="flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
         <button
           type="button"
           onClick={() => setTab('otp')}
-          className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all ${
+          className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${
             tab === 'otp'
               ? 'bg-white text-teal-700 shadow-sm'
               : 'text-slate-500 hover:text-slate-700'
@@ -344,7 +364,7 @@ function LoginContent() {
         <button
           type="button"
           onClick={() => setTab('email')}
-          className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all ${
+          className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${
             tab === 'email'
               ? 'bg-white text-teal-700 shadow-sm'
               : 'text-slate-500 hover:text-slate-700'

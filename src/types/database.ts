@@ -526,6 +526,58 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['messages']['Insert']>;
         Relationships: never[];
       };
+
+      // -----------------------------------------------------------------------
+      // contact_messages — public Contact form submissions
+      // Migration 6
+      // -----------------------------------------------------------------------
+      contact_messages: {
+        Row: {
+          id: string;
+          name: string;
+          email: string;
+          message: string;
+          source: string;
+          is_resolved: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          email: string;
+          message: string;
+          source?: string;
+          is_resolved?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['contact_messages']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // newsletter_subscribers — PublicFooter newsletter signups
+      // Migration 6
+      // -----------------------------------------------------------------------
+      newsletter_subscribers: {
+        Row: {
+          id: string;
+          email: string;
+          source: string;
+          is_active: boolean;
+          subscribed_at: string;
+          unsubscribed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          source?: string;
+          is_active?: boolean;
+          subscribed_at?: string;
+          unsubscribed_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['newsletter_subscribers']['Insert']>;
+        Relationships: never[];
+      };
     };
 
     Views: { [_ in never]: never };

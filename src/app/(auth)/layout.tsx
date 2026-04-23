@@ -1,31 +1,34 @@
 /**
- * Auth layout — wraps /login and /register with a split-screen design.
+ * Auth layout — split-screen for /login and /register.
  *
  * Desktop (lg+):
- *   Left half  — Deep teal gradient, PrimeServe branding + 3 trust points
- *   Right half — White, centred form area (max-w-md)
+ *   Left half  — Dark teal panel with PrimeServe branding + feature cards
+ *   Right half — White form area with optional dev-mode notice
  *
  * Mobile:
- *   Compact branding strip at top, form content below
- *
+ *   Brand strip + form stacked vertically
  */
 
 import Link from 'next/link';
-import { CheckCircle2 } from 'lucide-react';
+import { Truck, ShieldCheck, CreditCard, ArrowLeft } from 'lucide-react';
 
-// ---------------------------------------------------------------------------
-// Trust points shown in the left branding panel
-// ---------------------------------------------------------------------------
-
-const TRUST_POINTS = [
-  'Verified Vendors & Quality Products',
-  'Bulk Pricing with GST Invoices',
-  '394+ Products across 6 Categories',
+const FEATURES = [
+  {
+    Icon: Truck,
+    title: 'Fast Delivery',
+    body: 'Same-day delivery across the city',
+  },
+  {
+    Icon: ShieldCheck,
+    title: 'Secure Payments',
+    body: '100% secure transactions',
+  },
+  {
+    Icon: CreditCard,
+    title: 'Business Credit',
+    body: 'Flexible credit terms for businesses',
+  },
 ] as const;
-
-// ---------------------------------------------------------------------------
-// Layout
-// ---------------------------------------------------------------------------
 
 export default function AuthLayout({
   children,
@@ -33,75 +36,84 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="flex min-h-screen flex-col lg:flex-row">
+      {/* ─── Left panel ─────────────────────────────────────────── */}
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950 px-12 py-16 lg:flex lg:w-1/2 lg:flex-col lg:justify-center">
+        {/* Decorative glows */}
+        <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-teal-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-teal-500/10 blur-3xl" />
 
-      {/* ── Left panel: branding (desktop only) ──────────────────────────── */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-teal-600 via-teal-700 to-teal-900 flex-col items-center justify-center p-12 relative overflow-hidden">
-
-        {/* Decorative circles */}
-        <div className="absolute -top-24 -left-24 w-72 h-72 bg-teal-500/20 rounded-full" />
-        <div className="absolute -bottom-16 -right-16 w-96 h-96 bg-teal-800/30 rounded-full" />
-
-        <div className="relative z-10 max-w-md text-center">
+        <div className="relative z-10 max-w-md">
           {/* Logo */}
-          <Link href="/" className="inline-block mb-6">
-            <span className="text-4xl font-heading font-bold text-white tracking-tight">
-              PrimeServe
+          <Link href="/" className="mb-10 inline-flex items-center gap-2">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white font-heading text-lg font-bold text-slate-900">
+              P
+            </div>
+            <span className="font-heading text-2xl font-bold tracking-tight text-white">
+              Prime<span className="text-teal-300">Serve</span>
             </span>
           </Link>
 
           {/* Tagline */}
-          <p className="text-teal-100 text-lg mb-10 leading-relaxed">
-            B2B Procurement, Simplified
+          <h2 className="font-heading text-4xl font-extrabold leading-tight tracking-tight text-white">
+            Join <span className="text-teal-300">PrimeServe</span> Today
+          </h2>
+
+          <p className="mt-4 text-base leading-relaxed text-teal-50/80">
+            Access bulk pricing, credit terms, and premium office supplies for
+            your business.
           </p>
 
-          {/* Trust points */}
-          <ul className="space-y-4 text-left">
-            {TRUST_POINTS.map((point) => (
-              <li key={point} className="flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-teal-200 shrink-0 mt-0.5" />
-                <span className="text-teal-50 text-sm leading-relaxed">{point}</span>
+          {/* Feature cards */}
+          <ul className="mt-10 space-y-4">
+            {FEATURES.map(({ Icon, title, body }) => (
+              <li
+                key={title}
+                className="flex items-start gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm"
+              >
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-400/15 text-teal-300">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-heading text-sm font-bold text-white">
+                    {title}
+                  </p>
+                  <p className="mt-0.5 text-xs text-teal-50/70">{body}</p>
+                </div>
               </li>
             ))}
           </ul>
+        </div>
+      </div>
 
-          {/* Stat pills */}
-          <div className="mt-12 flex gap-4 justify-center">
-            <div className="bg-white/10 rounded-xl px-5 py-3 text-center">
-              <p className="text-2xl font-heading font-bold text-white">100+</p>
-              <p className="text-xs text-teal-200 mt-0.5">Businesses</p>
-            </div>
-            <div className="bg-white/10 rounded-xl px-5 py-3 text-center">
-              <p className="text-2xl font-heading font-bold text-white">394+</p>
-              <p className="text-xs text-teal-200 mt-0.5">Products</p>
-            </div>
-            <div className="bg-white/10 rounded-xl px-5 py-3 text-center">
-              <p className="text-2xl font-heading font-bold text-white">6</p>
-              <p className="text-xs text-teal-200 mt-0.5">Categories</p>
-            </div>
+      {/* ─── Right panel (form) ─────────────────────────────────── */}
+      <div className="flex flex-1 flex-col bg-white">
+        {/* Top bar: back to home */}
+        <div className="flex items-center justify-between px-4 pt-6 sm:px-8 lg:px-12">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-teal-600"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Link>
+
+          <div className="lg:hidden">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 font-heading text-sm font-bold text-white">
+                P
+              </div>
+              <span className="font-heading text-base font-bold tracking-tight text-slate-900">
+                Prime<span className="text-teal-600">Serve</span>
+              </span>
+            </Link>
           </div>
         </div>
-      </div>
 
-      {/* ── Right panel: form area ────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center bg-white px-4 py-8 lg:py-12 min-h-screen lg:min-h-0">
-
-        {/* Mobile-only compact branding */}
-        <div className="lg:hidden mb-8 text-center">
-          <Link href="/">
-            <span className="text-2xl font-heading font-bold text-teal-600 tracking-tight">
-              PrimeServe
-            </span>
-          </Link>
-          <p className="text-slate-500 text-xs mt-1">B2B Procurement, Simplified</p>
-        </div>
-
-        {/* Form content from page.tsx */}
-        <div className="w-full max-w-md">
-          {children}
+        <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-8 lg:px-12">
+          <div className="w-full max-w-md">{children}</div>
         </div>
       </div>
-
     </div>
   );
 }
