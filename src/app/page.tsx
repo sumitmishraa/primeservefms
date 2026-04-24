@@ -371,84 +371,99 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {FEATURED_PRODUCTS.map((product) => (
-              <div
-                key={product.name}
-                className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-teal-300 hover:shadow-lg"
-              >
-                <Link
-                  href="/marketplace"
-                  className="relative block aspect-[4/3] w-full overflow-hidden bg-slate-100"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  <span className="absolute left-3 top-3 rounded-full bg-teal-100 px-2.5 py-0.5 text-[11px] font-semibold text-teal-700">
-                    In Stock
-                  </span>
-                </Link>
-
-                <div className="flex flex-1 flex-col gap-1.5 p-5">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    {product.category}
-                  </p>
-                  <Link
-                    href="/marketplace"
-                    className="line-clamp-2 font-heading text-sm font-bold leading-snug text-slate-900 transition-colors hover:text-teal-700"
-                  >
-                    {product.name}
-                  </Link>
-
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <div className="flex">
-                      {[0, 1, 2, 3, 4].map((i) => (
-                        <Star
-                          key={i}
-                          className={`h-3.5 w-3.5 ${
-                            i < Math.round(product.rating)
-                              ? 'fill-amber-400 text-amber-400'
-                              : 'fill-slate-200 text-slate-200'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-slate-500">
-                      {product.rating} ({product.reviews})
-                    </span>
-                  </div>
-
-                  <p className="mt-1 font-heading text-lg font-bold text-teal-700">
-                    {product.price}
-                    <span className="ml-1 text-xs font-normal text-slate-500">
-                      / {product.unit}
-                    </span>
-                  </p>
-
-                  <Link
-                    href="/marketplace"
-                    className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700"
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    Add to Cart
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 flex justify-center">
-            <Link
-              href="/marketplace"
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-teal-500 hover:text-teal-600"
+          {/* Horizontal snap scroller. Negative margins + matching padding
+              let cards bleed to the viewport edge so the last/first card
+              hints there's more to scroll. Custom scrollbar utilities are
+              inlined as arbitrary variants so we don't depend on a plugin. */}
+          <div className="-mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+            <div
+              className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-              View all products
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+              {FEATURED_PRODUCTS.map((product) => (
+                <div
+                  key={product.name}
+                  className="group flex w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-teal-300 hover:shadow-lg sm:w-[300px]"
+                >
+                  <Link
+                    href="/marketplace"
+                    className="relative block aspect-[4/3] w-full overflow-hidden bg-slate-100"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <span className="absolute left-3 top-3 rounded-full bg-teal-100 px-2.5 py-0.5 text-[11px] font-semibold text-teal-700">
+                      In Stock
+                    </span>
+                  </Link>
+
+                  <div className="flex flex-1 flex-col gap-1.5 p-5">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                      {product.category}
+                    </p>
+                    <Link
+                      href="/marketplace"
+                      className="line-clamp-2 font-heading text-sm font-bold leading-snug text-slate-900 transition-colors hover:text-teal-700"
+                    >
+                      {product.name}
+                    </Link>
+
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <div className="flex">
+                        {[0, 1, 2, 3, 4].map((i) => (
+                          <Star
+                            key={i}
+                            className={`h-3.5 w-3.5 ${
+                              i < Math.round(product.rating)
+                                ? 'fill-amber-400 text-amber-400'
+                                : 'fill-slate-200 text-slate-200'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-slate-500">
+                        {product.rating} ({product.reviews})
+                      </span>
+                    </div>
+
+                    <p className="mt-1 font-heading text-lg font-bold text-teal-700">
+                      {product.price}
+                      <span className="ml-1 text-xs font-normal text-slate-500">
+                        / {product.unit}
+                      </span>
+                    </p>
+
+                    <Link
+                      href="/marketplace"
+                      className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700"
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                      Add to Cart
+                    </Link>
+                  </div>
+                </div>
+              ))}
+
+              {/* "See more" terminator card — same dimensions as a product
+                  card so it slots cleanly into the scroll rhythm. */}
+              <Link
+                href="/marketplace"
+                className="group flex w-[280px] shrink-0 snap-start flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-teal-300 bg-teal-50/40 p-8 text-center transition-all hover:-translate-y-1 hover:border-teal-500 hover:bg-teal-50 sm:w-[300px]"
+              >
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-teal-700 transition-transform group-hover:scale-110">
+                  <ArrowRight className="h-6 w-6" />
+                </div>
+                <p className="font-heading text-base font-bold text-teal-700">
+                  See more products
+                </p>
+                <p className="text-xs text-teal-700/70">
+                  Browse the full catalogue
+                </p>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

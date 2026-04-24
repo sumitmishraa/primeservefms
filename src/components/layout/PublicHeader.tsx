@@ -19,6 +19,10 @@ import {
   Menu,
   X,
   Loader2,
+  Settings,
+  Building2,
+  Package,
+  LogOut,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCartStore } from '@/stores/cartStore';
@@ -45,7 +49,7 @@ export default function PublicHeader() {
   // runs on public pages. Calling useAuthStore alone subscribes to the store
   // but never triggers /api/auth/me — which would leave isLoading stuck on
   // true for every visitor who lands on /, /pro, /about, etc.
-  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, user, logout } = useAuth();
   const cartCount = useCartStore((s) => s.items.length);
 
   // Until the /api/auth/me check has resolved we don't know which auth button
@@ -58,9 +62,31 @@ export default function PublicHeader() {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openStripCategory, setOpenStripCategory] = useState<string | null>(null);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   const categoriesHoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stripRef = useRef<HTMLDivElement>(null);
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  // Close the My Account dropdown on outside click
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
+
+  // Close My Account on Escape
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAccountOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
 
   // Close the strip dropdown on outside click
   useEffect(() => {
@@ -103,15 +129,26 @@ export default function PublicHeader() {
     if (q) router.push(`/marketplace?search=${encodeURIComponent(q)}`);
   };
 
-  // "My Account" should land on the role's profile/settings page so the
-  // user can edit company details, GST, PAN, addresses, etc. — not the
-  // role dashboard home (which is more of an at-a-glance overview).
-  const dashboardHref =
+  // Role-aware destinations for the My Account dropdown.
+  const profileHref =
     user?.role === 'admin'
       ? '/admin/profile'
       : user?.role === 'vendor'
         ? '/vendor/profile'
         : '/buyer/profile';
+
+  const ordersHref =
+    user?.role === 'admin'
+      ? '/admin/orders'
+      : user?.role === 'vendor'
+        ? '/vendor/orders'
+        : '/buyer/orders';
+
+  const handleLogout = async () => {
+    setAccountOpen(false);
+    setMobileOpen(false);
+    await logout();
+  };
 
   // Generic "My Account" label for every authenticated role. Specifically
   // does NOT say "Admin" — the public header should never advertise the
@@ -218,18 +255,23 @@ export default function PublicHeader() {
             +91 98765 43210
           </a>
 
-          <Link
-            href={isAuthenticated && user?.role === 'buyer' ? '/buyer/cart' : '/login?redirect=/buyer/cart'}
-            className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-teal-600"
-            aria-label="Cart"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {cartCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 font-mono text-[10px] font-bold leading-none text-white">
-                {cartCount > 99 ? '99+' : cartCount}
-              </span>
-            )}
-          </Link>
+          {/* Cart icon — hidden for vendor/admin (the cart is a buyer feature).
+              Buyers go straight to /buyer/cart; anonymous visitors hit the
+              login wall first and bounce back to the cart after sign-in. */}
+          {(!authResolved || !isAuthenticated || user?.role === 'buyer') && (
+            <Link
+              href={isAuthenticated ? '/buyer/cart' : '/login?redirect=/buyer/cart'}
+              className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-teal-600"
+              aria-label="Cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 font-mono text-[10px] font-bold leading-none text-white">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </Link>
+          )}
 
           <Link
             href="/pro"
@@ -250,13 +292,87 @@ export default function PublicHeader() {
               <Loader2 className="h-4 w-4 animate-spin text-slate-300" />
             </div>
           ) : isAuthenticated ? (
-            <Link
-              href={dashboardHref}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-teal-500 hover:text-teal-600"
-            >
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">{dashboardLabel}</span>
-            </Link>
+            <div ref={accountRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setAccountOpen((o) => !o)}
+                aria-haspopup="true"
+                aria-expanded={accountOpen}
+                className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-teal-500 hover:text-teal-600"
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">{dashboardLabel}</span>
+                <ChevronDown
+                  className={`h-3.5 w-3.5 text-slate-400 transition-transform ${accountOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              {accountOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
+                >
+                  {/* Header with the user's name */}
+                  <div className="border-b border-slate-100 px-4 py-3">
+                    <p className="truncate font-heading text-sm font-bold text-slate-900">
+                      {user?.full_name ?? 'My Account'}
+                    </p>
+                    {user?.email && (
+                      <p className="mt-0.5 truncate text-xs text-slate-500">
+                        {user.email}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Menu items */}
+                  <div className="py-1">
+                    <Link
+                      href={profileHref}
+                      role="menuitem"
+                      onClick={() => setAccountOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-teal-50 hover:text-teal-700"
+                    >
+                      <Settings className="h-4 w-4 text-slate-400" />
+                      Profile Settings
+                    </Link>
+
+                    {user?.role === 'buyer' && (
+                      <Link
+                        href={`${profileHref}#business`}
+                        role="menuitem"
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-teal-50 hover:text-teal-700"
+                      >
+                        <Building2 className="h-4 w-4 text-slate-400" />
+                        Company &amp; Branch
+                      </Link>
+                    )}
+
+                    <Link
+                      href={ordersHref}
+                      role="menuitem"
+                      onClick={() => setAccountOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-teal-50 hover:text-teal-700"
+                    >
+                      <Package className="h-4 w-4 text-slate-400" />
+                      My Orders
+                    </Link>
+
+                    <div className="my-1 h-px bg-slate-100" />
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-rose-600 transition-colors hover:bg-rose-50"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <Link
               href="/login"
@@ -421,13 +537,29 @@ export default function PublicHeader() {
               </Link>
               {authResolved && (
                 isAuthenticated ? (
-                  <Link
-                    href={dashboardHref}
-                    onClick={() => setMobileOpen(false)}
-                    className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    <User className="h-4 w-4" /> {dashboardLabel}
-                  </Link>
+                  <>
+                    <Link
+                      href={profileHref}
+                      onClick={() => setMobileOpen(false)}
+                      className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <Settings className="h-4 w-4" /> Profile Settings
+                    </Link>
+                    <Link
+                      href={ordersHref}
+                      onClick={() => setMobileOpen(false)}
+                      className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <Package className="h-4 w-4" /> My Orders
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-rose-200 px-4 py-3 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+                    >
+                      <LogOut className="h-4 w-4" /> Logout
+                    </button>
+                  </>
                 ) : (
                   <Link
                     href="/login"
