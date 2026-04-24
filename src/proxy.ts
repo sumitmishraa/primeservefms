@@ -195,15 +195,23 @@ export function proxy(request: NextRequest): NextResponse {
   const requiresVendor = pathname.startsWith("/vendor");
   const requiresBuyer = pathname.startsWith("/buyer");
 
+  // /admin is locked down strictly. Non-admins (buyers, vendors) get sent to
+  // the public homepage — NOT their own dashboard — so the existence and
+  // structure of the admin surface is never hinted at to non-admins.
+  if (requiresAdmin && role !== "admin") {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
   const hasAccess =
-    role === "admin" || // admins can browse all sections for review/testing
+    role === "admin" || // admins can browse buyer/vendor sections for review
     (requiresVendor && role === "vendor") ||
     (requiresBuyer && role === "buyer") ||
     // Non-role-prefixed protected routes (e.g. future /account/*) — allow any role
     (!requiresAdmin && !requiresVendor && !requiresBuyer);
 
   if (!hasAccess) {
-    // Authenticated but wrong role — send them to their own dashboard
+    // Authenticated but wrong role on /buyer or /vendor — send them to their
+    // own dashboard. (/admin was already handled above with a strict bounce.)
     const correctDashboard = new URL(dashboardFor(role), request.url);
     return NextResponse.redirect(correctDashboard);
   }

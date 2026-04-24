@@ -18,6 +18,7 @@ import {
   Phone,
   Menu,
   X,
+  Loader2,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useCartStore } from '@/stores/cartStore';
@@ -40,8 +41,14 @@ const STRIP_SUBCATEGORY_PREVIEW = 5;
 
 export default function PublicHeader() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuthStore();
   const cartCount = useCartStore((s) => s.items.length);
+
+  // Until the /api/auth/me check has resolved we don't know which auth button
+  // to show. Render a fixed-width placeholder to avoid both layout shift and
+  // flashing the wrong button (e.g. showing "Sign In" to a logged-in user, or
+  // — worse — flashing a Dashboard link to a logged-out visitor).
+  const authResolved = !isAuthLoading;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -98,6 +105,16 @@ export default function PublicHeader() {
       : user?.role === 'vendor'
         ? '/vendor'
         : '/buyer';
+
+  // Label the dashboard button by role so it can never be visually confused
+  // with the adjacent "Pro Plan" CTA (the previous "Dashboard" wording was
+  // ambiguous and users were clicking it expecting Pro).
+  const dashboardLabel =
+    user?.role === 'admin'
+      ? 'Admin'
+      : user?.role === 'vendor'
+        ? 'Vendor'
+        : 'My Account';
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white">
@@ -219,13 +236,23 @@ export default function PublicHeader() {
             Pro Plan
           </Link>
 
-          {isAuthenticated ? (
+          {!authResolved ? (
+            // Loading placeholder — same width as the real button to prevent
+            // a layout shift (and any flash of the wrong button) the moment
+            // auth state resolves.
+            <div
+              aria-hidden="true"
+              className="flex h-[38px] w-[112px] items-center justify-center rounded-lg border border-slate-200 sm:w-[124px]"
+            >
+              <Loader2 className="h-4 w-4 animate-spin text-slate-300" />
+            </div>
+          ) : isAuthenticated ? (
             <Link
               href={dashboardHref}
               className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-teal-500 hover:text-teal-600"
             >
               <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Dashboard</span>
+              <span className="hidden sm:inline">{dashboardLabel}</span>
             </Link>
           ) : (
             <Link
@@ -389,14 +416,24 @@ export default function PublicHeader() {
               >
                 <Crown className="h-4 w-4" /> Pro Plan
               </Link>
-              {!isAuthenticated && (
-                <Link
-                  href="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  <User className="h-4 w-4" /> Sign In
-                </Link>
+              {authResolved && (
+                isAuthenticated ? (
+                  <Link
+                    href={dashboardHref}
+                    onClick={() => setMobileOpen(false)}
+                    className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    <User className="h-4 w-4" /> {dashboardLabel}
+                  </Link>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    <User className="h-4 w-4" /> Sign In
+                  </Link>
+                )
               )}
             </nav>
           </div>
