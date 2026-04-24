@@ -110,15 +110,11 @@ export default function PublicHeader() {
         ? '/vendor'
         : '/buyer';
 
-  // Label the dashboard button by role so it can never be visually confused
-  // with the adjacent "Pro Plan" CTA (the previous "Dashboard" wording was
-  // ambiguous and users were clicking it expecting Pro).
-  const dashboardLabel =
-    user?.role === 'admin'
-      ? 'Admin'
-      : user?.role === 'vendor'
-        ? 'Vendor'
-        : 'My Account';
+  // Generic "My Account" label for every authenticated role. Specifically
+  // does NOT say "Admin" — the public header should never advertise the
+  // existence of the admin panel. The href is still role-aware via
+  // `dashboardHref`, but no public-facing label leaks the role.
+  const dashboardLabel = 'My Account';
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white">

@@ -195,15 +195,24 @@ export function proxy(request: NextRequest): NextResponse {
   const requiresVendor = pathname.startsWith("/vendor");
   const requiresBuyer = pathname.startsWith("/buyer");
 
-  // /admin is locked down strictly. Non-admins (buyers, vendors) get sent to
-  // the public homepage — NOT their own dashboard — so the existence and
-  // structure of the admin surface is never hinted at to non-admins.
+  // Strict role-based access for every role-prefixed area:
+  //   /admin   → admin only
+  //   /vendor  → vendor only
+  //   /buyer   → buyer only
+  // Non-admins hitting /admin are bounced to "/" (the public homepage) so
+  // the existence and structure of the admin surface is never hinted at.
+  // Wrong-role hits on /vendor or /buyer are bounced to the user's own
+  // dashboard, which is informative without leaking anything.
+  //
+  // NOTE: this intentionally reverses the prior "admins can browse all
+  // sections for review" behaviour (commit a8b6758). Per-section access is
+  // now strict; admins must use the admin panel, not the buyer/vendor UIs.
   if (requiresAdmin && role !== "admin") {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
   const hasAccess =
-    role === "admin" || // admins can browse buyer/vendor sections for review
+    (requiresAdmin && role === "admin") ||
     (requiresVendor && role === "vendor") ||
     (requiresBuyer && role === "buyer") ||
     // Non-role-prefixed protected routes (e.g. future /account/*) — allow any role

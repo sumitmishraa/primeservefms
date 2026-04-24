@@ -147,7 +147,11 @@ export default function RegisterPage() {
 
       setUser(json.user);
       toast.success(`Welcome to PrimeServe, ${json.user.full_name.split(' ')[0]}!`);
-      router.push('/buyer/marketplace');
+      // New accounts always have role='buyer' (hardcoded server-side in
+      // /api/auth/verify). Send them straight to the public marketplace
+      // — the same surface logged-out visitors see, but with cart + account
+      // features enabled.
+      router.push('/marketplace');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {

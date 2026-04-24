@@ -126,9 +126,21 @@ export function useAuth() {
   const redirectAfterLogin = useCallback(
     (u: UserProfile, redirectOverride?: string | null) => {
       if (redirectOverride) { router.push(redirectOverride); return; }
-      if (u.role === 'admin')  router.push('/admin');
-      else if (u.role === 'vendor') router.push('/vendor');
-      else router.push('/buyer/marketplace');
+      // Strict role-based routing. Default fallback is the public marketplace
+      // — buyers see the same browse surface as logged-out visitors, just
+      // with cart and account-aware features lit up.
+      switch (u.role) {
+        case 'admin':
+          router.push('/admin');
+          return;
+        case 'vendor':
+          router.push('/vendor');
+          return;
+        case 'buyer':
+        default:
+          router.push('/marketplace');
+          return;
+      }
     },
     [router]
   );
