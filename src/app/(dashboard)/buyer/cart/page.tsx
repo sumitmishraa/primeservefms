@@ -302,7 +302,7 @@ export default function BuyerCartPage() {
           </p>
         </div>
         <Link
-          href="/buyer/marketplace"
+          href="/marketplace"
           className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
         >
           <ShoppingBag className="w-4 h-4" aria-hidden="true" />
@@ -332,7 +332,7 @@ export default function BuyerCartPage() {
           {/* Continue shopping */}
           <div className="pt-2">
             <Link
-              href="/buyer/marketplace"
+              href="/marketplace"
               className="inline-flex items-center gap-2 text-sm text-teal-600 hover:text-teal-700 font-medium"
             >
               ← Continue Shopping

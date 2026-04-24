@@ -36,6 +36,7 @@ const BUSINESS_TYPES = [
 ];
 
 const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -53,6 +54,8 @@ export default function BuyerProfilePage() {
   const [companyType, setCompanyType] = useState('');
   const [gstNumber, setGstNumber] = useState('');
   const [gstError, setGstError] = useState('');
+  const [panNumber, setPanNumber] = useState('');
+  const [panError, setPanError] = useState('');
 
   // Saved addresses
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
@@ -74,6 +77,7 @@ export default function BuyerProfilePage() {
         setCompanyName(json.data.company_name ?? '');
         setCompanyType(json.data.company_type ?? '');
         setGstNumber(json.data.gst_number ?? '');
+        setPanNumber(json.data.tax_id ?? '');
         setAddresses(json.data.saved_addresses ?? []);
       } catch {
         toast.error('Could not load profile');
@@ -90,7 +94,12 @@ export default function BuyerProfilePage() {
       setGstError('Invalid GST format — expected: 29XXXXX1234X1Z5');
       return;
     }
+    if (panNumber.trim() && !PAN_REGEX.test(panNumber.trim().toUpperCase())) {
+      setPanError('Invalid PAN format — expected: ABCDE1234F');
+      return;
+    }
     setGstError('');
+    setPanError('');
     setSaving(true);
     try {
       const res = await fetch('/api/buyer/profile', {
@@ -102,6 +111,7 @@ export default function BuyerProfilePage() {
           company_name: companyName.trim(),
           company_type: companyType,
           gst_number: gstNumber.trim().toUpperCase() || null,
+          tax_id: panNumber.trim().toUpperCase() || null,
         }),
       });
       const json = await res.json() as { error: string | null };
@@ -234,7 +244,7 @@ export default function BuyerProfilePage() {
               {BUSINESS_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
-          <div className="sm:col-span-2">
+          <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">GST Number <span className="text-slate-400">(optional)</span></label>
             <input
               type="text"
@@ -250,18 +260,40 @@ export default function BuyerProfilePage() {
               </p>
             )}
           </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">PAN Number <span className="text-slate-400">(optional)</span></label>
+            <input
+              type="text"
+              value={panNumber}
+              onChange={(e) => { setPanNumber(e.target.value.toUpperCase()); setPanError(''); }}
+              placeholder="ABCDE1234F"
+              maxLength={10}
+              className={`${inputCls} font-mono ${panError ? 'border-rose-400' : ''}`}
+            />
+            {panError && (
+              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />{panError}
+              </p>
+            )}
+          </div>
 
-          {/* Read-only: client + branch */}
-          {profile.client_id && (
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Client <span className="text-slate-400">(assigned by admin)</span></label>
-              <input type="text" value={(profile as ProfileWithMeta).client_name ?? profile.client_id} readOnly className={readonlyCls} />
-            </div>
-          )}
-          {profile.branch_id && (
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Branch <span className="text-slate-400">(assigned by admin)</span></label>
-              <input type="text" value={(profile as ProfileWithMeta).branch_name ?? profile.branch_id} readOnly className={readonlyCls} />
+          {/* Read-only: client + branch (assigned by admin). Shown as a single
+              combined name when both are present — e.g. "Zomato Indra Nagar" —
+              so the buyer sees their organisational identity at a glance. */}
+          {(profile.client_id || profile.branch_id) && (
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                Organisation <span className="text-slate-400">(assigned by admin)</span>
+              </label>
+              <input
+                type="text"
+                value={[
+                  (profile as ProfileWithMeta).client_name,
+                  (profile as ProfileWithMeta).branch_name,
+                ].filter(Boolean).join(' ')}
+                readOnly
+                className={readonlyCls}
+              />
             </div>
           )}
         </div>

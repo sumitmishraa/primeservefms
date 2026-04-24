@@ -10,6 +10,9 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { ApiResponse } from '@/types';
 
 const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+// Indian PAN format: 5 letters + 4 digits + 1 letter (e.g. ABCDE1234F).
+// Stored in the existing `tax_id` column to avoid a new migration.
+const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 
 // ---------------------------------------------------------------------------
 // GET
@@ -56,6 +59,10 @@ interface UpdateProfileBody {
   company_name?: string;
   company_type?: string;
   gst_number?: string | null;
+  /** PAN number — stored in tax_id column. Validated against PAN_REGEX. */
+  tax_id?: string | null;
+  /** Profile picture URL. */
+  avatar_url?: string | null;
   saved_addresses?: unknown;
 }
 
@@ -80,6 +87,16 @@ export async function PUT(request: NextRequest): Promise<NextResponse<ApiRespons
         return NextResponse.json({ data: null, error: 'Invalid GST number format' }, { status: 400 });
       }
       update.gst_number = gst;
+    }
+    if (body.tax_id !== undefined) {
+      const pan = body.tax_id?.trim().toUpperCase() ?? null;
+      if (pan && !PAN_REGEX.test(pan)) {
+        return NextResponse.json({ data: null, error: 'Invalid PAN format — expected ABCDE1234F' }, { status: 400 });
+      }
+      update.tax_id = pan;
+    }
+    if (body.avatar_url !== undefined) {
+      update.avatar_url = body.avatar_url?.trim() || null;
     }
     if (body.saved_addresses !== undefined) update.saved_addresses = body.saved_addresses;
 

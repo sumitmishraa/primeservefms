@@ -103,12 +103,15 @@ export default function PublicHeader() {
     if (q) router.push(`/marketplace?search=${encodeURIComponent(q)}`);
   };
 
+  // "My Account" should land on the role's profile/settings page so the
+  // user can edit company details, GST, PAN, addresses, etc. — not the
+  // role dashboard home (which is more of an at-a-glance overview).
   const dashboardHref =
     user?.role === 'admin'
-      ? '/admin'
+      ? '/admin/profile'
       : user?.role === 'vendor'
-        ? '/vendor'
-        : '/buyer';
+        ? '/vendor/profile'
+        : '/buyer/profile';
 
   // Generic "My Account" label for every authenticated role. Specifically
   // does NOT say "Admin" — the public header should never advertise the

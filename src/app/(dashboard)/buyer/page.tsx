@@ -61,23 +61,39 @@ export default function BuyerDashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
-  const [companyName, setCompanyName] = useState('');
+  const [orgName, setOrgName] = useState('');
 
   useEffect(() => {
     async function load() {
       try {
+        // /api/buyer/profile already enriches the user with client_name +
+        // branch_name (looked up from clients/branches tables) — so prefer
+        // it over /api/auth/me for the greeting line.
         const [statsRes, profileRes] = await Promise.all([
           fetch('/api/buyer/stats'),
-          fetch('/api/auth/me'),
+          fetch('/api/buyer/profile'),
         ]);
         const [statsJson, profileJson] = await Promise.all([
           statsRes.json() as Promise<{ data: Stats | null; error: string | null }>,
-          profileRes.json() as Promise<{ user: { full_name: string; company_name: string | null } | null }>,
+          profileRes.json() as Promise<{
+            data: {
+              full_name: string;
+              company_name: string | null;
+              client_name: string | null;
+              branch_name: string | null;
+            } | null;
+          }>,
         ]);
         if (statsJson.data) setStats(statsJson.data);
-        if (profileJson.user) {
-          setUserName(profileJson.user.full_name);
-          setCompanyName(profileJson.user.company_name ?? '');
+        if (profileJson.data) {
+          setUserName(profileJson.data.full_name);
+          // Prefer client + branch (e.g. "Zomato Indra Nagar") over the
+          // free-text company_name when an admin has assigned this buyer
+          // to a real organisation. Falls back to company_name otherwise.
+          const org = [profileJson.data.client_name, profileJson.data.branch_name]
+            .filter(Boolean)
+            .join(' ');
+          setOrgName(org || profileJson.data.company_name || '');
         }
       } catch {
         toast.error('Failed to load dashboard');
@@ -104,7 +120,7 @@ export default function BuyerDashboardPage() {
         <h1 className="text-2xl font-bold text-slate-900">
           Welcome{userName ? `, ${userName.split(' ')[0]}` : ''}!
         </h1>
-        {companyName && <p className="text-slate-500 text-sm mt-0.5">{companyName}</p>}
+        {orgName && <p className="text-slate-500 text-sm mt-0.5">{orgName}</p>}
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-2 mt-4">
