@@ -252,7 +252,10 @@ export function useAuth() {
 
         setUser(json.user);
         toast.success('Welcome to PrimeServe!');
-        router.push('/buyer/marketplace');
+        // New accounts always have role='buyer' (hardcoded server-side).
+        // Send them to the public marketplace, same destination as the
+        // post-login redirect for buyers.
+        router.push('/marketplace');
       } catch (err) {
         clearUser();
         throw err instanceof Error ? err : new Error('Registration failed. Please try again.');
@@ -295,7 +298,10 @@ export function useAuth() {
 
         setUser(json.user);
         toast.success('Welcome to PrimeServe!');
-        router.push('/buyer/marketplace');
+        // New accounts always have role='buyer' (hardcoded server-side).
+        // Send them to the public marketplace, same destination as the
+        // post-login redirect for buyers.
+        router.push('/marketplace');
       } catch (err) {
         clearUser();
         throw err instanceof Error ? err : new Error('Registration failed. Please try again.');

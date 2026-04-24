@@ -69,12 +69,35 @@ export function PhoneVerification({ onVerified, disabled = false }: PhoneVerific
       toast.success('OTP sent to +91 ' + phone);
     } catch (err) {
       setStage('input');
-      const msg = err instanceof Error ? err.message : 'Failed to send OTP';
-      // Firebase error codes are verbose — simplify for users
-      if (msg.includes('invalid-phone-number')) {
+      // Surface the actual Firebase error code so support / users can tell
+      // apart bad number / rate limit / unauthorised domain / captcha block /
+      // billing-not-enabled. See login/page.tsx for the same handling.
+      const errObj = err as { code?: string; message?: string };
+      const code = errObj?.code ?? '';
+      const msg = errObj?.message ?? '';
+      console.error('[register phone OTP] firebase error:', { code, msg });
+
+      if (code === 'auth/invalid-phone-number' || msg.includes('invalid-phone-number')) {
         toast.error('Invalid phone number. Use a valid Indian mobile number.');
-      } else if (msg.includes('too-many-requests')) {
+      } else if (code === 'auth/too-many-requests' || msg.includes('too-many-requests')) {
         toast.error('Too many attempts. Please wait a few minutes and try again.');
+      } else if (code === 'auth/quota-exceeded') {
+        toast.error('Daily SMS quota reached. Try again tomorrow.');
+      } else if (
+        code === 'auth/captcha-check-failed' ||
+        code === 'auth/internal-error' ||
+        msg.includes('captcha')
+      ) {
+        toast.error(
+          'OTP verification blocked. This domain may not be authorised in Firebase — use the production URL.',
+          { duration: 6000 }
+        );
+      } else if (code === 'auth/operation-not-allowed') {
+        toast.error('Phone sign-in is disabled in Firebase. Contact support.');
+      } else if (code === 'auth/billing-not-enabled') {
+        toast.error('SMS service requires a Firebase Blaze plan upgrade.');
+      } else if (code) {
+        toast.error(`OTP failed (${code}). Please try again or contact support.`);
       } else {
         toast.error('Could not send OTP. Please try again.');
       }

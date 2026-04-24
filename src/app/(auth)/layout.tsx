@@ -11,6 +11,7 @@
 
 import Link from 'next/link';
 import { Truck, ShieldCheck, CreditCard, ArrowLeft } from 'lucide-react';
+import { PreviewDomainNotice } from '@/components/auth';
 
 const FEATURES = [
   {
@@ -111,7 +112,10 @@ export default function AuthLayout({
         </div>
 
         <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-8 lg:px-12">
-          <div className="w-full max-w-md">{children}</div>
+          <div className="w-full max-w-md space-y-4">
+            <PreviewDomainNotice />
+            {children}
+          </div>
         </div>
       </div>
     </div>

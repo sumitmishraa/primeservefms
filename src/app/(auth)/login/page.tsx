@@ -78,10 +78,39 @@ function PhoneOTPTab({ redirectTo }: { redirectTo: string | null }) {
     } catch (err) {
       setStage('input');
       clearRecaptchaVerifier();
-      const msg = err instanceof Error ? err.message : '';
-      if (msg.includes('invalid-phone-number')) toast.error('Invalid phone number. Please check and try again.');
-      else if (msg.includes('too-many-requests')) toast.error('Too many attempts. Please wait a few minutes.');
-      else toast.error('Could not send OTP. Please try again.');
+      // Surface the *actual* Firebase error so the user (and we, in support)
+      // can tell apart: bad number / rate limit / unauthorized domain /
+      // captcha block / billing-not-enabled, etc. Firebase errors carry a
+      // `.code` like "auth/captcha-check-failed".
+      const errObj = err as { code?: string; message?: string };
+      const code = errObj?.code ?? '';
+      const msg = errObj?.message ?? '';
+      console.error('[login phone OTP] firebase error:', { code, msg });
+
+      if (code === 'auth/invalid-phone-number' || msg.includes('invalid-phone-number')) {
+        toast.error('Invalid phone number. Please check and try again.');
+      } else if (code === 'auth/too-many-requests' || msg.includes('too-many-requests')) {
+        toast.error('Too many attempts. Please wait a few minutes.');
+      } else if (code === 'auth/quota-exceeded') {
+        toast.error('Daily SMS quota reached. Please try email login or come back tomorrow.');
+      } else if (
+        code === 'auth/captcha-check-failed' ||
+        code === 'auth/internal-error' ||
+        msg.includes('captcha')
+      ) {
+        toast.error(
+          'OTP verification blocked. This usually means this domain isn\'t authorised in Firebase — try email/password login or use the production URL.',
+          { duration: 6000 }
+        );
+      } else if (code === 'auth/operation-not-allowed') {
+        toast.error('Phone sign-in is disabled in Firebase. Contact support.');
+      } else if (code === 'auth/billing-not-enabled') {
+        toast.error('SMS service requires a Firebase Blaze plan upgrade.');
+      } else if (code) {
+        toast.error(`OTP failed (${code}). Please try email/password login instead.`);
+      } else {
+        toast.error('Could not send OTP. Please try email/password login instead.');
+      }
     }
   }, [phone, startTimer]);
 

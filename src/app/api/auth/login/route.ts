@@ -78,15 +78,49 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // 4. Verify password
     if (!user.password_hash) {
-      // Account was created before password auth was added — prompt re-registration
+      console.warn('[LOGIN] No password_hash for user:', user.email, 'role:', user.role);
       return NextResponse.json(
-        { error: 'This account has no password set. Please register again or contact support.' },
+        {
+          error:
+            'This account was created via phone OTP and has no password set. ' +
+            'Please sign in with the OTP option, or contact support to add a password.',
+          code: 'NO_PASSWORD',
+        },
         { status: 401 }
+      );
+    }
+
+    // Sanity-check the stored hash format. bcrypt hashes always start with
+    // $2a$ / $2b$ / $2y$ — if it's anything else the row was corrupted /
+    // double-hashed / inserted manually with raw text. Surface it loudly so
+    // we can fix the data instead of telling the user "wrong password".
+    const hashPrefix = user.password_hash.slice(0, 4);
+    const looksLikeBcrypt = /^\$2[aby]\$/.test(user.password_hash);
+    if (!looksLikeBcrypt) {
+      console.error(
+        '[LOGIN] Stored password_hash for',
+        user.email,
+        'is not a bcrypt hash. prefix:',
+        hashPrefix,
+        'length:',
+        user.password_hash.length
+      );
+      return NextResponse.json(
+        {
+          error:
+            'Your password is stored in an unexpected format. Please reset your password or contact support.',
+          code: 'HASH_FORMAT_ERROR',
+        },
+        { status: 500 }
       );
     }
 
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) {
+      // Log the failure server-side (without leaking the password) so we can
+      // distinguish "user typed wrong password" from "everyone is failing"
+      // in Vercel logs.
+      console.warn('[LOGIN] bcrypt.compare returned false for', user.email);
       return NextResponse.json(
         { error: 'Invalid email or password.' },
         { status: 401 }
