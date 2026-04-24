@@ -109,8 +109,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // 5. Hash password
+    //    Each step is awaited and the result is what gets stored — never the
+    //    plain-text `password`. The console line below makes the hash
+    //    generation visible in Vercel runtime logs (only the prefix + length,
+    //    never the full hash, to avoid leaking a hash that could be brute-
+    //    forced offline).
     const salt = await bcrypt.genSalt(12);
     const password_hash = await bcrypt.hash(password, salt);
+    console.log(
+      '[REGISTER] bcrypt hash generated for',
+      email,
+      '— prefix:',
+      password_hash.slice(0, 7),  // e.g. "$2b$12$"
+      'length:',
+      password_hash.length,        // bcrypt output is always 60 chars
+      'looksValid:',
+      /^\$2[aby]\$/.test(password_hash)
+    );
 
     // 6. Insert user
     console.log('[REGISTER] Creating user in Supabase...');

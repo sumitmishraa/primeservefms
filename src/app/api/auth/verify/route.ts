@@ -140,11 +140,32 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
       }
 
-      // Hash password if provided
+      // Hash password if provided. The OTP register flow accepts an optional
+      // password — if the user fills the password field on the register page
+      // we hash + store it so they can later log in with email + password.
+      // If they skip it, password_hash stays null and email/password login
+      // for this account will return code='NO_PASSWORD' with a helpful
+      // "use OTP instead" message.
       let password_hash: string | null = null;
       if (password) {
         const salt = await bcrypt.genSalt(12);
         password_hash = await bcrypt.hash(password, salt);
+        console.log(
+          '[VERIFY/REGISTER] bcrypt hash generated for',
+          firebasePhone,
+          '— prefix:',
+          password_hash.slice(0, 7),
+          'length:',
+          password_hash.length,
+          'looksValid:',
+          /^\$2[aby]\$/.test(password_hash)
+        );
+      } else {
+        console.log(
+          '[VERIFY/REGISTER] No password provided for',
+          firebasePhone,
+          '— password_hash will be NULL; email/password login disabled for this account'
+        );
       }
 
       // Insert new user
