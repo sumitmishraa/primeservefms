@@ -77,10 +77,15 @@ export default function ProductSidebar({
                       <input
                         type="checkbox"
                         checked={active}
-                        onChange={() => {
-                          onCategoryChange(active ? '' : cat.value);
-                          onSubcategoryChange('');
-                        }}
+                        // Single intent — the parent's handleCategoryChange
+                        // already clears `subcategory` atomically in the same
+                        // pushParams call. Calling onSubcategoryChange('')
+                        // here would fire a second router.push using a stale
+                        // searchParams snapshot and silently revert the
+                        // category we just set.
+                        onChange={() =>
+                          onCategoryChange(active ? '' : cat.value)
+                        }
                         className="sr-only"
                       />
                       <span

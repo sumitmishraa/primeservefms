@@ -77,7 +77,18 @@ function MarketplaceContent() {
 
   const pushParams = useCallback(
     (updates: Record<string, string>) => {
-      const params = new URLSearchParams(searchParams.toString());
+      // Read from window.location.search rather than the React searchParams
+      // snapshot. searchParams is stable across re-renders within the same
+      // event loop tick, so two pushParams calls fired back-to-back from a
+      // single onChange would both start from the *original* URL — the
+      // second would silently revert anything the first just set.
+      // window.location.search reflects whatever router.push has just
+      // mutated, so consecutive calls compose correctly.
+      const current =
+        typeof window !== 'undefined'
+          ? window.location.search
+          : `?${searchParams.toString()}`;
+      const params = new URLSearchParams(current);
       Object.entries(updates).forEach(([key, val]) => {
         if (val) params.set(key, val);
         else params.delete(key);
