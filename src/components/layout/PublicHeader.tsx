@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   Search,
   ShoppingCart,
@@ -45,6 +45,7 @@ const STRIP_SUBCATEGORY_PREVIEW = 5;
 
 export default function PublicHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   // Use useAuth (not useAuthStore) so the session-check useEffect actually
   // runs on public pages. Calling useAuthStore alone subscribes to the store
   // but never triggers /api/auth/me — which would leave isLoading stuck on
@@ -87,6 +88,17 @@ export default function PublicHeader() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
+
+  // Auto-close every open menu the moment the URL changes. PublicHeader
+  // stays mounted across client-side navigations, so without this hook a
+  // dropdown that triggered the navigation would stay visually open on
+  // the destination page.
+  useEffect(() => {
+    setAccountOpen(false);
+    setMobileOpen(false);
+    setCategoriesOpen(false);
+    setOpenStripCategory(null);
+  }, [pathname]);
 
   // Close the strip dropdown on outside click
   useEffect(() => {

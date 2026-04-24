@@ -275,18 +275,36 @@ function AddressForm({ prefix, values, errors, onChange }: AddressFormProps) {
 // ---------------------------------------------------------------------------
 
 /**
- * User profile shape returned by GET /api/auth/me
+ * Saved address record stored as JSONB in users.saved_addresses.
+ * Mirrors the shape used by the /buyer/profile editor.
  */
-interface UserProfile {
+interface SavedAddress {
+  id: string;
+  label: string;
+  contact_name: string;
+  contact_phone: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  is_default: boolean;
+}
+
+/**
+ * Buyer profile shape returned by GET /api/buyer/profile.
+ * Includes client/branch names + saved addresses array.
+ */
+interface BuyerProfile {
   id: string;
   full_name: string;
   phone: string | null;
   email: string | null;
-  address_line1: string | null;
-  address_line2: string | null;
-  city: string | null;
-  state: string | null;
-  pincode: string | null;
+  company_name: string | null;
+  gst_number: string | null;
+  client_name: string | null;
+  branch_name: string | null;
+  saved_addresses: SavedAddress[] | null;
 }
 
 export default function CheckoutPage() {
@@ -309,11 +327,12 @@ export default function CheckoutPage() {
   const gstAmount = gstBreakdown.reduce((s, g) => s + g.amount, 0);
 
   // ── User profile ──────────────────────────────────────────────────────────
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<BuyerProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
   // ── Shipping form ─────────────────────────────────────────────────────────
-  const [useProfileAddress, setUseProfileAddress] = useState(false);
+  // The selected saved address — null means "manual entry".
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [shipping, setShipping] = useState<AddressFields>(EMPTY_ADDRESS);
 
   // ── Billing form ──────────────────────────────────────────────────────────
@@ -341,20 +360,36 @@ export default function CheckoutPage() {
     }
   }, [items.length, router]);
 
-  // ── Load user profile ─────────────────────────────────────────────────────
+  // ── Load buyer profile (with saved addresses + GST + org) ──────────────
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const res = await fetch('/api/auth/me');
+        const res = await fetch('/api/buyer/profile');
         if (!res.ok) throw new Error('Not authenticated');
-        const json = await res.json() as { user: UserProfile };
-        setProfile(json.user);
-        // Pre-fill name and phone from profile
+        const json = await res.json() as { data: BuyerProfile | null; error: string | null };
+        if (!json.data) throw new Error(json.error ?? 'Failed to load profile');
+        const p = json.data;
+        setProfile(p);
+
+        // Pre-fill name + phone (always)
         setShipping((prev) => ({
           ...prev,
-          name: json.user.full_name ?? '',
-          phone: json.user.phone ?? '',
+          name: p.full_name ?? '',
+          phone: p.phone ?? '',
         }));
+
+        // Pre-fill GST from profile if it's set
+        if (p.gst_number) setGstNumber(p.gst_number);
+
+        // Auto-select the buyer's default saved address (or the first one
+        // if no default is flagged) so the form arrives pre-filled. The
+        // user can still pick a different saved address or switch to
+        // "Enter a new address" to override.
+        const addrs = p.saved_addresses ?? [];
+        if (addrs.length > 0) {
+          const def = addrs.find((a) => a.is_default) ?? addrs[0];
+          setSelectedAddressId(def.id);
+        }
       } catch {
         toast.error('Could not load your profile');
       } finally {
@@ -364,28 +399,35 @@ export default function CheckoutPage() {
     fetchProfile();
   }, []);
 
-  // ── Auto-fill / clear profile address ────────────────────────────────────
+  // ── When a saved address is selected, copy it into the shipping form ───
+  // Switching to "Enter a new address" (selectedAddressId === null) keeps
+  // the name/phone but clears the address fields so the user can type fresh.
   useEffect(() => {
     if (!profile) return;
-    if (useProfileAddress) {
-      setShipping({
-        name: profile.full_name ?? '',
-        phone: profile.phone ?? '',
-        line1: profile.address_line1 ?? '',
-        line2: profile.address_line2 ?? '',
-        city: profile.city ?? 'Bangalore',
-        state: profile.state ?? 'Karnataka',
-        pincode: profile.pincode ?? '',
-      });
+    const addrs = profile.saved_addresses ?? [];
+    if (selectedAddressId) {
+      const picked = addrs.find((a) => a.id === selectedAddressId);
+      if (picked) {
+        setShipping({
+          name: picked.contact_name || profile.full_name || '',
+          phone: picked.contact_phone || profile.phone || '',
+          line1: picked.line1,
+          line2: picked.line2,
+          city: picked.city,
+          state: picked.state,
+          pincode: picked.pincode,
+        });
+        setErrors((prev) => ({ ...prev, shipping: undefined }));
+      }
     } else {
-      // Only reset address fields — keep name/phone pre-fills
       setShipping((prev) => ({
         ...EMPTY_ADDRESS,
-        name: prev.name,
-        phone: prev.phone,
+        name: prev.name || profile.full_name || '',
+        phone: prev.phone || profile.phone || '',
       }));
     }
-  }, [useProfileAddress, profile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAddressId, profile]);
 
   // ── Shipping field updater ────────────────────────────────────────────────
   const updateShipping = useCallback((field: keyof AddressFields, value: string) => {
@@ -590,22 +632,92 @@ export default function CheckoutPage() {
               <h2 className="text-base font-semibold text-slate-900">Shipping Address</h2>
             </div>
 
-            {/* Use profile address toggle */}
-            {profile?.address_line1 && (
-              <label className="flex items-center gap-3 mb-4 p-3 bg-teal-50 border border-teal-200 rounded-lg cursor-pointer hover:bg-teal-100 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={useProfileAddress}
-                  onChange={(e) => setUseProfileAddress(e.target.checked)}
-                  className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500"
-                />
-                <span className="text-sm text-teal-800 font-medium">
-                  Use my profile address
-                </span>
-                <span className="text-xs text-teal-600 truncate">
-                  — {profile.address_line1}, {profile.city}
-                </span>
-              </label>
+            {/* Saved-address picker — appears only when the buyer has at least
+                one address in their profile. The default address is auto-selected
+                on mount; the user can pick a different one or click "Enter a new
+                address" to override and type a one-off shipping destination. */}
+            {(profile?.saved_addresses?.length ?? 0) > 0 && (
+              <div className="mb-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                  Use a saved address
+                </p>
+                <div className="space-y-2">
+                  {(profile!.saved_addresses ?? []).map((addr) => (
+                    <label
+                      key={addr.id}
+                      className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                        selectedAddressId === addr.id
+                          ? 'border-teal-400 bg-teal-50'
+                          : 'border-slate-200 hover:border-teal-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="saved-address"
+                        checked={selectedAddressId === addr.id}
+                        onChange={() => setSelectedAddressId(addr.id)}
+                        className="mt-1 h-4 w-4 text-teal-600 focus:ring-teal-500"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-slate-800">
+                            {addr.label}
+                          </p>
+                          {addr.is_default && (
+                            <span className="rounded-full bg-teal-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-teal-700">
+                              Default
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {addr.contact_name} · {addr.contact_phone}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}, {addr.city}, {addr.state} {addr.pincode}
+                        </p>
+                      </div>
+                    </label>
+                  ))}
+
+                  {/* Manual entry option */}
+                  <label
+                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
+                      selectedAddressId === null
+                        ? 'border-teal-400 bg-teal-50'
+                        : 'border-slate-200 hover:border-teal-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="saved-address"
+                      checked={selectedAddressId === null}
+                      onChange={() => setSelectedAddressId(null)}
+                      className="h-4 w-4 text-teal-600 focus:ring-teal-500"
+                    />
+                    <span className="text-sm font-medium text-slate-700">
+                      Enter a new address
+                    </span>
+                  </label>
+                </div>
+                <p className="mt-2 text-xs text-slate-400">
+                  Manage saved addresses in your{' '}
+                  <Link href="/buyer/profile" className="text-teal-600 hover:underline">
+                    profile
+                  </Link>
+                  .
+                </p>
+              </div>
+            )}
+
+            {/* No saved addresses yet — gentle nudge to save one */}
+            {(profile?.saved_addresses?.length ?? 0) === 0 && (
+              <p className="mb-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
+                💡 Tip: save addresses on your{' '}
+                <Link href="/buyer/profile" className="text-teal-600 hover:underline">
+                  profile
+                </Link>{' '}
+                to skip this step on future orders.
+              </p>
             )}
 
             <AddressForm
