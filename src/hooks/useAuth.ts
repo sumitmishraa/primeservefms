@@ -20,7 +20,7 @@
 
 'use client';
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
@@ -65,32 +65,55 @@ export function useAuth() {
   const { user, isLoading, isAuthenticated, setUser, clearUser, setLoading } =
     useAuthStore();
   const router = useRouter();
-  const isMounted = useRef(true);
 
   // ── Restore session on mount ──────────────────────────────────────────────
+  //
+  // Guarantees that isLoading becomes false after this effect runs, no matter
+  // what /api/auth/me does:
+  //   • 200 + user            → setUser (sets isLoading=false via store action)
+  //   • 200 without user / 401 / any non-OK status → clearUser (same)
+  //   • network error / thrown promise               → clearUser (catch)
+  //   • request hangs longer than SESSION_CHECK_TIMEOUT_MS → AbortController
+  //     trips, the catch fires, and we finally still call setLoading(false)
+  //     just in case the store actions were never reached.
 
   useEffect(() => {
-    isMounted.current = true;
     if (sessionCheckStarted) return;
     sessionCheckStarted = true;
 
+    const SESSION_CHECK_TIMEOUT_MS = 3000;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), SESSION_CHECK_TIMEOUT_MS);
+
     (async () => {
       try {
-        const res = await fetch('/api/auth/me');
+        const res = await fetch('/api/auth/me', { signal: controller.signal });
         if (res.ok) {
-          const json = (await res.json()) as { user: UserProfile };
-          if (json.user && isMounted.current) {
+          const json = (await res.json()) as { user: UserProfile | null };
+          if (json.user) {
             setUser(json.user);
             return;
           }
         }
-        if (isMounted.current) clearUser();
+        // Non-OK status (incl. 401) or 200 without a user → unauthenticated.
+        clearUser();
       } catch {
-        if (isMounted.current) clearUser();
+        // Network error, abort, or JSON parse failure → unauthenticated.
+        clearUser();
+      } finally {
+        clearTimeout(timeoutId);
+        // Belt-and-braces: setUser/clearUser already set isLoading=false, but
+        // if a future refactor ever broke that contract this guarantees the
+        // spinner can never be stuck on. Store updates are safe to call even
+        // after the initiating component unmounted — Zustand is global.
+        setLoading(false);
       }
     })();
 
-    return () => { isMounted.current = false; };
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

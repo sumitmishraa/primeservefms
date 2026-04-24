@@ -20,7 +20,7 @@ import {
   X,
   Loader2,
 } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuth } from '@/hooks/useAuth';
 import { useCartStore } from '@/stores/cartStore';
 import { PRODUCT_CATEGORIES, getSubcategoriesByCategory } from '@/lib/constants/categories';
 
@@ -41,7 +41,11 @@ const STRIP_SUBCATEGORY_PREVIEW = 5;
 
 export default function PublicHeader() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuthStore();
+  // Use useAuth (not useAuthStore) so the session-check useEffect actually
+  // runs on public pages. Calling useAuthStore alone subscribes to the store
+  // but never triggers /api/auth/me — which would leave isLoading stuck on
+  // true for every visitor who lands on /, /pro, /about, etc.
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const cartCount = useCartStore((s) => s.items.length);
 
   // Until the /api/auth/me check has resolved we don't know which auth button
