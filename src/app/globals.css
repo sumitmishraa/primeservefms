@@ -24,6 +24,13 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+/* Hide the reCAPTCHA badge and error widget injected by Google */
+.grecaptcha-badge {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* Utility: hide scrollbar but keep scrolling */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
