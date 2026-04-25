@@ -172,8 +172,7 @@ export function proxy(request: NextRequest): NextResponse {
 
   // ── If user is already logged in, redirect away from auth pages ──────────
   if (session && isAuthPage(pathname)) {
-    const dashboard = new URL(dashboardFor(session.role), request.url);
-    return NextResponse.redirect(dashboard);
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // ── Allow public routes through ──────────────────────────────────────────

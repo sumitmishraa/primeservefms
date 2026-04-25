@@ -126,23 +126,8 @@ export function useAuth() {
    * Respects the ?redirect= query param if present.
    */
   const redirectAfterLogin = useCallback(
-    (u: UserProfile, redirectOverride?: string | null) => {
-      if (redirectOverride) { router.push(redirectOverride); return; }
-      // Strict role-based routing. Default fallback is the public marketplace
-      // — buyers see the same browse surface as logged-out visitors, just
-      // with cart and account-aware features lit up.
-      switch (u.role) {
-        case 'admin':
-          router.push('/admin');
-          return;
-        case 'vendor':
-          router.push('/vendor');
-          return;
-        case 'buyer':
-        default:
-          router.push('/marketplace');
-          return;
-      }
+    (_u: UserProfile, _redirectOverride?: string | null) => {
+      router.push('/');
     },
     [router]
   );
@@ -260,10 +245,7 @@ export function useAuth() {
 
         setUser(json.user);
         toast.success('Welcome to PrimeServe!');
-        // New accounts always have role='buyer' (hardcoded server-side).
-        // Send them to the public marketplace, same destination as the
-        // post-login redirect for buyers.
-        router.push('/marketplace');
+        router.push('/');
       } catch (err) {
         clearUser();
         throw err instanceof Error ? err : new Error('Registration failed. Please try again.');
@@ -306,10 +288,7 @@ export function useAuth() {
 
         setUser(json.user);
         toast.success('Welcome to PrimeServe!');
-        // New accounts always have role='buyer' (hardcoded server-side).
-        // Send them to the public marketplace, same destination as the
-        // post-login redirect for buyers.
-        router.push('/marketplace');
+        router.push('/');
       } catch (err) {
         clearUser();
         throw err instanceof Error ? err : new Error('Registration failed. Please try again.');
