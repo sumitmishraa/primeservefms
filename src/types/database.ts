@@ -302,6 +302,7 @@ export type Database = {
           razorpay_order_id: string | null;
           razorpay_payment_id: string | null;
           gst_number: string | null;
+          payment_method: 'razorpay' | 'credit_45day';
           created_at: string;
           updated_at: string;
         };
@@ -331,6 +332,7 @@ export type Database = {
           razorpay_order_id?: string | null;
           razorpay_payment_id?: string | null;
           gst_number?: string | null;
+          payment_method?: 'razorpay' | 'credit_45day';
           created_at?: string;
           updated_at?: string;
         };
@@ -576,6 +578,72 @@ export type Database = {
           unsubscribed_at?: string | null;
         };
         Update: Partial<Database['public']['Tables']['newsletter_subscribers']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // credit_accounts — admin-assigned credit limits per buyer
+      // Migration 7
+      // -----------------------------------------------------------------------
+      credit_accounts: {
+        Row: {
+          id: string;
+          buyer_id: string;
+          credit_limit: number;
+          used_amount: number;
+          status: 'pending' | 'active' | 'suspended';
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          buyer_id: string;
+          credit_limit?: number;
+          used_amount?: number;
+          status?: 'pending' | 'active' | 'suspended';
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['credit_accounts']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // quote_requests — buyer monthly requirement uploads / quote requests
+      // Migration 7
+      // -----------------------------------------------------------------------
+      quote_requests: {
+        Row: {
+          id: string;
+          buyer_id: string;
+          title: string;
+          status: 'submitted' | 'under_review' | 'quoted' | 'accepted' | 'rejected';
+          items: Json;
+          notes: string | null;
+          document_url: string | null;
+          admin_notes: string | null;
+          quoted_amount: number | null;
+          valid_until: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          buyer_id: string;
+          title: string;
+          status?: 'submitted' | 'under_review' | 'quoted' | 'accepted' | 'rejected';
+          items?: Json;
+          notes?: string | null;
+          document_url?: string | null;
+          admin_notes?: string | null;
+          quoted_amount?: number | null;
+          valid_until?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['quote_requests']['Insert']>;
         Relationships: never[];
       };
     };

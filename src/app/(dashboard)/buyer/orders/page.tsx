@@ -28,6 +28,7 @@ interface OrderPreview {
   order_number: string;
   status: OrderStatus;
   payment_status: string;
+  payment_method: 'razorpay' | 'credit_45day';
   total_amount: number;
   created_at: string;
   order_items: OrderPreviewItem[];
@@ -238,9 +239,13 @@ export default function BuyerOrdersPage() {
                     </span>
                     <p className="font-mono font-bold text-slate-900 text-base">{formatINR(order.total_amount)}</p>
                     <p className="text-xs text-slate-400">
-                      {order.payment_status === 'paid'
-                        ? <span className="text-emerald-600 font-medium">Paid ✓</span>
-                        : <span className="text-amber-500 font-medium">Payment Pending</span>}
+                      {order.payment_status === 'paid' ? (
+                        <span className="text-emerald-600 font-medium">Paid ✓</span>
+                      ) : order.payment_method === 'credit_45day' ? (
+                        <span className="text-amber-600 font-medium">45-Day Credit</span>
+                      ) : (
+                        <span className="text-amber-500 font-medium">Payment Pending</span>
+                      )}
                     </p>
                   </div>
                 </div>

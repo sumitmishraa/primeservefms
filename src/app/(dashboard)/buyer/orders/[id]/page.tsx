@@ -27,6 +27,8 @@ interface OrderDetail {
   order_number: string;
   status: OrderStatus;
   payment_status: string;
+  payment_method: 'razorpay' | 'credit_45day';
+  razorpay_payment_id: string | null;
   subtotal: number;
   gst_amount: number;
   shipping_amount: number;
@@ -185,14 +187,8 @@ export default function BuyerOrderDetailPage() {
     );
   }
 
-  // Payment ID from admin_notes JSON
-  let razorpayPaymentId: string | null = null;
-  try {
-    if (order.admin_notes) {
-      const parsed = JSON.parse(order.admin_notes) as { razorpay_payment_id?: string };
-      razorpayPaymentId = parsed.razorpay_payment_id ?? null;
-    }
-  } catch { /* ignore */ }
+  const razorpayPaymentId = order.razorpay_payment_id;
+  const isCreditOrder = order.payment_method === 'credit_45day';
 
   // GST breakdown from order_items
   const gstByRate = new Map<number, number>();
@@ -362,19 +358,26 @@ export default function BuyerOrderDetailPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-slate-500">Method</span>
-                <span className="text-slate-700">Razorpay</span>
+                <span className="text-slate-700">
+                  {isCreditOrder ? '45-Day Credit' : 'Razorpay'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Status</span>
-                {order.payment_status === 'paid'
-                  ? <span className="text-emerald-600 font-medium">Paid ✓</span>
-                  : <span className="text-amber-500 font-medium">Pending</span>
-                }
+                {order.payment_status === 'paid' ? (
+                  <span className="text-emerald-600 font-medium">Paid ✓</span>
+                ) : isCreditOrder ? (
+                  <span className="text-amber-600 font-medium">Due after delivery</span>
+                ) : (
+                  <span className="text-amber-500 font-medium">Pending</span>
+                )}
               </div>
-              {razorpayPaymentId && (
+              {!isCreditOrder && razorpayPaymentId && (
                 <div className="flex justify-between">
                   <span className="text-slate-500">Payment ID</span>
-                  <span className="font-mono text-xs text-slate-600 truncate max-w-[140px]">{razorpayPaymentId}</span>
+                  <span className="font-mono text-xs text-slate-600 truncate max-w-[140px]">
+                    {razorpayPaymentId}
+                  </span>
                 </div>
               )}
             </div>

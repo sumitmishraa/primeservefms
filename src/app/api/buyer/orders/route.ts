@@ -25,7 +25,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     // Fetch orders without join to avoid Supabase relationship type error
     let query = supabase
       .from('orders')
-      .select('id, order_number, status, payment_status, subtotal, gst_amount, shipping_amount, total_amount, created_at, notes', { count: 'exact' })
+      .select('id, order_number, status, payment_status, payment_method, subtotal, gst_amount, shipping_amount, total_amount, created_at, notes', { count: 'exact' })
       .eq('buyer_id', user.id)
       .order('created_at', { ascending: false });
 

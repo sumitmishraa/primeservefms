@@ -70,7 +70,7 @@ interface CartState {
   /** Sum of all GST amounts across all items. */
   getTotalGST: () => number;
 
-  /** ₹0 if subtotal >= ₹2,000, otherwise ₹100. */
+  /** ₹0 if subtotal >= ₹5,000, otherwise ₹150. */
   getDeliveryCharge: () => number;
 
   /** subtotal + totalGST + deliveryCharge */
@@ -249,7 +249,7 @@ export const useCartStore = create<CartState>()(
         ),
 
       // ── getDeliveryCharge ──────────────────────────────────────────────────
-      getDeliveryCharge: () => (get().getSubtotal() >= 2000 ? 0 : 100),
+      getDeliveryCharge: () => (get().getSubtotal() >= 5000 ? 0 : 150),
 
       // ── getGrandTotal ──────────────────────────────────────────────────────
       getGrandTotal: () => {

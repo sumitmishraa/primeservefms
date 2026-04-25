@@ -8,7 +8,7 @@ export default function BuyerMessagesPage() {
     <PlaceholderPage
       icon={MessageSquare}
       title="Messages"
-      message="Coming in Phase 3 — Chat directly with vendors about orders and enquiries."
+      message="Direct messaging with vendors is coming soon. For now, add delivery instructions and special notes in your order at checkout."
     />
   );
 }

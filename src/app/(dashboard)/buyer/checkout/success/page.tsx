@@ -86,6 +86,8 @@ export default function OrderSuccessPage() {
     );
   }
 
+  const isCreditOrder = order.payment_method === 'credit_45day';
+
   const shippingAddr = order.shipping_address as {
     name?: string; line1?: string; city?: string; state?: string; pincode?: string;
   } | null;
@@ -104,7 +106,11 @@ export default function OrderSuccessPage() {
         </div>
 
         <h1 className="text-2xl font-bold text-slate-900 mb-1">Order Placed Successfully!</h1>
-        <p className="text-slate-500 text-sm">Thank you for your order. We&apos;ll process it shortly.</p>
+        <p className="text-slate-500 text-sm">
+          {isCreditOrder
+            ? "Your credit order has been placed. Payment is due within 45 days of delivery."
+            : "Thank you for your order. We\u2019ll process it shortly."}
+        </p>
       </div>
 
       {/* ── Order details card ────────────────────────────────────────────── */}
@@ -118,10 +124,17 @@ export default function OrderSuccessPage() {
             <p className="text-xs text-slate-400 mt-1">{formatDate(order.created_at)}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <CheckCircle2 className="w-3 h-3" />
-              Payment Confirmed
-            </span>
+            {isCreditOrder ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                <CheckCircle2 className="w-3 h-3" />
+                Credit Order
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <CheckCircle2 className="w-3 h-3" />
+                Payment Confirmed
+              </span>
+            )}
             <button
               onClick={copyOrderNumber}
               className="flex items-center gap-1 text-xs text-slate-400 hover:text-teal-600 transition-colors"
@@ -171,12 +184,16 @@ export default function OrderSuccessPage() {
             )}
           </div>
           <div className="flex justify-between text-sm font-semibold pt-2 border-t border-slate-100">
-            <span className="text-slate-900">Total Paid</span>
+            <span className="text-slate-900">
+              {isCreditOrder ? 'Total (Due in 45 Days)' : 'Total Paid'}
+            </span>
             <span className="font-mono text-teal-600 text-base">{formatINR(order.total_amount)}</span>
           </div>
           <div className="flex justify-between text-xs pt-1">
             <span className="text-slate-400">Payment Method</span>
-            <span className="text-slate-500">Razorpay · Paid</span>
+            <span className="text-slate-500">
+              {isCreditOrder ? '45-Day Credit' : 'Razorpay · Paid'}
+            </span>
           </div>
         </div>
 

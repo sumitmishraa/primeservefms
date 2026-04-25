@@ -285,7 +285,7 @@ export default function BuyerCartPage() {
   const grandTotal = getGrandTotal();
 
   const hasMOQViolation = items.some((item) => item.quantity < item.moq);
-  const freeDeliveryThreshold = 2000;
+  const freeDeliveryThreshold = 5000;
   const amountToFreeDelivery = freeDeliveryThreshold - subtotal;
 
   // ── Empty state ─────────────────────────────────────────────────────────

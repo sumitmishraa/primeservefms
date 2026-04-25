@@ -1,18 +1,26 @@
 /**
  * POST /api/orders/create
  *
- * Creates an order in Supabase (payment_status: 'pending') then opens a
- * Razorpay order so the frontend can open the payment modal.
+ * Creates an order in Supabase then either:
+ *   a) Opens a Razorpay order (payment_method = 'razorpay', default)
+ *   b) Charges against the buyer's credit line and returns immediately
+ *      (payment_method = 'credit_45day') — no Razorpay involved.
  *
- * Flow:
+ * Flow (razorpay):
  *   1. Verify auth
- *   2. Validate + recalculate prices server-side (don't trust client prices)
- *   3. Check each product is active, approved, and qty >= MOQ
- *   4. Insert order (status: pending, payment_status: pending)
+ *   2. Validate + recalculate prices server-side
+ *   3. Check each product is active, approved, qty >= MOQ
+ *   4. Insert order (payment_status: pending)
  *   5. Insert order_items
  *   6. Create Razorpay order
  *   7. Save razorpay_order_id on our order
  *   8. Return data needed for the frontend modal
+ *
+ * Flow (credit_45day):
+ *   Steps 1–5 same as above, then:
+ *   6. Verify buyer has an active credit account with sufficient available credit
+ *   7. Deduct total_amount from credit_accounts.used_amount
+ *   8. Return { order_id, order_number } — no Razorpay keys
  */
 
 export const dynamic = 'force-dynamic';
@@ -49,15 +57,18 @@ interface CreateOrderBody {
   billing_address?: ShippingAddress | null;
   gst_number?: string | null;
   notes?: string | null;
+  payment_method?: 'razorpay' | 'credit_45day';
 }
 
 interface CreateOrderResponse {
   order_id: string;
   order_number: string;
-  razorpay_order_id: string;
-  razorpay_key: string;
-  amount: number;        // paise
-  currency: string;
+  payment_method: 'razorpay' | 'credit_45day';
+  // Razorpay-only fields (undefined for credit orders)
+  razorpay_order_id?: string;
+  razorpay_key?: string;
+  amount?: number;        // paise
+  currency?: string;
   buyer_name: string;
   buyer_email: string | null;
   buyer_phone: string | null;
@@ -69,7 +80,6 @@ interface CreateOrderResponse {
 
 function resolvePrice(tiers: PricingTier[], basePrice: number, qty: number): number {
   if (!tiers || tiers.length === 0) return basePrice;
-  // Find the matching tier (sorted ascending by min_qty)
   const sorted = [...tiers].sort((a, b) => a.min_qty - b.min_qty);
   let resolved = basePrice;
   for (const tier of sorted) {
@@ -95,7 +105,14 @@ export async function POST(
     }
 
     const body = await request.json() as CreateOrderBody;
-    const { items, shipping_address, billing_address, gst_number, notes } = body;
+    const {
+      items,
+      shipping_address,
+      billing_address,
+      gst_number,
+      notes,
+      payment_method = 'razorpay',
+    } = body;
 
     if (!items?.length || !shipping_address) {
       return NextResponse.json(
@@ -115,10 +132,8 @@ export async function POST(
 
     if (productsError) throw productsError;
 
-    // Build a lookup map
     const productMap = new Map(products?.map((p) => [p.id, p]) ?? []);
 
-    // Validate each item and compute server-side totals
     let subtotal = 0;
     let gst_amount = 0;
 
@@ -179,10 +194,41 @@ export async function POST(
 
     subtotal = Math.round(subtotal * 100) / 100;
     gst_amount = Math.round(gst_amount * 100) / 100;
-    const shipping_amount = subtotal >= 2000 ? 0 : 100;
+    const shipping_amount = subtotal >= 5000 ? 0 : 150;
     const total_amount = Math.round((subtotal + gst_amount + shipping_amount) * 100) / 100;
 
-    // ── Insert order (payment_status: pending) ────────────────────────────────
+    // ── Credit check (before inserting order) ─────────────────────────────────
+    if (payment_method === 'credit_45day') {
+      const { data: creditRow, error: creditError } = await supabase
+        .from('credit_accounts')
+        .select('id, credit_limit, used_amount, status')
+        .eq('buyer_id', user.id)
+        .maybeSingle();
+
+      if (creditError) throw creditError;
+
+      if (!creditRow || creditRow.status !== 'active') {
+        return NextResponse.json(
+          { data: null, error: 'You do not have an active credit account. Please contact support.' },
+          { status: 400 }
+        );
+      }
+
+      const available = (creditRow as { credit_limit: number; used_amount: number }).credit_limit
+        - (creditRow as { credit_limit: number; used_amount: number }).used_amount;
+
+      if (available < total_amount) {
+        return NextResponse.json(
+          {
+            data: null,
+            error: `Insufficient credit. Available: ₹${available.toFixed(2)}, Required: ₹${total_amount.toFixed(2)}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // ── Insert order ──────────────────────────────────────────────────────────
     const order_number = formatOrderNumber();
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -192,6 +238,7 @@ export async function POST(
         vendor_id: null,
         status: 'pending',
         payment_status: 'pending',
+        payment_method,
         subtotal,
         gst_amount,
         shipping_amount,
@@ -215,7 +262,46 @@ export async function POST(
 
     if (itemsError) throw itemsError;
 
-    // ── Create Razorpay order ──────────────────────────────────────────────────
+    // ── Credit path: deduct from credit account and return ────────────────────
+    if (payment_method === 'credit_45day') {
+      // Read current used_amount then write the incremented value.
+      // Safe at MVP scale; replace with a DB-side RPC for high concurrency.
+      const { data: currentCredit, error: readErr } = await supabase
+        .from('credit_accounts')
+        .select('used_amount')
+        .eq('buyer_id', user.id)
+        .single();
+
+      if (readErr) throw readErr;
+
+      const newUsed = Math.round(
+        (((currentCredit as { used_amount: number }).used_amount) + total_amount) * 100
+      ) / 100;
+
+      const { error: deductError } = await supabase
+        .from('credit_accounts')
+        .update({ used_amount: newUsed })
+        .eq('buyer_id', user.id);
+
+      if (deductError) throw deductError;
+
+      return NextResponse.json(
+        {
+          data: {
+            order_id: order.id,
+            order_number,
+            payment_method: 'credit_45day',
+            buyer_name: user.full_name,
+            buyer_email: user.email,
+            buyer_phone: user.phone,
+          },
+          error: null,
+        },
+        { status: 201 }
+      );
+    }
+
+    // ── Razorpay path: create Razorpay order ──────────────────────────────────
     const razorpayOrder = await razorpay.orders.create({
       amount: Math.round(total_amount * 100),
       currency: 'INR',
@@ -226,7 +312,6 @@ export async function POST(
       },
     });
 
-    // ── Save razorpay_order_id on our order ────────────────────────────────────
     const { error: updateError } = await supabase
       .from('orders')
       .update({ razorpay_order_id: razorpayOrder.id })
@@ -239,6 +324,7 @@ export async function POST(
         data: {
           order_id: order.id,
           order_number,
+          payment_method: 'razorpay',
           razorpay_order_id: razorpayOrder.id,
           razorpay_key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
           amount: razorpayOrder.amount as number,

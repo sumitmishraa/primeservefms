@@ -44,7 +44,7 @@ const BUYER_NAV: NavItem[] = [
   { label: 'My Orders', href: '/buyer/orders', icon: Package },
   { label: 'Quick Reorder', href: '/buyer/reorder', icon: RefreshCw },
   { label: 'Cart', href: '/buyer/cart', icon: ShoppingCart },
-  { label: 'My Profile', href: '/buyer/profile', icon: User },
+  { label: 'Account', href: '/buyer/account', icon: User },
 ];
 
 const ADMIN_NAV: NavItem[] = [
