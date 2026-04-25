@@ -28,8 +28,8 @@ import { Eye, EyeOff, Mail, Lock, Phone, Loader2, ArrowLeft } from 'lucide-react
 import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { OTPInput } from '@/components/auth/OTPInput';
-import { sendPhoneOTP, clearRecaptchaVerifier } from '@/lib/firebase/config';
-import type { ConfirmationResult } from 'firebase/auth';
+import { sendPhoneOTP, clearRecaptchaVerifier, auth } from '@/lib/firebase/config';
+import { signOut, type ConfirmationResult } from 'firebase/auth';
 
 const inputCls =
   'w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 ' +
@@ -127,7 +127,14 @@ function PhoneOTPTab({ redirectTo }: { redirectTo: string | null }) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('No account found')) {
-        toast.error('No account found with this number. Please register first.');
+        // Clean up Firebase auth state and reCAPTCHA so a subsequent
+        // registration attempt on the same number can start fresh.
+        try { await signOut(auth); } catch {}
+        clearRecaptchaVerifier();
+        toast.error(
+          'This phone number is not registered. Please sign up first.',
+          { duration: 5000 }
+        );
         setStage('input');
       } else {
         setOtpError(true);

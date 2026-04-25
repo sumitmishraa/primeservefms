@@ -22,7 +22,9 @@
 
 import { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
 import toast from 'react-hot-toast';
+import { auth } from '@/lib/firebase/config';
 import { useAuthStore } from '@/stores/authStore';
 import type { UserProfile } from '@/types';
 
@@ -166,9 +168,15 @@ export function useAuth() {
         });
         const json = (await res.json()) as { user?: UserProfile; error?: string; code?: string };
 
-        if (res.status === 404) throw new Error('Account not found. Please register first.');
+        if (res.status === 404) throw new Error('This email is not registered. Please sign up first.');
         if (res.status === 403) throw new Error('Your account has been deactivated. Please contact support.');
-        if (!res.ok || !json.user) throw new Error(json.error ?? 'Login failed. Please try again.');
+        if (res.status === 401) {
+          if (json.code === 'NO_PASSWORD') {
+            throw new Error('This account was created via phone OTP and has no password set. Please sign in using the OTP option.');
+          }
+          throw new Error('Incorrect password. Please try again.');
+        }
+        if (!res.ok || !json.user) throw new Error('Login failed. Please try again.');
 
         setUser(json.user);
         return json.user;
@@ -320,6 +328,8 @@ export function useAuth() {
   const logout = useCallback(async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
+      // Also sign out of Firebase to clear phone/email auth state client-side.
+      try { await signOut(auth); } catch {}
       clearUser();
       router.push('/login');
       toast.success('Logged out successfully');

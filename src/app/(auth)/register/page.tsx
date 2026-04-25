@@ -139,10 +139,22 @@ export default function RegisterPage() {
       const json = (await res.json()) as { user?: UserProfile; error?: string };
 
       if (res.status === 409) {
-        throw new Error(json.error ?? 'Account already exists.');
+        const raw = json.error?.toLowerCase() ?? '';
+        if (raw.includes('phone')) {
+          throw new Error('This phone number is already registered. Please log in instead.');
+        }
+        if (raw.includes('email')) {
+          throw new Error('This email is already registered. Please log in instead.');
+        }
+        throw new Error('An account with these details already exists. Please log in instead.');
+      }
+      if (res.status === 401) {
+        // Firebase token was rejected server-side (e.g. expired between OTP
+        // confirmation and form submission). Ask the user to re-verify.
+        throw new Error('Your phone verification has expired. Please verify your number again.');
       }
       if (!res.ok || !json.user) {
-        throw new Error(json.error ?? 'Registration failed. Please try again.');
+        throw new Error('Registration failed. Please try again.');
       }
 
       setUser(json.user);
