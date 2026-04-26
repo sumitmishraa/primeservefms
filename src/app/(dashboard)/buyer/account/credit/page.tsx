@@ -87,14 +87,14 @@ export default function AccountCreditPage() {
       </div>
 
       {/* Hero — status + outstanding */}
-      <div className="bg-linear-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white relative overflow-hidden">
-        <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-teal-500 opacity-10" />
-        <div className="absolute -right-4 -bottom-8 w-24 h-24 rounded-full bg-teal-400 opacity-10" />
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-teal-800 via-slate-900 to-slate-900 p-6 text-white shadow-xl">
+        <div className="pointer-events-none absolute -right-12 -top-12 w-52 h-52 rounded-full bg-teal-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -left-8 -bottom-8 w-36 h-36 rounded-full bg-white/5 blur-xl" />
         <div className="relative z-10">
           <div className="flex items-start justify-between mb-5">
             <div>
-              <p className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Outstanding Payable</p>
-              <p className="text-4xl font-bold font-mono text-white">{formatINR(credit.outstanding)}</p>
+              <p className="text-teal-300 text-xs font-semibold uppercase tracking-wider mb-1">Outstanding Payable</p>
+              <p className="text-4xl font-bold tracking-tight text-white">{formatINR(credit.outstanding)}</p>
               <p className="text-slate-400 text-xs mt-1">Total pending credit payments</p>
             </div>
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${cfg.bg} ${cfg.border} ${cfg.color}`}>
@@ -111,7 +111,7 @@ export default function AccountCreditPage() {
             ].map(({ label, value, sub, color }) => (
               <div key={label} className="bg-white/5 rounded-xl p-3 border border-white/10">
                 <p className="text-xs text-slate-400 mb-1">{label}</p>
-                <p className={`text-base font-bold font-mono ${color}`}>{value}</p>
+                <p className={`text-base font-bold tracking-tight ${color}`}>{value}</p>
                 <p className="text-xs text-slate-500 mt-0.5">{sub}</p>
               </div>
             ))}
