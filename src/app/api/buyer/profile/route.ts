@@ -10,9 +10,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { ApiResponse } from '@/types';
 
 const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-// Indian PAN format: 5 letters + 4 digits + 1 letter (e.g. ABCDE1234F).
-// Stored in the existing `tax_id` column to avoid a new migration.
 const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ---------------------------------------------------------------------------
 // GET
@@ -25,7 +24,6 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
     const supabase = createAdminClient();
 
-    // Fetch client/branch names in parallel
     const [clientRes, branchRes] = await Promise.all([
       user.client_id
         ? supabase.from('clients').select('name').eq('id', user.client_id).single()
@@ -54,14 +52,21 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 // ---------------------------------------------------------------------------
 
 interface UpdateProfileBody {
+  // Core personal
   full_name?: string;
   phone?: string;
+  // New personal fields
+  designation?: string | null;
+  department?: string | null;
+  alt_phone?: string | null;
+  procurement_email?: string | null;
+  invoice_email?: string | null;
+  // Legacy tax/company fields (kept for backward compat)
   company_name?: string;
   company_type?: string;
   gst_number?: string | null;
-  /** PAN number — stored in tax_id column. Validated against PAN_REGEX. */
+  /** PAN — stored in tax_id column */
   tax_id?: string | null;
-  /** Profile picture URL. */
   avatar_url?: string | null;
   saved_addresses?: unknown;
 }
@@ -79,6 +84,25 @@ export async function PUT(request: NextRequest): Promise<NextResponse<ApiRespons
       update.full_name = body.full_name.trim();
     }
     if (body.phone !== undefined) update.phone = body.phone.trim() || null;
+    if (body.designation !== undefined) update.designation = body.designation?.trim() || null;
+    if (body.department !== undefined) update.department = body.department?.trim() || null;
+    if (body.alt_phone !== undefined) update.alt_phone = body.alt_phone?.trim() || null;
+
+    if (body.procurement_email !== undefined) {
+      const em = body.procurement_email?.trim() || null;
+      if (em && !EMAIL_REGEX.test(em)) {
+        return NextResponse.json({ data: null, error: 'Invalid procurement email address' }, { status: 400 });
+      }
+      update.procurement_email = em;
+    }
+    if (body.invoice_email !== undefined) {
+      const em = body.invoice_email?.trim() || null;
+      if (em && !EMAIL_REGEX.test(em)) {
+        return NextResponse.json({ data: null, error: 'Invalid invoice email address' }, { status: 400 });
+      }
+      update.invoice_email = em;
+    }
+
     if (body.company_name !== undefined) update.company_name = body.company_name.trim() || null;
     if (body.company_type !== undefined) update.company_type = body.company_type || null;
     if (body.gst_number !== undefined) {
@@ -95,9 +119,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse<ApiRespons
       }
       update.tax_id = pan;
     }
-    if (body.avatar_url !== undefined) {
-      update.avatar_url = body.avatar_url?.trim() || null;
-    }
+    if (body.avatar_url !== undefined) update.avatar_url = body.avatar_url?.trim() || null;
     if (body.saved_addresses !== undefined) update.saved_addresses = body.saved_addresses;
 
     if (!Object.keys(update).length) {

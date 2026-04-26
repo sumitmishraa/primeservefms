@@ -9,9 +9,7 @@ import toast from 'react-hot-toast';
 import { formatINR, formatDate } from '@/lib/utils/formatting';
 import type { QuoteRequest, QuoteItem } from '@/app/api/buyer/quotes/route';
 
-// ---------------------------------------------------------------------------
-// Status config
-// ---------------------------------------------------------------------------
+// ─── Status config ────────────────────────────────────────────────────────────
 
 const STATUS_STYLES: Record<string, string> = {
   submitted: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -28,16 +26,38 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: 'Rejected',
 };
 
-const UNITS = ['piece', 'kg', 'litre', 'pack', 'box', 'carton', 'roll', 'pair', 'set', 'ream', 'packet', 'can', 'bottle', 'tube'];
-const FREQUENCIES = ['One-time', 'Weekly', 'Monthly', 'Quarterly'];
+// ─── Unit options ─────────────────────────────────────────────────────────────
+
+const UNITS = [
+  { value: 'piece', label: 'Piece' },
+  { value: 'kg', label: 'Kilogram (kg)' },
+  { value: 'liter', label: 'Litre' },
+  { value: 'pack', label: 'Pack' },
+  { value: 'box', label: 'Box' },
+  { value: 'carton', label: 'Carton' },
+  { value: 'roll', label: 'Roll' },
+  { value: 'pair', label: 'Pair' },
+  { value: 'set', label: 'Set' },
+  { value: 'ream', label: 'Ream' },
+  { value: 'pkt', label: 'Packet' },
+  { value: 'can', label: 'Can' },
+  { value: 'bottle', label: 'Bottle' },
+  { value: 'tube', label: 'Tube' },
+];
 
 function emptyItem(): QuoteItem {
-  return { product_name: '', quantity: 1, unit: 'piece', frequency: 'Monthly', notes: '' };
+  return {
+    product_name: '',
+    description: '',
+    unit: 'piece',
+    quantity: 1,
+    preferred_brand: '',
+    target_price: 0,
+    notes: '',
+  };
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AccountQuotesPage() {
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
@@ -79,7 +99,6 @@ export default function AccountQuotesPage() {
     setShowForm(false);
   }
 
-  // Manual entry handlers
   function addItem() { setItems((p) => [...p, emptyItem()]); }
   function removeItem(idx: number) {
     if (items.length === 1) { toast.error('At least one item is required'); return; }
@@ -117,19 +136,16 @@ export default function AccountQuotesPage() {
   async function handleExcelSubmit() {
     if (!excelTitle.trim()) { toast.error('Please add a title for this request'); return; }
     if (!excelFile) { toast.error('Please select an Excel file'); return; }
-
     const ext = excelFile.name.split('.').pop()?.toLowerCase();
     if (ext !== 'xlsx' && ext !== 'xls') {
       toast.error('Only .xlsx or .xls files are accepted');
       return;
     }
-
     setSubmitting(true);
     try {
       const form = new FormData();
       form.append('title', excelTitle.trim());
       form.append('file', excelFile);
-
       const res = await fetch('/api/buyer/quotes/upload', { method: 'POST', body: form });
       const json = await res.json() as { data: { id: string } | null; error: string | null };
       if (!res.ok || json.error) throw new Error(json.error ?? 'Upload failed');
@@ -149,14 +165,14 @@ export default function AccountQuotesPage() {
     </div>
   );
 
-  const inputCls = 'w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors';
+  const inputCls = 'w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors bg-white';
 
   return (
-    <div className="space-y-5">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-5">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 font-heading">Request a Quote</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Request a Quote</h1>
           <p className="text-sm text-slate-500 mt-1">
             Submit your product requirements and get competitive bulk pricing.
           </p>
@@ -164,7 +180,7 @@ export default function AccountQuotesPage() {
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 transition-colors shrink-0"
+            className="flex items-center gap-2 px-4 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 transition-colors shrink-0 shadow-sm"
           >
             <Plus className="w-4 h-4" />New Request
           </button>
@@ -174,8 +190,7 @@ export default function AccountQuotesPage() {
       {/* New Quote Form */}
       {showForm && (
         <div className="bg-white rounded-xl border border-teal-200 shadow-sm overflow-hidden">
-          {/* Form header + mode toggle */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-teal-50/40">
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-teal-600" />
               <h3 className="text-sm font-semibold text-slate-700">New Quote Request</h3>
@@ -208,7 +223,6 @@ export default function AccountQuotesPage() {
           <div className="p-6 space-y-5">
             {formMode === 'manual' ? (
               <>
-                {/* Title */}
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1.5">
                     Request Title <span className="text-rose-500">*</span>
@@ -236,42 +250,81 @@ export default function AccountQuotesPage() {
                     </button>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {items.map((item, idx) => (
-                      <div key={idx} className="grid grid-cols-12 gap-2 items-start p-3 bg-slate-50 rounded-lg border border-slate-200">
-                        <div className="col-span-12 sm:col-span-4">
-                          <label className="block text-xs text-slate-500 mb-1">Product Name</label>
-                          <input
-                            type="text"
-                            value={item.product_name}
-                            onChange={(e) => updateItem(idx, 'product_name', e.target.value)}
-                            className={inputCls}
-                            placeholder="e.g. Floor Mop"
-                          />
+                      <div key={idx} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        {/* Row 1: Product Name + Description */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                          <div>
+                            <label className="block text-xs text-slate-500 mb-1">Product Name <span className="text-rose-400">*</span></label>
+                            <input
+                              type="text"
+                              value={item.product_name}
+                              onChange={(e) => updateItem(idx, 'product_name', e.target.value)}
+                              className={inputCls}
+                              placeholder="e.g. Floor Mop"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-slate-500 mb-1">Size / Description</label>
+                            <input
+                              type="text"
+                              value={item.description}
+                              onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                              className={inputCls}
+                              placeholder="e.g. 400g, Heavy-duty"
+                            />
+                          </div>
                         </div>
-                        <div className="col-span-4 sm:col-span-2">
-                          <label className="block text-xs text-slate-500 mb-1">Qty</label>
-                          <input
-                            type="number"
-                            min={1}
-                            value={item.quantity}
-                            onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value, 10) || 1)}
-                            className={`${inputCls} font-mono`}
-                          />
+                        {/* Row 2: Unit + Qty + Brand + Price */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+                          <div>
+                            <label className="block text-xs text-slate-500 mb-1">Unit</label>
+                            <select
+                              value={item.unit}
+                              onChange={(e) => updateItem(idx, 'unit', e.target.value)}
+                              className={`${inputCls} appearance-none`}
+                            >
+                              {UNITS.map((u) => (
+                                <option key={u.value} value={u.value}>{u.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-slate-500 mb-1">Quantity <span className="text-rose-400">*</span></label>
+                            <input
+                              type="number"
+                              min={1}
+                              value={item.quantity}
+                              onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value, 10) || 1)}
+                              className={`${inputCls} font-mono`}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-slate-500 mb-1">Preferred Brand</label>
+                            <input
+                              type="text"
+                              value={item.preferred_brand}
+                              onChange={(e) => updateItem(idx, 'preferred_brand', e.target.value)}
+                              className={inputCls}
+                              placeholder="Any / Scotch-Brite"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-slate-500 mb-1">Target Price (₹)</label>
+                            <input
+                              type="number"
+                              min={0}
+                              step={0.01}
+                              value={item.target_price || ''}
+                              onChange={(e) => updateItem(idx, 'target_price', parseFloat(e.target.value) || 0)}
+                              className={`${inputCls} font-mono`}
+                              placeholder="0"
+                            />
+                          </div>
                         </div>
-                        <div className="col-span-4 sm:col-span-2">
-                          <label className="block text-xs text-slate-500 mb-1">Unit</label>
-                          <select value={item.unit} onChange={(e) => updateItem(idx, 'unit', e.target.value)} className={inputCls}>
-                            {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-                          </select>
-                        </div>
-                        <div className="col-span-4 sm:col-span-2">
-                          <label className="block text-xs text-slate-500 mb-1">Frequency</label>
-                          <select value={item.frequency} onChange={(e) => updateItem(idx, 'frequency', e.target.value)} className={inputCls}>
-                            {FREQUENCIES.map((f) => <option key={f} value={f}>{f}</option>)}
-                          </select>
-                        </div>
-                        <div className="col-span-12 sm:col-span-2 flex items-end pb-0.5 gap-2">
+                        {/* Row 3: Notes + Remove */}
+                        <div className="flex items-end gap-2">
                           <div className="flex-1">
                             <label className="block text-xs text-slate-500 mb-1">Notes</label>
                             <input
@@ -279,12 +332,12 @@ export default function AccountQuotesPage() {
                               value={item.notes}
                               onChange={(e) => updateItem(idx, 'notes', e.target.value)}
                               className={inputCls}
-                              placeholder="Optional"
+                              placeholder="Optional notes"
                             />
                           </div>
                           <button
                             onClick={() => removeItem(idx)}
-                            className="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-colors shrink-0"
+                            className="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition-colors shrink-0 mb-0.5"
                             aria-label="Remove item"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -295,7 +348,6 @@ export default function AccountQuotesPage() {
                   </div>
                 </div>
 
-                {/* Notes */}
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1.5">
                     Additional Notes <span className="text-slate-400 font-normal">(optional)</span>
@@ -305,7 +357,7 @@ export default function AccountQuotesPage() {
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
                     className={inputCls}
-                    placeholder="Delivery preferences, preferred brands, special requirements…"
+                    placeholder="Delivery preferences, special requirements…"
                   />
                 </div>
 
@@ -318,10 +370,7 @@ export default function AccountQuotesPage() {
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     {submitting ? 'Submitting…' : 'Submit Request'}
                   </button>
-                  <button
-                    onClick={resetForm}
-                    className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors"
-                  >
+                  <button onClick={resetForm} className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors">
                     Cancel
                   </button>
                 </div>
@@ -334,22 +383,21 @@ export default function AccountQuotesPage() {
                   <div>
                     <p className="text-sm font-semibold text-teal-800 mb-2">Expected Excel Format</p>
                     <p className="text-xs text-teal-700 mb-2">
-                      Your spreadsheet should have exactly these column headers in row 1:
+                      Row 1 must have exactly these column headers:
                     </p>
-                    <div className="inline-grid grid-cols-4 gap-x-6 gap-y-1 text-xs font-mono">
-                      {['Product Name', 'Size / Description', 'Quantity', 'Preferred Brand'].map((col) => (
-                        <span key={col} className="bg-white border border-teal-200 rounded px-2 py-1 text-teal-800">
+                    <div className="flex flex-wrap gap-1.5">
+                      {['Product Name', 'Size / Description', 'Unit', 'Quantity', 'Preferred Brand', 'Target Price'].map((col) => (
+                        <span key={col} className="bg-white border border-teal-200 rounded px-2 py-1 text-xs font-mono text-teal-800">
                           {col}
                         </span>
                       ))}
                     </div>
                     <p className="text-xs text-teal-600 mt-2">
-                      Each row after the header represents one product. Save as .xlsx or .xls.
+                      Each row after the header is one product. Save as .xlsx or .xls.
                     </p>
                   </div>
                 </div>
 
-                {/* Title */}
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1.5">
                     Request Title <span className="text-rose-500">*</span>
@@ -363,7 +411,6 @@ export default function AccountQuotesPage() {
                   />
                 </div>
 
-                {/* File picker */}
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1.5">
                     Excel File <span className="text-rose-500">*</span>
@@ -413,10 +460,7 @@ export default function AccountQuotesPage() {
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                     {submitting ? 'Uploading…' : 'Upload & Submit'}
                   </button>
-                  <button
-                    onClick={resetForm}
-                    className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors"
-                  >
+                  <button onClick={resetForm} className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors">
                     Cancel
                   </button>
                 </div>
@@ -432,7 +476,7 @@ export default function AccountQuotesPage() {
           <FileText className="w-10 h-10 text-slate-300 mx-auto mb-3" />
           <p className="text-slate-600 font-medium text-sm">No quote requests yet</p>
           <p className="text-slate-400 text-xs mt-1 max-w-xs mx-auto">
-            Submit your monthly product requirements and our team will respond with competitive pricing.
+            Submit your product requirements and our team will respond with competitive pricing.
           </p>
           <button
             onClick={() => setShowForm(true)}
@@ -478,43 +522,42 @@ export default function AccountQuotesPage() {
 
               {expandedId === quote.id && (
                 <div className="border-t border-slate-100 px-5 py-4 space-y-4">
-                  {/* Document link */}
                   {quote.document_url && (
                     <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
                       <FileSpreadsheet className="w-4 h-4 text-teal-600 shrink-0" />
                       <p className="text-xs text-slate-600 flex-1">Excel file uploaded</p>
-                      <a
-                        href={quote.document_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-teal-600 hover:underline font-medium"
-                      >
+                      <a href={quote.document_url} target="_blank" rel="noopener noreferrer" className="text-xs text-teal-600 hover:underline font-medium">
                         Download
                       </a>
                     </div>
                   )}
 
-                  {/* Items table */}
                   {(quote.items as QuoteItem[]).length > 0 && (
                     <div>
                       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Items</p>
-                      <div className="rounded-lg border border-slate-200 overflow-hidden">
+                      <div className="rounded-lg border border-slate-200 overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="bg-slate-50 text-xs text-slate-500 font-medium">
                               <th className="px-3 py-2 text-left">Product</th>
+                              <th className="px-3 py-2 text-left hidden sm:table-cell">Size / Desc</th>
                               <th className="px-3 py-2 text-right">Qty</th>
                               <th className="px-3 py-2 text-left">Unit</th>
-                              <th className="px-3 py-2 text-left hidden sm:table-cell">Frequency</th>
+                              <th className="px-3 py-2 text-left hidden md:table-cell">Brand</th>
+                              <th className="px-3 py-2 text-right hidden md:table-cell">Target ₹</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
                             {(quote.items as QuoteItem[]).map((item, i) => (
                               <tr key={i} className="text-slate-700">
                                 <td className="px-3 py-2.5 font-medium">{item.product_name}</td>
+                                <td className="px-3 py-2.5 text-slate-500 hidden sm:table-cell">{item.description || '—'}</td>
                                 <td className="px-3 py-2.5 text-right font-mono">{item.quantity}</td>
                                 <td className="px-3 py-2.5 text-slate-500">{item.unit}</td>
-                                <td className="px-3 py-2.5 text-slate-500 hidden sm:table-cell">{item.frequency}</td>
+                                <td className="px-3 py-2.5 text-slate-500 hidden md:table-cell">{item.preferred_brand || '—'}</td>
+                                <td className="px-3 py-2.5 text-right font-mono hidden md:table-cell">
+                                  {item.target_price ? formatINR(item.target_price) : '—'}
+                                </td>
                               </tr>
                             ))}
                           </tbody>
@@ -523,7 +566,6 @@ export default function AccountQuotesPage() {
                     </div>
                   )}
 
-                  {/* Admin response */}
                   {(quote.admin_notes || quote.quoted_amount) && (
                     <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                       <p className="text-xs font-semibold text-purple-700 mb-2">PrimeServe Response</p>

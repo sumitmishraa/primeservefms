@@ -1,11 +1,3 @@
-/**
- * Sidebar — role-aware left navigation panel.
- *
- * Shows different nav items for buyer, vendor, and admin.
- * The active item is detected via usePathname().
- * Optional onNavClick prop lets MobileMenu close itself when a link is clicked.
- */
-
 'use client';
 
 import Link from 'next/link';
@@ -28,10 +20,6 @@ import {
 import type { UserProfile } from '@/types';
 import type { UserRole } from '@/types';
 
-// ---------------------------------------------------------------------------
-// Nav item definitions per role
-// ---------------------------------------------------------------------------
-
 interface NavItem {
   label: string;
   href: string;
@@ -39,6 +27,7 @@ interface NavItem {
 }
 
 const BUYER_NAV: NavItem[] = [
+  { label: 'Dashboard', href: '/buyer/account/dashboard', icon: LayoutDashboard },
   { label: 'Profile Settings', href: '/buyer/account/profile', icon: User },
   { label: 'Company Details', href: '/buyer/account/company', icon: Building2 },
   { label: 'My Orders', href: '/buyer/orders', icon: Package },
@@ -58,16 +47,6 @@ const ADMIN_NAV: NavItem[] = [
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Returns the correct nav array for the given role and current path.
- * Admins browsing /buyer/* see buyer nav so they can review buyer flows.
- * @param role - The user's role
- * @param pathname - Current URL pathname
- */
 function getNavItems(role: UserRole, pathname: string): NavItem[] {
   if (role === 'admin') {
     if (pathname.startsWith('/buyer')) return BUYER_NAV;
@@ -77,24 +56,12 @@ function getNavItems(role: UserRole, pathname: string): NavItem[] {
   return [];
 }
 
-/**
- * Finds the single active nav href using longest-prefix matching.
- * When two nav items could match the same pathname (e.g. /admin/products and
- * /admin/products/import), the most specific one wins.
- *
- * @param pathname - Current URL pathname
- * @param items - Nav items for the current role
- * @returns The href of the active item, or null if none match
- */
 function getActivePath(pathname: string, items: NavItem[]): string | null {
-  // Exact match always wins immediately
   for (const item of items) {
     if (pathname === item.href) return item.href;
   }
-  // Prefix match — pick the longest (most specific) match
   let best: string | null = null;
   for (const item of items) {
-    // Root dashboard items only ever match exactly (handled above)
     if (item.href === '/admin' || item.href === '/vendor' || item.href === '/buyer') continue;
     if (pathname.startsWith(item.href + '/')) {
       if (!best || item.href.length > best.length) best = item.href;
@@ -103,51 +70,30 @@ function getActivePath(pathname: string, items: NavItem[]): string | null {
   return best;
 }
 
-/**
- * Returns Tailwind classes for the role badge colour.
- * @param role - The user's role
- */
 function getRoleBadgeClass(role: UserRole): string {
   if (role === 'vendor') return 'bg-purple-100 text-purple-700';
   if (role === 'admin') return 'bg-rose-100 text-rose-700';
-  return 'bg-blue-100 text-blue-700';
+  return 'bg-teal-100 text-teal-700';
 }
 
-/**
- * Returns the display label for a role.
- * @param role - The user's role
- */
 function getRoleLabel(role: UserRole): string {
   if (role === 'vendor') return 'Vendor';
   if (role === 'admin') return 'Admin';
   return 'Buyer';
 }
 
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 interface SidebarProps {
-  /** Authenticated user — drives avatar, name, company, role badge, and nav items */
   user: UserProfile;
-  /** Called when a nav link is clicked — used by MobileMenu to close itself */
   onNavClick?: () => void;
 }
 
-/**
- * Left sidebar with user identity header, role-based nav links, and a footer.
- * Renders as a fixed panel on desktop; inside MobileMenu on small screens.
- *
- * @param user - The currently authenticated user
- * @param onNavClick - Optional callback fired on any nav link click
- */
 export default function Sidebar({ user, onNavClick }: SidebarProps) {
   const pathname = usePathname();
   const navItems = getNavItems(user.role, pathname);
   const activePath = getActivePath(pathname, navItems);
   const isAdminViewingBuyer = user.role === 'admin' && pathname.startsWith('/buyer');
   const avatarInitial = user.full_name.charAt(0).toUpperCase();
+  const isBuyer = user.role === 'buyer';
 
   return (
     <div className="h-full bg-white border-r border-slate-200 w-65 flex flex-col">
@@ -155,7 +101,7 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
       <div className="p-5 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <div
-            className="w-12 h-12 rounded-full bg-teal-600 text-white font-bold text-lg flex items-center justify-center shrink-0 select-none"
+            className="w-12 h-12 rounded-full bg-linear-to-br from-teal-500 to-teal-700 text-white font-bold text-lg flex items-center justify-center shrink-0 select-none shadow-sm"
             aria-hidden="true"
           >
             {avatarInitial}
@@ -169,11 +115,14 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
                 {user.company_name}
               </p>
             )}
-            <span
-              className={`inline-block mt-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}
-            >
-              {getRoleLabel(user.role)}
-            </span>
+            {/* Show role badge only for non-buyers (admin/vendor need context) */}
+            {!isBuyer && (
+              <span
+                className={`inline-block mt-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}
+              >
+                {getRoleLabel(user.role)}
+              </span>
+            )}
           </div>
         </div>
       </div>

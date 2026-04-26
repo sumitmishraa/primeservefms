@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Settings, Package, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserProfile } from '@/types';
 
@@ -66,7 +66,7 @@ export default function UserMenu({ user }: UserMenuProps) {
             )}
           </div>
 
-          {/* Profile Settings */}
+          {/* My Account */}
           <div className="py-1" role="none">
             <Link
               href="/buyer/account/profile"
@@ -75,7 +75,18 @@ export default function UserMenu({ user }: UserMenuProps) {
               role="menuitem"
             >
               <Settings className="w-4 h-4 text-slate-400" aria-hidden="true" />
-              Profile Settings
+              My Account
+            </Link>
+
+            {/* My Orders */}
+            <Link
+              href="/buyer/orders"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+              role="menuitem"
+            >
+              <Package className="w-4 h-4 text-slate-400" aria-hidden="true" />
+              My Orders
             </Link>
           </div>
 

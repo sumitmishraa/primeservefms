@@ -11,9 +11,11 @@ import type { ApiResponse } from '@/types';
 
 export interface QuoteItem {
   product_name: string;
-  quantity: number;
+  description: string;
   unit: string;
-  frequency: string;
+  quantity: number;
+  preferred_brand: string;
+  target_price: number;
   notes: string;
 }
 
@@ -89,17 +91,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     }
 
     const supabase = createAdminClient();
-    // Cast items to satisfy the Json JSONB column type
-    const insertRow = {
-      buyer_id: user.id,
-      title: body.title.trim(),
-      items: body.items as unknown as Record<string, unknown>[],
-      notes: body.notes?.trim() || null,
-      status: 'submitted' as const,
-    };
     const { data, error } = await supabase
       .from('quote_requests')
-      .insert(insertRow as never)
+      .insert({
+        buyer_id: user.id,
+        title: body.title.trim(),
+        items: body.items as unknown as Record<string, unknown>[],
+        notes: body.notes?.trim() || null,
+        status: 'submitted' as const,
+      } as never)
       .select('id')
       .single();
 

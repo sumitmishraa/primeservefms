@@ -197,11 +197,11 @@ export async function POST(
     const shipping_amount = subtotal >= 5000 ? 0 : 150;
     const total_amount = Math.round((subtotal + gst_amount + shipping_amount) * 100) / 100;
 
-    // ── Credit check (before inserting order) ─────────────────────────────────
+    // ── Credit check (status-only — no limit cap) ─────────────────────────────
     if (payment_method === 'credit_45day') {
       const { data: creditRow, error: creditError } = await supabase
         .from('credit_accounts')
-        .select('id, credit_limit, used_amount, status')
+        .select('id, status')
         .eq('buyer_id', user.id)
         .maybeSingle();
 
@@ -210,19 +210,6 @@ export async function POST(
       if (!creditRow || creditRow.status !== 'active') {
         return NextResponse.json(
           { data: null, error: 'You do not have an active credit account. Please contact support.' },
-          { status: 400 }
-        );
-      }
-
-      const available = (creditRow as { credit_limit: number; used_amount: number }).credit_limit
-        - (creditRow as { credit_limit: number; used_amount: number }).used_amount;
-
-      if (available < total_amount) {
-        return NextResponse.json(
-          {
-            data: null,
-            error: `Insufficient credit. Available: ₹${available.toFixed(2)}, Required: ₹${total_amount.toFixed(2)}`,
-          },
           { status: 400 }
         );
       }
@@ -262,29 +249,8 @@ export async function POST(
 
     if (itemsError) throw itemsError;
 
-    // ── Credit path: deduct from credit account and return ────────────────────
+    // ── Credit path: order is already inserted — return immediately ──────────
     if (payment_method === 'credit_45day') {
-      // Read current used_amount then write the incremented value.
-      // Safe at MVP scale; replace with a DB-side RPC for high concurrency.
-      const { data: currentCredit, error: readErr } = await supabase
-        .from('credit_accounts')
-        .select('used_amount')
-        .eq('buyer_id', user.id)
-        .single();
-
-      if (readErr) throw readErr;
-
-      const newUsed = Math.round(
-        (((currentCredit as { used_amount: number }).used_amount) + total_amount) * 100
-      ) / 100;
-
-      const { error: deductError } = await supabase
-        .from('credit_accounts')
-        .update({ used_amount: newUsed })
-        .eq('buyer_id', user.id);
-
-      if (deductError) throw deductError;
-
       return NextResponse.json(
         {
           data: {

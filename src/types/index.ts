@@ -136,11 +136,21 @@ export interface ShippingAddress {
  */
 export interface BusinessDocument {
   /** Human-readable document type label */
-  doc_type: 'gst_certificate' | 'trade_license' | 'pan_card' | 'bank_statement' | 'other';
+  doc_type:
+    | 'gst_certificate'
+    | 'trade_license'
+    | 'pan_card'
+    | 'bank_statement'
+    | 'incorporation_proof'
+    | 'cancelled_cheque'
+    | 'msme_certificate'
+    | 'other';
   /** Supabase Storage public URL */
   url: string;
   /** ISO 8601 timestamp of upload */
   uploaded_at: string;
+  /** Optional display name override */
+  file_name?: string;
 }
 
 // ---------------------------------------------------------------------------
