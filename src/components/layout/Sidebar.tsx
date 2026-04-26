@@ -11,10 +11,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Store,
   Package,
-  RefreshCw,
-  ShoppingCart,
   User,
   LayoutDashboard,
   BarChart3,
@@ -23,11 +20,13 @@ import {
   Upload,
   BookUser,
   Building2,
+  CreditCard,
+  FileText,
+  ShoppingCart,
   type LucideIcon,
 } from 'lucide-react';
 import type { UserProfile } from '@/types';
 import type { UserRole } from '@/types';
-import { useCartStore } from '@/stores/cartStore';
 
 // ---------------------------------------------------------------------------
 // Nav item definitions per role
@@ -40,11 +39,11 @@ interface NavItem {
 }
 
 const BUYER_NAV: NavItem[] = [
-  { label: 'Marketplace', href: '/marketplace', icon: Store },
+  { label: 'Profile Settings', href: '/buyer/account/profile', icon: User },
+  { label: 'Company Details', href: '/buyer/account/company', icon: Building2 },
   { label: 'My Orders', href: '/buyer/orders', icon: Package },
-  { label: 'Quick Reorder', href: '/buyer/reorder', icon: RefreshCw },
-  { label: 'Cart', href: '/buyer/cart', icon: ShoppingCart },
-  { label: 'Account', href: '/buyer/account', icon: User },
+  { label: 'Credit Overview', href: '/buyer/account/credit', icon: CreditCard },
+  { label: 'Request Quote', href: '/buyer/account/quotes', icon: FileText },
 ];
 
 const ADMIN_NAV: NavItem[] = [
@@ -149,7 +148,6 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
   const activePath = getActivePath(pathname, navItems);
   const isAdminViewingBuyer = user.role === 'admin' && pathname.startsWith('/buyer');
   const avatarInitial = user.full_name.charAt(0).toUpperCase();
-  const cartCount = useCartStore((s) => s.getItemCount());
 
   return (
     <div className="h-full bg-white border-r border-slate-200 w-65 flex flex-col">
@@ -202,7 +200,6 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = item.href === activePath;
-          const isCart = item.href === '/buyer/cart';
 
           return (
             <Link
@@ -216,7 +213,6 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
               }`}
               aria-current={active ? 'page' : undefined}
             >
-              {/* Active indicator bar */}
               {active && (
                 <span
                   className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.75 bg-teal-600 rounded-r-full"
@@ -228,12 +224,6 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
                 aria-hidden="true"
               />
               {item.label}
-              {/* Cart item count badge */}
-              {isCart && cartCount > 0 && (
-                <span className="ml-auto min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full bg-teal-600 text-white text-xs font-bold">
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              )}
             </Link>
           );
         })}

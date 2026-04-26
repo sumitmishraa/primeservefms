@@ -128,6 +128,11 @@ export default function AccountCompanyPage() {
 
   return (
     <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 font-heading">Company Details</h1>
+        <p className="text-sm text-slate-500 mt-1">Your business identity, tax numbers, and registered address</p>
+      </div>
+
       {/* Business Identity */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-2 mb-5">

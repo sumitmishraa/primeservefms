@@ -72,6 +72,11 @@ export default function AccountProfilePage() {
 
   return (
     <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 font-heading">Profile Settings</h1>
+        <p className="text-sm text-slate-500 mt-1">Update your personal information and contact details</p>
+      </div>
+
       {/* Avatar + identity */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-2 mb-5">
