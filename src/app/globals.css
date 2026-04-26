@@ -39,3 +39,38 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Product detail page — variant change microinteractions */
+@keyframes pdpFadeUp {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes pdpPulseRing {
+  0%   { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.45); }
+  100% { box-shadow: 0 0 0 12px rgba(13, 148, 136, 0); }
+}
+@keyframes pdpShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.pdp-fade-up   { animation: pdpFadeUp   0.28s ease-out both; }
+.pdp-pulse-ring{ animation: pdpPulseRing 0.65s ease-out both; }
+
+/* Diagonal stripe pattern used to mark out-of-stock variant cards */
+.pdp-stripes-disabled {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(148, 163, 184, 0.08) 0,
+    rgba(148, 163, 184, 0.08) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+/* Soft halo behind selected variant card */
+.pdp-selected-glow {
+  box-shadow:
+    0 0 0 1px rgb(20 184 166 / 0.35),
+    0 8px 24px -8px rgb(20 184 166 / 0.30),
+    0 4px 8px -4px rgb(20 184 166 / 0.20);
+}
