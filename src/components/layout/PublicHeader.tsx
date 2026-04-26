@@ -20,6 +20,7 @@ import {
   X,
   Loader2,
   Settings,
+  Package,
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -339,7 +340,17 @@ export default function PublicHeader() {
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-teal-50 hover:text-teal-700"
                     >
                       <Settings className="h-4 w-4 text-slate-400" />
-                      Profile Settings
+                      My Account
+                    </Link>
+
+                    <Link
+                      href={ordersHref}
+                      role="menuitem"
+                      onClick={() => setAccountOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-teal-50 hover:text-teal-700"
+                    >
+                      <Package className="h-4 w-4 text-slate-400" />
+                      My Orders
                     </Link>
 
                     <div className="my-1 h-px bg-slate-100" />
@@ -527,7 +538,14 @@ export default function PublicHeader() {
                       onClick={() => setMobileOpen(false)}
                       className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                     >
-                      <Settings className="h-4 w-4" /> Profile Settings
+                      <Settings className="h-4 w-4" /> My Account
+                    </Link>
+                    <Link
+                      href={ordersHref}
+                      onClick={() => setMobileOpen(false)}
+                      className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <Package className="h-4 w-4" /> My Orders
                     </Link>
                     <button
                       type="button"
