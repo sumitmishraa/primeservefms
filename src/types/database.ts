@@ -267,6 +267,8 @@ export type Database = {
           subcategory_slug: string | null;
           brand: string | null;
           size_variant: string | null;
+          /** Groups variant products together on the PDP. Null = standalone. */
+          group_slug: string | null;
           unit_of_measure: Database['public']['Enums']['unit_of_measure'];
           base_price: number;
           moq: number;
@@ -300,6 +302,7 @@ export type Database = {
           subcategory_slug?: string | null;
           brand?: string | null;
           size_variant?: string | null;
+          group_slug?: string | null;
           unit_of_measure?: Database['public']['Enums']['unit_of_measure'];
           base_price: number;
           moq?: number;

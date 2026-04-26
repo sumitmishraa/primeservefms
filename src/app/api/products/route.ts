@@ -32,6 +32,8 @@ export interface MarketplaceProduct {
   description: string | null;
   brand: string | null;
   size_variant: string | null;
+  /** Non-null when this product belongs to a variant group */
+  group_slug: string | null;
   base_price: number;
   unit_of_measure: string;
   moq: number;
@@ -76,7 +78,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     let query = supabase
       .from('products')
       .select(
-        'id, slug, name, description, brand, size_variant, base_price, unit_of_measure, moq, thumbnail_url, images, category, subcategory_slug, stock_status, gst_rate, specifications, pricing_tiers',
+        'id, slug, name, description, brand, size_variant, group_slug, base_price, unit_of_measure, moq, thumbnail_url, images, category, subcategory_slug, stock_status, gst_rate, specifications, pricing_tiers',
         { count: 'exact' }
       );
 
