@@ -72,7 +72,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     }
 
     const sheet = workbook.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { header: 1, defval: '' }) as unknown[][];
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
 
     if (rows.length < 2) {
       return NextResponse.json({ data: null, error: 'Excel file must have a header row and at least one data row' }, { status: 400 });
