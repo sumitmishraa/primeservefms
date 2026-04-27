@@ -155,19 +155,23 @@ export default function ImportProductsPage() {
 
       {/* Instructions card */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800 space-y-2">
-        <p className="font-semibold">Before you upload, make sure your file has:</p>
+        <p className="font-semibold">Two workbook formats are supported:</p>
         <ul className="list-disc list-inside space-y-1 text-blue-700">
-          <li><strong>Housekeeping sheet</strong> — headers at row 5: SL.No | Item Descriptions | Size/Brand | Units | Category | Sub-category</li>
-          <li><strong>Stationery sheet</strong> — headers at row 4: SL.No | Item Descriptions | Size/Brand | Qty | Category | Sub-category</li>
-          <li>Section headers (non-product rows) are automatically skipped</li>
-          <li>Prices will be set to ₹0 — you can update them in the catalog after import</li>
+          <li>
+            <strong>Diversey / TASKI 2025 price list</strong> (sheet:&nbsp;
+            <em>Diversey Price List 2025 Client</em>) — headers at row 4:&nbsp;
+            ITEM CODE | PRODUCT NAME | GROUP | PACK SIZE | HSN Code | CLP Rate 2025 | GST %.
+            Imported under <strong>Cleaning Chemicals</strong> with smart sub-category mapping
+            (Laundry → Laundry Chemicals, FC → Floor Care, etc.).
+          </li>
+          <li>
+            <strong>Legacy Housekeeping / Stationery workbook</strong> — headers near rows
+            4–5 with SL.No | Item Descriptions | Size/Brand | Units | Category | Sub-category.
+          </li>
+          <li>Section header / note rows are skipped automatically.</li>
+          <li>Same-name + different-pack rows are grouped as variants on the product page.</li>
+          <li>Re-uploading the same workbook is safe — already-imported rows are skipped.</li>
         </ul>
-        <p className="text-blue-600 mt-2">
-          Download a sample template:{' '}
-          <span className="underline cursor-not-allowed opacity-60">
-            Coming soon
-          </span>
-        </p>
       </div>
 
       {/* Drop zone */}

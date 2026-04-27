@@ -46,3 +46,7 @@ dist/
 next-env.d.ts
 # Added by code-review-graph
 .code-review-graph/
+
+# Vendor price-list source workbooks (raw data, not source code)
+TASKI*.xlsx
+*PRICE LIST*.xlsx

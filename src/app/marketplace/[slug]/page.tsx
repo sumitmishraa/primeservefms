@@ -714,7 +714,8 @@ export default function ProductDetailPage({
               className="pdp-fade-up rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-teal-50/40 p-5 shadow-sm"
             >
               <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
-                Price per <span className="capitalize">{product.unit_of_measure}</span>
+                Rate per <span className="capitalize">{product.unit_of_measure}</span>
+                {product.size_variant && <> · {product.size_variant}</>}
               </p>
               <div className="mt-1 flex items-baseline gap-3">
                 <span className="font-mono text-3xl font-extrabold text-teal-700 sm:text-4xl">
@@ -726,11 +727,37 @@ export default function ProductDetailPage({
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-xs text-slate-500">
-                Excl. GST {product.gst_rate}% &nbsp;·&nbsp; Per&nbsp;
-                <span className="capitalize">{product.unit_of_measure}</span>
-                {product.size_variant && <> · {product.size_variant}</>}
-              </p>
+
+              {/* Explicit GST breakdown — buyers asked for this front-and-centre */}
+              <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rate</p>
+                  <p className="mt-0.5 font-mono text-sm font-bold text-slate-900">
+                    {formatINR(product.base_price)}
+                  </p>
+                </div>
+                <div className="border-x border-slate-100">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    GST&nbsp;{product.gst_rate}%
+                  </p>
+                  <p className="mt-0.5 font-mono text-sm font-bold text-slate-700">
+                    {formatINR(product.base_price * product.gst_rate / 100)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Incl. GST</p>
+                  <p className="mt-0.5 font-mono text-sm font-bold text-emerald-700">
+                    {formatINR(product.base_price * (1 + product.gst_rate / 100))}
+                  </p>
+                </div>
+              </div>
+              {product.hsn_code && (
+                <p className="mt-2 text-[11px] text-slate-500">
+                  HSN&nbsp;<span className="font-mono font-semibold text-slate-700">{product.hsn_code}</span>
+                  &nbsp;· GST-compliant B2B invoicing
+                </p>
+              )}
+
               {pricingTiers.length > 0 && (
                 <button
                   type="button"
@@ -859,7 +886,10 @@ export default function ProductDetailPage({
               </span>
             </p>
             <p className="truncate text-[11px] text-slate-500">
-              MOQ {product.moq} · {product.size_variant ?? uomLabel(product.unit_of_measure)}
+              + GST {product.gst_rate}% ·&nbsp;
+              <span className="font-semibold text-emerald-700">
+                {formatINR(product.base_price * (1 + product.gst_rate / 100))} incl.
+              </span>
             </p>
           </div>
           <button

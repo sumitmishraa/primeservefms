@@ -103,10 +103,17 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* Body */}
       <div className="flex flex-1 flex-col gap-1.5 p-4">
-        {/* SKU */}
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-          {sku}
-        </p>
+        {/* SKU + size-variant chip */}
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            {sku}
+          </p>
+          {product.size_variant && (
+            <span className="truncate rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+              {product.size_variant}
+            </span>
+          )}
+        </div>
 
         {/* Name */}
         <Link
@@ -133,15 +140,28 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className="text-slate-500">({count})</span>
         </div>
 
-        {/* Price */}
-        <p className="mt-1 font-heading text-lg font-bold text-teal-700">
-          {formatINR(product.base_price)}
-          <span className="ml-1 text-xs font-normal text-slate-500">
-            / {product.unit_of_measure}
-          </span>
-        </p>
+        {/* Pricing block — Rate / GST / Incl. GST */}
+        <div className="mt-1 space-y-0.5">
+          <p className="text-[11px] text-slate-500">
+            Rate&nbsp;
+            <span className="font-mono font-bold text-slate-900">
+              {formatINR(product.base_price)}
+            </span>
+            <span className="ml-1 text-slate-400">/ {product.unit_of_measure}</span>
+          </p>
+          <p className="text-[11px] text-slate-500">
+            GST {product.gst_rate}%&nbsp;
+            <span className="font-mono font-semibold text-slate-700">
+              ({formatINR(product.base_price * product.gst_rate / 100)})
+            </span>
+          </p>
+          <p className="font-heading text-base font-bold leading-tight text-teal-700">
+            {formatINR(product.base_price * (1 + product.gst_rate / 100))}
+            <span className="ml-1 text-[10px] font-normal text-slate-500">incl. GST</span>
+          </p>
+        </div>
 
-        {/* Bulk hint */}
+        {/* Bulk / MOQ hint */}
         <p className="text-[11px] text-slate-500">
           {bulk
             ? `From ${formatINR(bulk.price)} for ${bulk.minQty}+`

@@ -73,9 +73,9 @@ export const PRODUCT_CATEGORIES: ProductCategoryMeta[] = [
   {
     value: 'cleaning_chemicals',
     label: 'Cleaning Chemicals',
-    description: 'Floor cleaners, toilet cleaners, hand wash, soaps, detergents, and disinfectants',
+    description: 'Laundry, kitchen, floor, washroom, hand-care and pest-control chemicals — including the full Diversey / TASKI catalog',
     icon: 'FlaskConical',
-    productCount: 56,
+    productCount: 222,
   },
   {
     value: 'office_stationeries',
@@ -149,9 +149,22 @@ export const SUBCATEGORIES: Record<ProductCategory, SubcategoryMeta[]> = {
   ],
 
   cleaning_chemicals: [
-    { value: 'bulk_cleaning_chemicals',     label: 'Bulk Cleaning Chemicals',    slug: 'bulk_cleaning_chemicals' },
-    { value: 'branded_cleaning_liquids',    label: 'Branded Cleaning Liquids',   slug: 'branded_cleaning_liquids' },
-    { value: 'soaps_and_detergent_powders', label: 'Soaps & Detergent Powders',  slug: 'soaps_and_detergent_powders' },
+    // Diversey / TASKI catalog groups — match the "GROUP" column in the 2025
+    // price list. Order roughly mirrors a buyer's mental model
+    // (laundry → kitchen → housekeeping → floor → washroom → personal → pest).
+    { value: 'laundry_chemicals',                  label: 'Laundry Chemicals',                  slug: 'laundry_chemicals' },
+    { value: 'kitchen_hygiene_and_warewashing',    label: 'Kitchen Hygiene & Warewashing',      slug: 'kitchen_hygiene_and_warewashing' },
+    { value: 'housekeeping_and_general_cleaners',  label: 'Housekeeping & General Cleaners',    slug: 'housekeeping_and_general_cleaners' },
+    { value: 'floor_care_and_polish',              label: 'Floor Care & Polish',                slug: 'floor_care_and_polish' },
+    { value: 'washroom_and_odour_control',         label: 'Washroom & Odour Control',           slug: 'washroom_and_odour_control' },
+    { value: 'personal_care_and_hand_hygiene',     label: 'Personal Care & Hand Hygiene',       slug: 'personal_care_and_hand_hygiene' },
+    { value: 'pest_control_and_fly_management',    label: 'Pest Control & Fly Management',      slug: 'pest_control_and_fly_management' },
+    { value: 'dispensers_and_hygiene_accessories', label: 'Dispensers & Hygiene Accessories',   slug: 'dispensers_and_hygiene_accessories' },
+    { value: 'dishwashing_machines_and_equipment', label: 'Dishwashing Machines & Equipment',   slug: 'dishwashing_machines_and_equipment' },
+    // Legacy slugs retained for any rows imported under the old taxonomy
+    { value: 'bulk_cleaning_chemicals',            label: 'Bulk Cleaning Chemicals',            slug: 'bulk_cleaning_chemicals' },
+    { value: 'branded_cleaning_liquids',           label: 'Branded Cleaning Liquids',           slug: 'branded_cleaning_liquids' },
+    { value: 'soaps_and_detergent_powders',        label: 'Soaps & Detergent Powders',          slug: 'soaps_and_detergent_powders' },
   ],
 
   pantry_items: [
@@ -238,6 +251,38 @@ export const ORDER_STATUSES: OrderStatusMeta[] = [
 // ---------------------------------------------------------------------------
 // Helper functions
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Diversey / TASKI workbook GROUP -> cleaning_chemicals subcategory_slug
+// ---------------------------------------------------------------------------
+
+/**
+ * Maps the raw GROUP value from the Diversey / TASKI 2025 price list to a
+ * cleaning_chemicals subcategory_slug. Used by the admin Excel importer.
+ *
+ * Keys are normalised to lowercase before lookup. Unrecognised groups fall
+ * back to 'housekeeping_and_general_cleaners' so no row is dropped.
+ */
+export const TASKI_GROUP_TO_SUBCATEGORY: Record<string, string> = {
+  'laundry':   'laundry_chemicals',
+  'kitchen':   'kitchen_hygiene_and_warewashing',
+  'mww':       'kitchen_hygiene_and_warewashing',
+  'mww conc':  'kitchen_hygiene_and_warewashing',
+  'hsk':       'housekeeping_and_general_cleaners',
+  'bc':        'housekeeping_and_general_cleaners',
+  'fc':        'floor_care_and_polish',
+  'oc':        'washroom_and_odour_control',
+  'pc':        'personal_care_and_hand_hygiene',
+  'ipm':       'pest_control_and_fly_management',
+  'others':    'dispensers_and_hygiene_accessories',
+  'dwp':       'dishwashing_machines_and_equipment',
+};
+
+/**
+ * Default subcategory_slug used when an imported row has an empty or
+ * unrecognised GROUP value.
+ */
+export const TASKI_DEFAULT_SUBCATEGORY = 'housekeeping_and_general_cleaners';
 
 /**
  * Returns the subcategories for a given product category value.
