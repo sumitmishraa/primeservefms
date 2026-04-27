@@ -64,14 +64,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     const { searchParams } = new URL(request.url);
-    const category    = searchParams.get('category') ?? '';
-    const subcategory = searchParams.get('subcategory') ?? '';
-    const search      = searchParams.get('search') ?? '';
-    const stockFilter = searchParams.get('stock') ?? '';
-    const page        = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
-    const perPage     = Math.min(100, Math.max(1, parseInt(searchParams.get('per_page') ?? '25', 10)));
-    const from        = (page - 1) * perPage;
-    const to          = from + perPage - 1;
+    const category        = searchParams.get('category') ?? '';
+    const subcategory     = searchParams.get('subcategory') ?? '';
+    const search          = searchParams.get('search') ?? '';
+    const stockFilter     = searchParams.get('stock') ?? '';
+    // By default, hide soft-deleted (is_active=false) rows from the admin
+    // catalog so the trash-icon button visibly removes them. Pass
+    // ?include_inactive=true to see deactivated rows too (e.g. to restore them).
+    const includeInactive = searchParams.get('include_inactive') === 'true';
+    const page            = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+    const perPage         = Math.min(100, Math.max(1, parseInt(searchParams.get('per_page') ?? '25', 10)));
+    const from            = (page - 1) * perPage;
+    const to              = from + perPage - 1;
 
     const supabase = createAdminClient();
 
@@ -79,6 +83,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .from('products')
       .select('*', { count: 'exact' });
 
+    if (!includeInactive) {
+      query = query.eq('is_active', true);
+    }
     if (category) {
       query = query.eq('category', category as Enums<'product_category'>);
     }

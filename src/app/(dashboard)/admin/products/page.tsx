@@ -159,11 +159,12 @@ function StockToggle({
 
 export default function AdminProductsPage() {
   // Filters
-  const [search,       setSearch]       = useState('');
-  const [category,     setCategory]     = useState('');
-  const [subcategory,  setSubcategory]  = useState('');
-  const [stockFilter,  setStockFilter]  = useState('');
-  const [page,         setPage]         = useState(1);
+  const [search,         setSearch]         = useState('');
+  const [category,       setCategory]       = useState('');
+  const [subcategory,    setSubcategory]    = useState('');
+  const [stockFilter,    setStockFilter]    = useState('');
+  const [includeInactive, setIncludeInactive] = useState(false);
+  const [page,           setPage]           = useState(1);
 
   // Data
   const [data,    setData]    = useState<PaginatedProducts | null>(null);
@@ -196,6 +197,7 @@ export default function AdminProductsPage() {
       if (subcategory)     params.set('subcategory', subcategory);
       if (debouncedSearch) params.set('search',      debouncedSearch);
       if (stockFilter)     params.set('stock',       stockFilter);
+      if (includeInactive) params.set('include_inactive', 'true');
 
       const res  = await fetch(`/api/admin/products?${params.toString()}`);
       const json = (await res.json()) as { data: PaginatedProducts | null; error: string | null };
@@ -206,12 +208,12 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, category, subcategory, debouncedSearch, stockFilter]);
+  }, [page, category, subcategory, debouncedSearch, stockFilter, includeInactive]);
 
   useEffect(() => { void fetchProducts(); }, [fetchProducts]);
 
   // Reset page when filters change
-  useEffect(() => { setPage(1); }, [category, subcategory, debouncedSearch, stockFilter]);
+  useEffect(() => { setPage(1); }, [category, subcategory, debouncedSearch, stockFilter, includeInactive]);
 
   // Reset subcategory when category changes
   useEffect(() => { setSubcategory(''); }, [category]);
@@ -291,6 +293,43 @@ export default function AdminProductsPage() {
       })
     );
     toast.success(`Deactivated ${ids.length - failed} products`);
+    setSelected(new Set());
+    void fetchProducts();
+  };
+
+  /**
+   * Permanently removes the selected products from the DB. Used to wipe the
+   * catalog before a fresh Excel import. Products that are referenced by
+   * existing orders will fail with a 409 — those rows are reported back to
+   * the admin so they can be handled separately.
+   */
+  const handleBulkHardDelete = async () => {
+    const msg =
+      `Permanently delete ${selected.size} product${selected.size !== 1 ? 's' : ''}?\n\n` +
+      `This cannot be undone. Products that appear in past orders will be skipped.`;
+    if (!confirm(msg)) return;
+    const ids = [...selected];
+    let removed = 0;
+    let blocked = 0;
+    await Promise.all(
+      ids.map(async (id) => {
+        try {
+          const res  = await fetch(`/api/admin/products/${id}?hard=true`, { method: 'DELETE' });
+          const json = (await res.json()) as { error: string | null };
+          if (res.ok && !json.error) {
+            removed++;
+          } else if (res.status === 409) {
+            blocked++;
+          }
+        } catch {
+          /* network errors silently grouped into the unaccounted-for remainder */
+        }
+      })
+    );
+    if (blocked > 0) {
+      toast.error(`${blocked} product(s) skipped — they appear in past orders`);
+    }
+    toast.success(`Permanently deleted ${removed} products`);
     setSelected(new Set());
     void fetchProducts();
   };
@@ -418,6 +457,17 @@ export default function AdminProductsPage() {
           ))}
         </div>
 
+        {/* Show inactive toggle */}
+        <label className="flex items-center gap-2 text-sm text-slate-600 select-none">
+          <input
+            type="checkbox"
+            checked={includeInactive}
+            onChange={(e) => setIncludeInactive(e.target.checked)}
+            className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+          />
+          Show inactive
+        </label>
+
         <button
           type="button"
           onClick={() => void fetchProducts()}
@@ -434,13 +484,22 @@ export default function AdminProductsPage() {
           <span className="text-sm font-medium text-teal-800">
             {selected.size} product{selected.size !== 1 ? 's' : ''} selected
           </span>
-          <div className="flex gap-2 ml-auto">
+          <div className="flex flex-wrap gap-2 ml-auto">
             <button
               type="button"
               onClick={handleBulkDelete}
-              className="text-sm text-rose-600 hover:text-rose-700 font-medium px-3 py-1.5 border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors"
+              className="text-sm text-amber-700 hover:text-amber-800 font-medium px-3 py-1.5 border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors"
+              title="Hide selected products from the catalog (recoverable)"
             >
-              Delete Selected
+              Deactivate
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkHardDelete}
+              className="text-sm text-white font-semibold px-3 py-1.5 bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
+              title="Permanently remove selected products from the database"
+            >
+              Delete permanently
             </button>
           </div>
         </div>

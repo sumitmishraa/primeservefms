@@ -59,6 +59,18 @@ interface RowError {
   reason: string;
 }
 
+/**
+ * One staged operation produced by a sheet parser.
+ *  - kind 'insert'      → fresh row to INSERT.
+ *  - kind 'reactivate'  → existing soft-deleted row whose deterministic slug
+ *                         matched. We UPDATE it back to is_active=true and
+ *                         refresh price / hsn / gst / description in case the
+ *                         workbook revised them.
+ */
+type StagedOp =
+  | { kind: 'insert';     payload: ProductInsert }
+  | { kind: 'reactivate'; id: string; payload: Partial<ProductInsert> };
+
 interface ProductInsert {
   uploaded_by:       string;
   vendor_id:         null;
@@ -89,15 +101,20 @@ interface ProductInsert {
 
 interface ImportContext {
   user:           { id: string };
-  /** Slugs already present in the DB before this import started. Deterministic-slug
-   *  collisions against this set mean "this row is already imported" and should be skipped. */
+  /** Active product slugs already present in the DB before this import started.
+   *  A deterministic-slug match here means "this row is already live" and we skip. */
   dbSlugs:        Set<string>;
+  /** Slug -> id for SOFT-DELETED rows. A match here means "this row was previously
+   *  trashed" — we reactivate + refresh it instead of inserting a duplicate. */
+  inactiveByslug: Map<string, string>;
   /** Slugs that have been added by this import run (used to break ties within the workbook). */
   batchSlugs:     Set<string>;
   subcats:        Array<{ id: string; slug: string; category: string }>;
   errors:         RowError[];
   /** Counter incremented every time a row is skipped because its slug already exists in dbSlugs. */
   skippedExisting: { count: number };
+  /** Counter incremented every time a soft-deleted row was reactivated by this import. */
+  reactivated:    { count: number };
 }
 
 // ---------------------------------------------------------------------------
@@ -296,14 +313,14 @@ function isDiverseySheet(rawRows: unknown[][]): boolean {
 function parseDiverseySheet(
   rawRows: unknown[][],
   ctx:     ImportContext,
-): ProductInsert[] {
+): StagedOp[] {
   // Header is row 4 (index 3); data starts at row 5 (index 4).
   const dataRows = rawRows.slice(4);
 
   // De-dupe storage.
   const importKeys = new Set<string>();         // name+pack key — within-file dedupe
   const groupCount = new Map<string, number>(); // group_slug → row count, for variant detection
-  const products: ProductInsert[] = [];
+  const products: StagedOp[] = [];
 
   // Pre-fetch existing subcategories once and look them up by slug only.
   const subcatBySlug = new Map<string, string>();
@@ -313,9 +330,11 @@ function parseDiverseySheet(
 
   // -------- pass 1 — parse rows, record group counts --------------------
   interface StagedRow {
-    insert:      Omit<ProductInsert, 'group_slug'>;
-    familySlug:  string;
-    rowNumber:   number;
+    insert:        Omit<ProductInsert, 'group_slug'>;
+    familySlug:    string;
+    rowNumber:     number;
+    /** non-null when this row should reactivate an existing soft-deleted product */
+    reactivateId?: string;
   }
   const staged: StagedRow[] = [];
 
@@ -379,21 +398,26 @@ function parseDiverseySheet(
     if (!baseSlug) baseSlug = 'product';
     if (itemCode) baseSlug += '-' + slugify(itemCode);
 
-    // If this exact slug already lives in the DB, the row was imported on a
-    // previous run — skip silently for idempotent re-imports.
+    // If this exact slug matches an active row, the workbook entry is already
+    // imported — skip silently for idempotent re-imports.
     if (ctx.dbSlugs.has(baseSlug)) {
       ctx.skippedExisting.count++;
       continue;
     }
 
-    // Within-batch tie-break (e.g. two pack sizes that collapse to the same
-    // slug after normalisation but with different item codes).
+    // If this exact slug matches a soft-deleted row, reactivate + refresh it
+    // instead of inserting a duplicate.
+    const reactivateId = ctx.inactiveByslug.get(baseSlug);
     let slug = baseSlug;
-    let suffix = 1;
-    while (ctx.batchSlugs.has(slug) || ctx.dbSlugs.has(slug)) {
-      slug = `${baseSlug}-${++suffix}`;
+    if (!reactivateId) {
+      // Within-batch tie-break (e.g. two pack sizes that collapse to the same
+      // slug after normalisation but with different item codes).
+      let suffix = 1;
+      while (ctx.batchSlugs.has(slug) || ctx.dbSlugs.has(slug) || ctx.inactiveByslug.has(slug)) {
+        slug = `${baseSlug}-${++suffix}`;
+      }
+      ctx.batchSlugs.add(slug);
     }
-    ctx.batchSlugs.add(slug);
 
     const useCase = describeUseCase(subSlug);
     const short   = buildShortDescription(name, pack || null, useCase);
@@ -426,17 +450,30 @@ function parseDiverseySheet(
       tags:              [],
     };
 
-    staged.push({ insert, familySlug, rowNumber: absRow });
+    staged.push({ insert, familySlug, rowNumber: absRow, reactivateId });
     groupCount.set(familySlug, (groupCount.get(familySlug) ?? 0) + 1);
   }
 
   // -------- pass 2 — attach group_slug only to families with >1 pack ----
   for (const s of staged) {
     const isVariantFamily = (groupCount.get(s.familySlug) ?? 0) > 1;
-    products.push({
+    const payload: ProductInsert = {
       ...s.insert,
       group_slug: isVariantFamily ? s.familySlug : null,
-    });
+    };
+    if (s.reactivateId) {
+      // For reactivation, drop fields that should not change on a re-import:
+      // slug (DB identity), uploaded_by (original importer), vendor_id (admin-managed).
+      const { slug: _slug, uploaded_by: _u, vendor_id: _v, ...refresh } = payload;
+      void _slug; void _u; void _v;
+      products.push({
+        kind: 'reactivate',
+        id: s.reactivateId,
+        payload: { ...refresh, is_active: true },
+      });
+    } else {
+      products.push({ kind: 'insert', payload });
+    }
   }
 
   return products;
@@ -454,7 +491,7 @@ function parseLegacySheet(
   sheetName: string,
   rawRows:   unknown[][],
   ctx:       ImportContext,
-): ProductInsert[] {
+): StagedOp[] {
   const headerRowIndex = rawRows.findIndex(
     (r) => Array.isArray(r) && r.some(
       (c) => typeof c === 'string' && c.toLowerCase().includes('item descriptions'),
@@ -478,7 +515,7 @@ function parseLegacySheet(
 
   const dataRows = rawRows.slice(headerRowIndex + 1);
   const slNoCol  = colIdx.slNo === -1 ? 0 : colIdx.slNo;
-  const products: ProductInsert[] = [];
+  const products: StagedOp[] = [];
 
   dataRows.forEach((rawRow, idx) => {
     const row = rawRow as unknown[];
@@ -527,14 +564,17 @@ function parseLegacySheet(
       return;
     }
 
+    const reactivateId = ctx.inactiveByslug.get(baseSlug);
     let slug = baseSlug;
-    let suffix = 1;
-    while (ctx.batchSlugs.has(slug) || ctx.dbSlugs.has(slug)) {
-      slug = `${baseSlug}-${++suffix}`;
+    if (!reactivateId) {
+      let suffix = 1;
+      while (ctx.batchSlugs.has(slug) || ctx.dbSlugs.has(slug) || ctx.inactiveByslug.has(slug)) {
+        slug = `${baseSlug}-${++suffix}`;
+      }
+      ctx.batchSlugs.add(slug);
     }
-    ctx.batchSlugs.add(slug);
 
-    products.push({
+    const payload: ProductInsert = {
       uploaded_by:       ctx.user.id,
       vendor_id:         null,
       name,
@@ -561,7 +601,14 @@ function parseLegacySheet(
       images,
       specifications:    {},
       tags:              [],
-    });
+    };
+    if (reactivateId) {
+      const { slug: _slug, uploaded_by: _u, vendor_id: _v, ...refresh } = payload;
+      void _slug; void _u; void _v;
+      products.push({ kind: 'reactivate', id: reactivateId, payload: { ...refresh, is_active: true } });
+    } else {
+      products.push({ kind: 'insert', payload });
+    }
   });
 
   console.log('[IMPORT] Legacy sheet', sheetName, '→', products.length, 'rows');
@@ -605,45 +652,57 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const supabase = createAdminClient();
 
-    // Pre-fetch existing slugs and subcategories for de-dupe + FK lookup.
+    // Pre-fetch existing slugs (split by activity) and subcategories.
+    // Active rows  → "this is already imported, skip".
+    // Inactive rows → "this was previously soft-deleted, reactivate it".
     const [{ data: existing }, { data: subcatRows }] = await Promise.all([
-      supabase.from('products').select('slug'),
+      supabase.from('products').select('id, slug, is_active'),
       supabase.from('subcategories').select('id, slug, category'),
     ]);
 
+    const dbSlugs        = new Set<string>();
+    const inactiveByslug = new Map<string, string>();
+    for (const p of (existing ?? []) as Array<{ id: string; slug: string; is_active: boolean }>) {
+      if (p.is_active) dbSlugs.add(p.slug);
+      else             inactiveByslug.set(p.slug, p.id);
+    }
+
     const ctx: ImportContext = {
       user:            { id: user.id },
-      dbSlugs:         new Set((existing ?? []).map((p) => p.slug)),
+      dbSlugs,
+      inactiveByslug,
       batchSlugs:      new Set<string>(),
       subcats:         (subcatRows ?? []) as Array<{ id: string; slug: string; category: string }>,
       errors:          [],
       skippedExisting: { count: 0 },
+      reactivated:     { count: 0 },
     };
 
     // 4. Parse each sheet using the appropriate parser.
-    const allInserts: ProductInsert[] = [];
+    const ops: StagedOp[] = [];
 
     for (const sheetName of workbook.SheetNames) {
       const sheet = workbook.Sheets[sheetName];
       const rawRows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
 
-      const sheetInserts = isDiverseySheet(rawRows)
+      const sheetOps = isDiverseySheet(rawRows)
         ? parseDiverseySheet(rawRows, ctx)
         : parseLegacySheet(sheetName, rawRows, ctx);
 
-      allInserts.push(...sheetInserts);
+      ops.push(...sheetOps);
     }
 
-    console.log('[IMPORT] Total rows queued for insert:', allInserts.length);
+    const inserts      = ops.filter((o): o is Extract<StagedOp, { kind: 'insert' }>     => o.kind === 'insert');
+    const reactivates  = ops.filter((o): o is Extract<StagedOp, { kind: 'reactivate' }> => o.kind === 'reactivate');
 
-    // 5. Batch insert (chunks of 50). The DB has a unique constraint on slug,
-    //    so any same-slug row that survived our pre-filter will surface as a
-    //    duplicate-key error and be counted as skipped.
-    const CHUNK = 50;
+    console.log('[IMPORT] Inserts queued:', inserts.length, 'Reactivations queued:', reactivates.length);
+
     let inserted = 0;
 
-    for (let i = 0; i < allInserts.length; i += CHUNK) {
-      const chunk = allInserts.slice(i, i + CHUNK);
+    // 5a. Batch INSERT new rows (chunks of 50).
+    const CHUNK = 50;
+    for (let i = 0; i < inserts.length; i += CHUNK) {
+      const chunk = inserts.slice(i, i + CHUNK).map((o) => o.payload);
       const { error: bulkErr } = await supabase.from('products').insert(chunk);
       if (!bulkErr) {
         inserted += chunk.length;
@@ -668,18 +727,38 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
+    // 5b. Reactivate previously soft-deleted rows one-by-one (small N — fine).
+    for (const op of reactivates) {
+      const { error: updErr } = await supabase
+        .from('products')
+        .update(op.payload)
+        .eq('id', op.id);
+      if (updErr) {
+        ctx.errors.push({
+          row:    0,
+          name:   op.payload.name ?? '(unknown)',
+          reason: `Reactivate failed: ${updErr.message}`,
+        });
+      } else {
+        ctx.reactivated.count++;
+      }
+    }
+
     console.log(
       '[IMPORT] Done. Inserted:', inserted,
+      'Reactivated:', ctx.reactivated.count,
       'Skipped:', ctx.skippedExisting.count,
       'Errors:', ctx.errors.length,
     );
 
+    const total = inserted + ctx.reactivated.count;
     return NextResponse.json({
       data: {
-        imported: inserted,
+        imported: total,
         skipped:  ctx.skippedExisting.count,
         errors:   ctx.errors,
-        message:  `Successfully imported ${inserted} products`,
+        message:  `Imported ${inserted} new products`
+          + (ctx.reactivated.count > 0 ? `, reactivated ${ctx.reactivated.count}` : ''),
       },
       error: null,
     });
