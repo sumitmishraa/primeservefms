@@ -309,16 +309,24 @@ function splitImageUrls(raw: string): string[] {
 // ---------------------------------------------------------------------------
 
 /**
- * Returns true when a sheet looks like the Diversey / TASKI 2025 price list:
- * the header row 4 contains both "ITEM CODE" and "CLP Rate" tokens.
+ * Returns true when a sheet looks like the Diversey / TASKI 2025 price list.
+ *
+ * Detection: row 4 (index 3) must have "ITEM CODE" in column A AND contain
+ * both "group" and "pack" columns. We intentionally do NOT require the exact
+ * price-column label ("CLP Rate 2025" vs "Rate") since that varies by section.
  */
 function isDiverseySheet(rawRows: unknown[][]): boolean {
   const r4 = rawRows[3];
   if (!Array.isArray(r4)) return false;
+  const colA = typeof r4[0] === 'string' ? r4[0].toLowerCase().trim() : '';
+  if (colA !== 'item code') return false;
   const flat = r4
     .map((c) => (typeof c === 'string' ? c.toLowerCase() : ''))
     .join('|');
-  return flat.includes('item code') && flat.includes('clp rate');
+  // Must have a price-like column ("rate" or "clp") AND group AND pack
+  return (flat.includes('rate') || flat.includes('clp')) &&
+    flat.includes('group') &&
+    flat.includes('pack');
 }
 
 /**
@@ -383,12 +391,13 @@ function parseDiverseySheet(
     const name = typeof nameRaw === 'string' ? nameRaw.trim() : String(nameRaw ?? '').trim();
     if (!name) continue;
 
-    // Skip repeated header rows — these have "ITEM CODE" in column A.
-    if (typeof itemCodeRaw === 'string' && itemCodeRaw.trim().toUpperCase().startsWith('ITEM CODE')) continue;
+    // Skip repeated section-header rows — col A is "ITEM CODE" (any casing/spacing).
+    if (typeof itemCodeRaw === 'string' && itemCodeRaw.trim().toUpperCase() === 'ITEM CODE') continue;
 
-    // Skip "Note :" footer rows.
-    if (typeof itemCodeRaw === 'string' && /^note/i.test(itemCodeRaw.trim())) continue;
-    if (/^note/i.test(name)) continue;
+    // Skip footer / note / terms rows (col A starts with "Note", "Terms", "GST Extra", etc.).
+    if (typeof itemCodeRaw === 'string' &&
+        /^(note|terms|gst extra|payment|delivery|sku)/i.test(itemCodeRaw.trim())) continue;
+    if (/^(note|terms)/i.test(name)) continue;
 
     const rate = parseNumeric(rateRaw);
     if (!isFinite(rate) || rate <= 0) {
