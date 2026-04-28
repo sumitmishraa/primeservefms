@@ -18,7 +18,6 @@ const QUICK_LINKS = [
   { href: '/about', label: 'About Us' },
   { href: '/marketplace', label: 'Services' },
   { href: '/contact', label: 'Contact' },
-  { href: '/pro', label: 'Pro Plan' },
   { href: '/about', label: 'Careers' },
 ];
 

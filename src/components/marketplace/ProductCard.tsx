@@ -4,17 +4,18 @@
  * Layout matches the B2B marketplace reference:
  *   - Top half: light teal tint image area with a stock badge (top-left)
  *     and a heart/wishlist icon (top-right)
- *   - Bottom half: SKU, product name, star rating + review count,
- *     price per unit, bulk hint ("From ₹X for 50+"), and Add to Cart button
+ *   - Bottom half: SKU, product name, one clear product price, MOQ,
+ *     and Add to Cart button
  *
- * The image + name link to /marketplace/[slug]; the Add to Cart button
- * opens the quantity modal (login-gated).
+ * The card links to /marketplace/[slug]; the Add to Cart button opens the
+ * quantity modal (login-gated).
  */
 
 'use client';
 
 import Link from 'next/link';
-import { Package, Heart, Star } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Package, Heart } from 'lucide-react';
 import { formatINR } from '@/lib/utils/formatting';
 import AddToCartButton from './AddToCartButton';
 import type { CartableProduct } from './AddToCartButton';
@@ -23,49 +24,48 @@ interface ProductCardProps {
   product: CartableProduct;
 }
 
-/**
- * Hash-based stable rating + review count so the skeleton looks realistic
- * in the demo build before real review data is wired up.
- */
-function pseudoRating(id: string) {
-  let seed = 0;
-  for (let i = 0; i < id.length; i++) seed = (seed * 31 + id.charCodeAt(i)) | 0;
-  const rating = 3.5 + ((Math.abs(seed) % 15) / 10);
-  const count = 10 + (Math.abs(seed >> 3) % 180);
-  return { rating: Math.min(5, Math.round(rating * 10) / 10), count };
-}
-
-/**
- * Finds the lowest per-unit price across all pricing tiers.
- * Returns null when there are no tiers that beat base_price.
- */
-function lowestTierPrice(product: CartableProduct): { price: number; minQty: number } | null {
-  if (!product.pricing_tiers || product.pricing_tiers.length === 0) return null;
-  const sorted = [...product.pricing_tiers].sort((a, b) => a.price - b.price);
-  const best = sorted[0];
-  if (!best || best.price >= product.base_price) return null;
-  return { price: best.price, minQty: best.min_qty };
+function productImageAlt(product: CartableProduct): string {
+  const size = product.size_variant ? ` ${product.size_variant}` : '';
+  return `Buy ${product.name}${size} online for B2B housekeeping procurement`;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const router = useRouter();
   const isOutOfStock = product.stock_status === 'out_of_stock';
   const isLowStock = product.stock_status === 'low_stock';
-  const { rating, count } = pseudoRating(product.id);
   const sku = product.id.slice(0, 8).toUpperCase();
-  const bulk = lowestTierPrice(product);
+  const detailHref = `/marketplace/${product.slug}`;
+
+  const openDetails = (target: EventTarget): boolean => {
+    if (target instanceof Element && target.closest('a, button, input, select, textarea')) {
+      return false;
+    }
+    router.push(detailHref);
+    return true;
+  };
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-colors hover:border-teal-300">
+    <article
+      className="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-colors hover:border-teal-300 focus-within:border-teal-300"
+      onClick={(e) => openDetails(e.target)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (openDetails(e.target)) e.preventDefault();
+        }
+      }}
+      tabIndex={0}
+      aria-label={`View ${product.name}`}
+    >
       {/* Image area */}
       <Link
-        href={`/marketplace/${product.slug}`}
+        href={detailHref}
         className="relative block aspect-square w-full overflow-hidden bg-teal-50/40"
       >
         {product.thumbnail_url ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={product.thumbnail_url}
-            alt={product.name}
+            alt={productImageAlt(product)}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
@@ -117,55 +117,25 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Name */}
         <Link
-          href={`/marketplace/${product.slug}`}
+          href={detailHref}
           className="line-clamp-2 font-heading text-sm font-bold leading-snug text-slate-900 hover:text-teal-700"
         >
           {product.name}
         </Link>
 
-        {/* Rating */}
-        <div className="flex items-center gap-1.5 text-xs">
-          <div className="flex">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <Star
-                key={i}
-                className={`h-3.5 w-3.5 ${
-                  i < Math.round(rating)
-                    ? 'fill-amber-400 text-amber-400'
-                    : 'fill-slate-200 text-slate-200'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-slate-500">({count})</span>
-        </div>
-
-        {/* Pricing block — Rate / GST / Incl. GST */}
-        <div className="mt-1 space-y-0.5">
-          <p className="text-[11px] text-slate-500">
-            Rate&nbsp;
-            <span className="font-mono font-bold text-slate-900">
-              {formatINR(product.base_price)}
-            </span>
-            <span className="ml-1 text-slate-400">/ {product.unit_of_measure}</span>
-          </p>
-          <p className="text-[11px] text-slate-500">
-            GST {product.gst_rate}%&nbsp;
-            <span className="font-mono font-semibold text-slate-700">
-              ({formatINR(product.base_price * product.gst_rate / 100)})
-            </span>
-          </p>
+        {/* Price only on card; GST breakdown lives on the product page. */}
+        <div className="mt-1">
           <p className="font-heading text-base font-bold leading-tight text-teal-700">
-            {formatINR(product.base_price * (1 + product.gst_rate / 100))}
-            <span className="ml-1 text-[10px] font-normal text-slate-500">incl. GST</span>
+            {formatINR(product.base_price)}
+            <span className="ml-1 text-[10px] font-normal text-slate-500">
+              / {product.unit_of_measure}
+            </span>
           </p>
         </div>
 
-        {/* Bulk / MOQ hint */}
+        {/* MOQ hint */}
         <p className="text-[11px] text-slate-500">
-          {bulk
-            ? `From ${formatINR(bulk.price)} for ${bulk.minQty}+`
-            : `Min. ${product.moq} ${product.unit_of_measure}`}
+          Min. {product.moq} {product.unit_of_measure}
         </p>
 
         {/* Add to Cart */}
@@ -173,6 +143,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           <AddToCartButton product={product} variant="card" />
         </div>
       </div>
-    </div>
+    </article>
   );
 }

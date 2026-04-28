@@ -14,7 +14,7 @@ import {
   Wrench,
   Printer,
   User,
-  Crown,
+  LayoutDashboard,
   Phone,
   Menu,
   X,
@@ -48,7 +48,7 @@ export default function PublicHeader() {
   // Use useAuth (not useAuthStore) so the session-check useEffect actually
   // runs on public pages. Calling useAuthStore alone subscribes to the store
   // but never triggers /api/auth/me — which would leave isLoading stuck on
-  // true for every visitor who lands on /, /pro, /about, etc.
+  // true for every visitor who lands on /, /about, /contact, etc.
   const { isAuthenticated, isLoading: isAuthLoading, user, logout } = useAuth();
   const cartCount = useCartStore((s) => s.items.length);
 
@@ -140,7 +140,14 @@ export default function PublicHeader() {
     if (q) router.push(`/marketplace?search=${encodeURIComponent(q)}`);
   };
 
-  // Role-aware destinations for the My Account dropdown.
+  // Role-aware destinations for the dashboard shortcut and account dropdown.
+  const dashboardHref =
+    user?.role === 'admin'
+      ? '/admin'
+      : user?.role === 'vendor'
+        ? '/vendor'
+        : '/buyer/account/dashboard';
+
   const profileHref =
     user?.role === 'admin'
       ? '/admin/profile'
@@ -244,15 +251,17 @@ export default function PublicHeader() {
             </div>
           </div>
 
-          <Link href="/about" className="text-sm font-semibold text-slate-700 hover:text-teal-600">
-            About Us
-          </Link>
-          <Link href="/contact" className="text-sm font-semibold text-slate-700 hover:text-teal-600">
-            Contact Us
+          <Link
+            href={authResolved && isAuthenticated ? dashboardHref : '/login'}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-teal-600"
+            aria-label="Go to dashboard"
+            title="Dashboard"
+          >
+            <LayoutDashboard className="h-5 w-5" />
           </Link>
         </nav>
 
-        {/* Right: phone + cart + Pro Plan + Sign In */}
+        {/* Right: phone + cart + Sign In */}
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <a
             href="tel:+919876543210"
@@ -279,14 +288,6 @@ export default function PublicHeader() {
               )}
             </Link>
           )}
-
-          <Link
-            href="/pro"
-            className="hidden items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-teal-700 sm:flex"
-          >
-            <Crown className="h-4 w-4" />
-            Pro Plan
-          </Link>
 
           {!authResolved ? (
             // Loading placeholder — same width as the real button to prevent
@@ -510,25 +511,11 @@ export default function PublicHeader() {
               ))}
               <div className="my-3 border-t border-slate-100" />
               <Link
-                href="/about"
+                href={authResolved && isAuthenticated ? dashboardHref : '/login'}
                 onClick={() => setMobileOpen(false)}
-                className="block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-teal-600"
               >
-                About Us
-              </Link>
-              <Link
-                href="/contact"
-                onClick={() => setMobileOpen(false)}
-                className="block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Contact Us
-              </Link>
-              <Link
-                href="/pro"
-                onClick={() => setMobileOpen(false)}
-                className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 text-sm font-semibold text-white hover:bg-teal-700"
-              >
-                <Crown className="h-4 w-4" /> Pro Plan
+                <LayoutDashboard className="h-4 w-4" /> Dashboard
               </Link>
               {authResolved && (
                 isAuthenticated ? (

@@ -289,6 +289,13 @@ function describeUseCase(subSlug: string): string {
   }
 }
 
+function splitImageUrls(raw: string): string[] {
+  return raw
+    .split(/[,;\n]/)
+    .map((u) => u.trim())
+    .filter(Boolean);
+}
+
 // ---------------------------------------------------------------------------
 // Diversey workbook parser
 // ---------------------------------------------------------------------------
@@ -315,6 +322,19 @@ function parseDiverseySheet(
   ctx:     ImportContext,
 ): StagedOp[] {
   // Header is row 4 (index 3); data starts at row 5 (index 4).
+  const headerRow = Array.isArray(rawRows[3]) ? rawRows[3] : [];
+  const imageCols = headerRow
+    .map((h, idx) => ({
+      idx,
+      label: typeof h === 'string' ? h.toLowerCase() : '',
+    }))
+    .filter(({ label }) => (
+      label.includes('image') ||
+      label.includes('photo') ||
+      label.includes('picture') ||
+      label.includes('url')
+    ))
+    .map(({ idx }) => idx);
   const dataRows = rawRows.slice(4);
 
   // De-dupe storage.
@@ -378,6 +398,10 @@ function parseDiverseySheet(
     const hsn     = hsnRaw == null || hsnRaw === '' ? null : String(hsnRaw).trim();
     const gstRate = normaliseGst(gstRaw);
     const itemCode = itemCodeRaw == null || itemCodeRaw === '' ? null : String(itemCodeRaw).trim();
+    const images = imageCols.flatMap((col) => {
+      const raw = row[col];
+      return raw == null || raw === '' ? [] : splitImageUrls(String(raw));
+    });
 
     // Within-file exact-duplicate detection (name + pack).
     const fileKey = `${name.toLowerCase()}|${pack.toLowerCase()}`;
@@ -444,8 +468,8 @@ function parseDiverseySheet(
       is_active:         true,
       hsn_code:          hsn,
       gst_rate:          gstRate,
-      thumbnail_url:     null,
-      images:            [],
+      thumbnail_url:     images[0] ?? null,
+      images,
       specifications:    pack ? { 'Pack Size': pack } : {},
       tags:              [],
     };
@@ -550,9 +574,7 @@ function parseLegacySheet(
       ? ctx.subcats.find((s) => s.slug === subcategorySlug && s.category === category)?.id ?? null
       : null;
 
-    const images: string[] = imageUrlRaw
-      ? imageUrlRaw.split(',').map((u) => u.trim()).filter(Boolean)
-      : [];
+    const images: string[] = imageUrlRaw ? splitImageUrls(imageUrlRaw) : [];
 
     // Deterministic slug
     let baseSlug = slugify(name);

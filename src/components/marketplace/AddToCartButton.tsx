@@ -119,6 +119,8 @@ function CartModal({ product, onClose, onAdd }: CartModalProps) {
 
   const unitPrice = resolvePrice(product.pricing_tiers, qty, product.base_price);
   const subtotal  = unitPrice * qty;
+  const gstAmount = subtotal * product.gst_rate / 100;
+  const total     = subtotal + gstAmount;
   const tierHints = getBetterTierHints(product.pricing_tiers, qty);
 
   // Focus the input when modal opens
@@ -238,12 +240,26 @@ function CartModal({ product, onClose, onAdd }: CartModalProps) {
           </div>
         )}
 
-        {/* Live subtotal */}
-        <div className="mt-4 flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
-          <span className="text-xs text-slate-500">Subtotal (excl. GST)</span>
-          <span className="font-mono text-sm font-bold text-slate-900">
-            {formatINR(subtotal)}
-          </span>
+        {/* Live order total */}
+        <div className="mt-4 space-y-1.5 rounded-lg bg-slate-50 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-500">Subtotal (excl. GST)</span>
+            <span className="font-mono text-sm font-bold text-slate-900">
+              {formatINR(subtotal)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-500">GST ({product.gst_rate}%)</span>
+            <span className="font-mono text-sm font-semibold text-slate-700">
+              {formatINR(gstAmount)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between border-t border-slate-200 pt-1.5">
+            <span className="text-xs font-semibold text-slate-700">Total incl. GST</span>
+            <span className="font-mono text-base font-bold text-teal-700">
+              {formatINR(total)}
+            </span>
+          </div>
         </div>
 
         {/* Confirm */}
@@ -289,6 +305,8 @@ export default function AddToCartButton({
   const [qty, setQty] = useState(initialQuantity ?? product.moq);
   const unitPrice = resolvePrice(product.pricing_tiers, qty, product.base_price);
   const subtotal  = unitPrice * qty;
+  const gstAmount = subtotal * product.gst_rate / 100;
+  const total     = subtotal + gstAmount;
   const tierHints = getBetterTierHints(product.pricing_tiers, qty);
 
   const isOutOfStock = product.stock_status === 'out_of_stock';
@@ -455,17 +473,23 @@ export default function AddToCartButton({
       )}
 
       {/* Live subtotal */}
-      <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+      <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:grid-cols-3">
         <div>
-          <p className="text-xs text-slate-500">Subtotal (excl. GST)</p>
+          <p className="text-xs text-slate-500">Product price</p>
           <p className="font-mono text-lg font-bold text-slate-900">
             {formatINR(subtotal)}
           </p>
         </div>
-        <div className="text-right">
+        <div className="sm:text-center">
           <p className="text-xs text-slate-500">GST ({product.gst_rate}%)</p>
           <p className="font-mono text-sm font-semibold text-slate-600">
-            + {formatINR(subtotal * product.gst_rate / 100)}
+            + {formatINR(gstAmount)}
+          </p>
+        </div>
+        <div className="sm:text-right">
+          <p className="text-xs font-semibold text-slate-700">Total incl. GST</p>
+          <p className="font-mono text-lg font-bold text-teal-700">
+            {formatINR(total)}
           </p>
         </div>
       </div>

@@ -36,7 +36,6 @@ import {
   Tag,
   Truck,
   FileText,
-  Star,
   Sparkles,
   Award,
   Phone,
@@ -83,6 +82,23 @@ function formatVariantLabel(sizeVariant: string | null, uom: string): string {
   return `${sizeVariant} ${u}`;
 }
 
+function productSeoSummary(product: Product, categoryLabel: string): string {
+  const short = product.short_description?.trim();
+  if (short) return short;
+
+  const long = product.description?.replace(/\s+/g, ' ').trim();
+  if (long) return long.length > 180 ? `${long.slice(0, 177).trim()}...` : long;
+
+  const size = product.size_variant ? ` ${product.size_variant}` : '';
+  const brand = product.brand ? `${product.brand} ` : '';
+  return `Buy ${brand}${product.name}${size} for ${categoryLabel.toLowerCase()} procurement with GST invoice and bulk B2B delivery from PrimeServe.`;
+}
+
+function productImageAlt(productName: string, sizeVariant: string | null, categoryLabel: string): string {
+  const size = sizeVariant ? ` ${sizeVariant}` : '';
+  return `Buy ${productName}${size} online for ${categoryLabel.toLowerCase()} B2B procurement`;
+}
+
 function getProductColor(p: Product): string | null {
   const specs = p.specifications as Record<string, string> | null;
   if (!specs) return null;
@@ -105,15 +121,6 @@ function getSwatchCss(name: string): string {
 function lowestPrice(tiers: PricingTierRow[], basePrice: number): number {
   if (!tiers || tiers.length === 0) return basePrice;
   return Math.min(basePrice, ...tiers.map((t) => t.price));
-}
-
-/** Stable pseudo-rating from the product id so the rating widget feels real. */
-function pseudoRating(id: string): { rating: number; count: number } {
-  let seed = 0;
-  for (let i = 0; i < id.length; i++) seed = (seed * 31 + id.charCodeAt(i)) | 0;
-  const rating = 3.7 + ((Math.abs(seed) % 13) / 10); // 3.7 — 4.9
-  const count  = 18 + (Math.abs(seed >> 3) % 240);   // 18 — 257
-  return { rating: Math.min(5, Math.round(rating * 10) / 10), count };
 }
 
 /** Choose the next price tier the buyer hasn't yet reached. */
@@ -472,6 +479,8 @@ export default function ProductDetailPage({
   // ---------------------------------------------------------------------------
 
   const categoryLabel = getCategoryLabel(product.category);
+  const seoSummary    = productSeoSummary(product, categoryLabel);
+  const imageAlt      = productImageAlt(product.name, product.size_variant, categoryLabel);
   const specs         = (product.specifications ?? {}) as Record<string, string>;
   const specEntries   = Object.entries(specs).filter(
     ([k]) => !['color', 'Color', 'colour', 'Colour'].includes(k),
@@ -482,7 +491,6 @@ export default function ProductDetailPage({
     ? product.images
     : (product.thumbnail_url ? [product.thumbnail_url] : []);
   const activeImage   = galleryImages[activeImageIdx] ?? null;
-  const { rating, count } = pseudoRating(product.id);
   const lowest        = lowestPrice(pricingTiers, product.base_price);
   const maxSavingPct  = Math.round(((product.base_price - lowest) / product.base_price) * 100);
   const isChemical    = product.category === 'cleaning_chemicals';
@@ -557,7 +565,7 @@ export default function ProductDetailPage({
 
             <ProductGallery
               key={product.id}
-              productName={product.name}
+              imageAlt={imageAlt}
               images={galleryImages}
               activeIdx={activeImageIdx}
               onSelect={setActiveImageIdx}
@@ -577,34 +585,15 @@ export default function ProductDetailPage({
           {/* ── RIGHT: Sticky buy box ───────────────────────────────── */}
           <div className="space-y-5 lg:sticky lg:top-20" ref={cartSectionRef}>
 
-            {/* Brand row + rating */}
+            {/* Brand row */}
             <div className="flex flex-wrap items-center gap-2">
               {product.brand && (
                 <span className="rounded-md bg-gradient-to-r from-teal-600 to-teal-500 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
                   {product.brand}
                 </span>
               )}
-              <span className="text-xs text-slate-400">·</span>
+              {product.brand && <span className="text-xs text-slate-400">·</span>}
               <span className="text-xs text-slate-500">{categoryLabel}</span>
-              <div className="ml-auto flex items-center gap-1.5">
-                <div className="flex">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <Star
-                      key={i}
-                      className={`h-3.5 w-3.5 ${
-                        i < Math.round(rating)
-                          ? 'fill-amber-400 text-amber-400'
-                          : 'fill-slate-200 text-slate-200'
-                      }`}
-                      aria-hidden="true"
-                    />
-                  ))}
-                </div>
-                <span className="text-xs font-medium text-slate-600">
-                  {rating}
-                </span>
-                <span className="text-xs text-slate-400">({count})</span>
-              </div>
             </div>
 
             {/* Product name */}
@@ -612,11 +601,9 @@ export default function ProductDetailPage({
               <h1 className="font-heading text-2xl font-bold leading-tight text-slate-900 sm:text-3xl">
                 {product.name}
               </h1>
-              {product.short_description && (
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
-                  {product.short_description}
-                </p>
-              )}
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                {seoSummary}
+              </p>
               {product.sku && (
                 <p className="mt-1.5 font-mono text-[11px] font-medium uppercase tracking-widest text-slate-400">
                   SKU: {product.sku}
@@ -825,7 +812,7 @@ export default function ProductDetailPage({
           <div className="mt-5">
             {activeTab === 'description' && (
               <DescriptionPanel
-                description={product.description}
+                description={product.description ?? seoSummary}
                 isChemical={isChemical}
                 productName={product.name}
                 hsnCode={product.hsn_code}
@@ -921,7 +908,7 @@ export default function ProductDetailPage({
 // ---------------------------------------------------------------------------
 
 interface ProductGalleryProps {
-  productName: string;
+  imageAlt: string;
   images: string[];
   activeIdx: number;
   activeImage: string | null;
@@ -931,7 +918,7 @@ interface ProductGalleryProps {
 }
 
 function ProductGallery({
-  productName, images, activeIdx, activeImage, onSelect, isOutOfStock, maxSavingPct,
+  imageAlt, images, activeIdx, activeImage, onSelect, isOutOfStock, maxSavingPct,
 }: ProductGalleryProps) {
   const total = images.length;
   const goPrev = () => onSelect((activeIdx - 1 + total) % total);
@@ -944,7 +931,7 @@ function ProductGallery({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={activeImage}
-            alt={productName}
+            alt={imageAlt}
             className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
         ) : (
@@ -1018,7 +1005,7 @@ function ProductGallery({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={img}
-                alt={`${productName} — image ${idx + 1}`}
+                alt={`${imageAlt} - image ${idx + 1}`}
                 className="h-full w-full object-cover"
               />
             </button>

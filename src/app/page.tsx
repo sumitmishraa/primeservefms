@@ -9,8 +9,6 @@ import {
   TrendingUp,
   Truck,
   ShieldCheck,
-  Check,
-  Crown,
   Quote,
   Star,
   ShoppingCart,
@@ -195,13 +193,6 @@ export default function HomePage() {
               >
                 Browse Products
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <Link
-                href="/pro"
-                className="inline-flex items-center gap-2 rounded-lg border border-teal-400/40 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:border-teal-400 hover:bg-teal-500/10"
-              >
-                <Sparkles className="h-4 w-4 text-teal-400" />
-                Unlock Pro Benefits
               </Link>
             </div>
 
@@ -495,62 +486,6 @@ export default function HomePage() {
                 <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{body}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ───── Pro Plan CTA ────────────────────────────────────── */}
-      <section className="bg-white py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950 px-10 py-20 lg:px-16 lg:py-24">
-            <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-teal-500/20 blur-3xl" />
-            <div className="relative grid gap-12 lg:grid-cols-2 lg:items-center">
-              <div>
-                <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-300">
-                  <Crown className="h-3.5 w-3.5" /> PrimeServe Pro
-                </span>
-                <h2 className="font-heading text-4xl font-bold leading-tight text-white sm:text-5xl">
-                  Unlock maximum business savings
-                </h2>
-                <p className="mt-5 text-base leading-relaxed text-slate-300 sm:text-lg">
-                  Upgrade your procurement strategy. Get dedicated account
-                  management, extended 60-day credit terms, and enterprise-level
-                  discounts designed specifically for high-volume facility
-                  teams.
-                </p>
-                <p className="mt-4 text-sm leading-relaxed text-slate-400">
-                  Up to 12% extra discount on every order, 60-day credit terms,
-                  dedicated account manager, and priority deliveries on all
-                  orders.
-                </p>
-                <Link
-                  href="/pro"
-                  className="mt-8 inline-flex items-center gap-2 rounded-lg bg-teal-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 transition-colors hover:bg-teal-400"
-                >
-                  See Pro Benefits
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-
-              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {[
-                  '12% extra discount on orders',
-                  '60-day credit terms',
-                  'Dedicated account manager',
-                  'Priority deliveries on all orders',
-                  'Early access to new SKUs',
-                  'Volume-based rewards program',
-                ].map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-start gap-2.5 rounded-lg border border-white/10 bg-white/[0.04] p-3 text-sm text-slate-200"
-                  >
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
           </div>
         </div>
       </section>

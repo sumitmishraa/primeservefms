@@ -9,7 +9,6 @@
  *   /login         Auth pages
  *   /register
  *   /marketplace   Public product catalogue (all sub-paths)
- *   /pro           Pro Plan pricing page
  *   /about         About Us page
  *   /contact       Contact page
  *   /categories    Category overview page
@@ -131,7 +130,6 @@ function isPublicPath(pathname: string): boolean {
     "/login",
     "/register",
     "/marketplace",
-    "/pro",
     "/about",
     "/contact",
     "/categories",
