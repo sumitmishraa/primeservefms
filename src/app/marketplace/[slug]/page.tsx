@@ -41,7 +41,6 @@ import {
   Phone,
   Info,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { formatINR } from '@/lib/utils/formatting';
 import { getCategoryLabel } from '@/lib/constants/categories';
 import AddToCartButton from '@/components/marketplace/AddToCartButton';
@@ -334,56 +333,23 @@ export default function ProductDetailPage({
       setIsLoading(true);
       setError(null);
       try {
-        const supabase = createClient();
+        const res = await fetch(`/api/products/${encodeURIComponent(slug)}`);
+        const json = (await res.json()) as {
+          data: { product: Product; variants: Product[]; related: Product[] } | null;
+          error: string | null;
+        };
 
-        const { data, error: dbErr } = await supabase
-          .from('products')
-          .select('*')
-          .eq('slug', slug)
-          .eq('is_approved', true)
-          .eq('is_active', true)
-          .single();
-
-        if (dbErr || !data) {
-          setError('Product not found');
+        if (!res.ok || json.error || !json.data) {
+          setError(json.error ?? 'Product not found');
           return;
         }
 
+        const { product: data, variants: sibs, related: rel } = json.data;
         setBaseProduct(data);
         setSelectedVariant(data);
         setActiveImageIdx(0);
-
-        // Siblings (variants in same group)
-        if (data.group_slug) {
-          const { data: siblings } = await supabase
-            .from('products')
-            .select('*')
-            .eq('group_slug', data.group_slug)
-            .eq('is_approved', true)
-            .eq('is_active', true)
-            .order('base_price', { ascending: true });
-          setVariants(siblings && siblings.length > 1 ? siblings : [data]);
-        } else {
-          setVariants([data]);
-        }
-
-        // Related products in same category, ordered by popularity
-        const { data: rel } = await supabase
-          .from('products')
-          .select('*')
-          .eq('category', data.category)
-          .eq('is_approved', true)
-          .eq('is_active', true)
-          .neq('id', data.id)
-          .order('total_orders', { ascending: false })
-          .limit(8);
-        if (rel) {
-          // Filter out other variants in the same group from "related"
-          const filtered = data.group_slug
-            ? rel.filter((r) => r.group_slug !== data.group_slug)
-            : rel;
-          setRelated(filtered.slice(0, 4));
-        }
+        setVariants(sibs);
+        setRelated(rel);
       } catch {
         setError('Failed to load product');
       } finally {
