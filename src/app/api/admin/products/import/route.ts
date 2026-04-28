@@ -222,20 +222,21 @@ function mapLegacyCategory(raw: string): Enums<'product_category'> {
 
 /**
  * Generate a SEO-friendly short description for a cleaning-chemical row.
- * Returns one tight sentence buyers can scan in card view.
+ * Optimised for Google Shopping and organic product searches.
  */
 function buildShortDescription(
   name:        string,
   pack:        string | null,
   useCaseHint: string,
 ): string {
-  const packSuffix = pack ? ` — ${pack}` : '';
-  return `${name}${packSuffix} | Industrial-grade ${useCaseHint} for B2B facilities.`;
+  const packSuffix = pack ? `, ${pack}` : '';
+  return `Buy ${name}${packSuffix} online — professional ${useCaseHint} at bulk B2B prices with GST invoice. Fast 24–48 hr delivery across India.`;
 }
 
 /**
- * Generate a longer plain-text description used on the product detail page.
- * Built deterministically from name, pack, group, GST, HSN — no AI runtime.
+ * Generate a long SEO description for the product detail page.
+ * Built deterministically — no AI runtime needed.
+ * Structured to rank for: product name + B2B + bulk + GST + facility.
  */
 function buildLongDescription(
   name:        string,
@@ -245,27 +246,34 @@ function buildLongDescription(
   gstRate:     number,
 ): string {
   const lines: string[] = [];
-  const headerName = pack ? `${name} (${pack})` : name;
+  const displayName = pack ? `${name} (${pack})` : name;
+
   lines.push(
-    `${headerName} is a professional-grade ${useCaseHint} engineered for high-traffic ` +
-    `commercial environments — hotels, hospitals, restaurants, offices, and large facility ` +
-    `operations.`,
+    `${displayName} is a professional-grade ${useCaseHint} trusted by hotels, hospitals, ` +
+    `corporate offices, restaurants, and large facility management teams across India. ` +
+    `Ideal for high-frequency, high-volume B2B procurement.`,
   );
   lines.push(
-    `Sourced from authorised Diversey / TASKI distributors, every pack ships sealed and ` +
-    `factory-fresh. Suitable for routine use by trained housekeeping and engineering teams.`,
+    `Why businesses choose PrimeServe for ${name.toLowerCase()}:\n` +
+    `• Competitive bulk pricing with volume-based discounts\n` +
+    `• GST-compliant B2B invoice included with every order\n` +
+    `• Fast 24–48 hour delivery to your registered branch address\n` +
+    `• Securely packaged to ensure zero damage on arrival\n` +
+    `• Reorder in one click from your buyer dashboard`,
   );
   if (pack) {
-    lines.push(`Pack size: ${pack}.`);
+    lines.push(`Available pack size: ${pack}.`);
   }
   if (hsn) {
-    lines.push(`HSN code: ${hsn}. GST charged at ${gstRate}%.`);
+    lines.push(
+      `HSN code: ${hsn} | GST rate: ${gstRate}% — fully compliant for input tax credit claims.`,
+    );
   } else {
-    lines.push(`GST charged at ${gstRate}%.`);
+    lines.push(`GST rate: ${gstRate}% — compliant for input tax credit claims.`);
   }
   lines.push(
-    `Bulk B2B pricing available on quantity orders. GST-compliant invoicing with the ` +
-    `Primeserve buyer dashboard. Pan-India delivery, 3–7 business days.`,
+    `Order ${name} in bulk on PrimeServe — India's leading B2B marketplace for facility ` +
+    `and housekeeping supplies. Pan-India delivery, transparent pricing, no hidden charges.`,
   );
   return lines.join('\n\n');
 }

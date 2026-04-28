@@ -37,10 +37,11 @@ import {
   Truck,
   FileText,
   Sparkles,
-  Award,
   Phone,
   Info,
+  PackageCheck,
 } from 'lucide-react';
+import { PublicHeader, PublicFooter } from '@/components/layout';
 import { formatINR } from '@/lib/utils/formatting';
 import { getCategoryLabel } from '@/lib/constants/categories';
 import AddToCartButton from '@/components/marketplace/AddToCartButton';
@@ -272,7 +273,7 @@ function VariantCard({ variant, isSelected, badge, onSelect }: VariantCardProps)
       {/* Price row */}
       <div className="flex w-full items-baseline gap-1.5">
         <span className={[
-          'font-mono text-base font-bold',
+          'font-heading text-base font-bold',
           isSelected ? 'text-teal-700' : 'text-slate-900',
         ].join(' ')}>
           {formatINR(variant.base_price)}
@@ -499,8 +500,10 @@ export default function ProductDetailPage({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 lg:pb-12">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+    <>
+    <PublicHeader />
+    <div className="min-h-screen bg-slate-50 pb-24 lg:pb-8">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
 
         {/* ── Breadcrumb ──────────────────────────────────────────────── */}
         <nav
@@ -524,10 +527,10 @@ export default function ProductDetailPage({
         </nav>
 
         {/* ════════ HERO GRID (gallery + sticky buy box) ════════════════ */}
-        <div className="grid gap-8 lg:grid-cols-2 xl:grid-cols-[55%_1fr] lg:items-start">
+        <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-[52%_1fr] lg:items-start">
 
           {/* ── LEFT: Image gallery ─────────────────────────────────── */}
-          <div className="space-y-3">
+          <div className="space-y-2">
 
             <ProductGallery
               key={product.id}
@@ -540,16 +543,10 @@ export default function ProductDetailPage({
               activeImage={activeImage}
             />
 
-            {/* Trust bar — visible under gallery on desktop */}
-            <div className="hidden grid-cols-3 gap-2 sm:grid">
-              <TrustPill icon={ShieldCheck} title="Verified Seller" subtitle="PrimeServe authorised" />
-              <TrustPill icon={FileText}    title="GST Invoice"    subtitle="B2B-ready billing"     />
-              <TrustPill icon={Truck}       title="Bulk Delivery"  subtitle="Pan-India coverage"    />
-            </div>
           </div>
 
           {/* ── RIGHT: Sticky buy box ───────────────────────────────── */}
-          <div className="space-y-5 lg:sticky lg:top-20" ref={cartSectionRef}>
+          <div className="space-y-4 lg:sticky lg:top-20" ref={cartSectionRef}>
 
             {/* Brand row */}
             <div className="flex flex-wrap items-center gap-2">
@@ -570,11 +567,6 @@ export default function ProductDetailPage({
               <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
                 {seoSummary}
               </p>
-              {product.sku && (
-                <p className="mt-1.5 font-mono text-[11px] font-medium uppercase tracking-widest text-slate-400">
-                  SKU: {product.sku}
-                </p>
-              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -664,28 +656,28 @@ export default function ProductDetailPage({
             {/* ── PRICE CARD ───────────────────────────────────────── */}
             <div
               key={`price-${product.id}`}
-              className="pdp-fade-up rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-teal-50/40 p-5 shadow-sm"
+              className="pdp-fade-up rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-teal-50/40 p-4 shadow-sm"
             >
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
                 Rate per <span className="capitalize">{product.unit_of_measure}</span>
                 {product.size_variant && <> · {product.size_variant}</>}
               </p>
               <div className="mt-1 flex items-baseline gap-3">
-                <span className="font-mono text-3xl font-extrabold text-teal-700 sm:text-4xl">
+                <span className="font-heading text-3xl font-extrabold text-teal-700 sm:text-4xl">
                   {formatINR(product.base_price)}
                 </span>
                 {maxSavingPct > 0 && (
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-mono text-xs font-bold text-emerald-700">
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">
                     Save up to {maxSavingPct}%
                   </span>
                 )}
               </div>
 
-              {/* Explicit GST breakdown — buyers asked for this front-and-centre */}
+              {/* Explicit GST breakdown */}
               <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rate</p>
-                  <p className="mt-0.5 font-mono text-sm font-bold text-slate-900">
+                  <p className="mt-0.5 font-heading text-sm font-bold text-slate-900">
                     {formatINR(product.base_price)}
                   </p>
                 </div>
@@ -693,13 +685,13 @@ export default function ProductDetailPage({
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     GST&nbsp;{product.gst_rate}%
                   </p>
-                  <p className="mt-0.5 font-mono text-sm font-bold text-slate-700">
+                  <p className="mt-0.5 font-heading text-sm font-bold text-slate-700">
                     {formatINR(product.base_price * product.gst_rate / 100)}
                   </p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Incl. GST</p>
-                  <p className="mt-0.5 font-mono text-sm font-bold text-emerald-700">
+                  <p className="mt-0.5 font-heading text-sm font-bold text-emerald-700">
                     {formatINR(product.base_price * (1 + product.gst_rate / 100))}
                   </p>
                 </div>
@@ -753,20 +745,6 @@ export default function ProductDetailPage({
             {/* Quantity + Add to Cart (existing component, receives selected variant) */}
             <AddToCartButton product={cartProduct} variant="detail" />
 
-            {/* Seller card */}
-            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-600 to-teal-700 text-white shadow-sm">
-                <ShieldCheck className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Sold &amp; fulfilled by
-                </p>
-                <p className="truncate font-semibold text-slate-800">PrimeServe Facility Solutions</p>
-                <p className="text-[11px] text-teal-600">Verified B2B Supplier · GST registered</p>
-              </div>
-              <Award className="h-5 w-5 shrink-0 text-amber-500" aria-hidden="true" />
-            </div>
 
           </div>
         </div>
@@ -832,7 +810,7 @@ export default function ProductDetailPage({
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-4px_16px_-8px_rgba(0,0,0,0.08)] backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="font-mono text-lg font-extrabold text-teal-700">
+            <p className="font-heading text-lg font-extrabold text-teal-700">
               {formatINR(product.base_price)}
               <span className="ml-1 text-[10px] font-normal text-slate-500">
                 / <span className="capitalize">{product.unit_of_measure}</span>
@@ -862,6 +840,8 @@ export default function ProductDetailPage({
       </div>
 
     </div>
+    <PublicFooter />
+    </>
   );
 }
 
@@ -892,7 +872,7 @@ function ProductGallery({
 
   return (
     <>
-      <div className="group relative aspect-square w-full overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-teal-50/50 to-slate-50 shadow-sm">
+      <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-teal-50/50 to-slate-50 shadow-sm">
         {activeImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -1188,7 +1168,7 @@ function VolumePricingTable({
                   <span className="capitalize text-slate-500">{uom}</span>
                   {(tier.max_qty ?? 2) > 1 ? 's' : ''}
                 </td>
-                <td className="px-5 py-3.5 text-right font-mono font-bold text-teal-700">
+                <td className="px-5 py-3.5 text-right font-heading font-bold text-teal-700">
                   {formatINR(tier.price)}
                 </td>
                 <td className="px-5 py-3.5 text-right">
@@ -1217,8 +1197,8 @@ function ShippingPanel() {
   const items: { icon: typeof Truck; title: string; body: string }[] = [
     {
       icon: Truck,
-      title: 'Delivery — 3 to 7 business days',
-      body: 'Pan-India delivery to your registered branch address. Free delivery on orders above ₹5,000; flat ₹150 below that.',
+      title: 'Fast delivery — 24 to 48 hours',
+      body: 'Pan-India express delivery to your registered branch address. Free shipping on orders above ₹5,000; flat ₹150 below that.',
     },
     {
       icon: FileText,
@@ -1226,14 +1206,14 @@ function ShippingPanel() {
       body: 'Every order ships with a GST B2B invoice in your registered company name, suitable for input tax credit.',
     },
     {
-      icon: ShieldCheck,
-      title: 'Authentic & sealed',
-      body: 'Sourced directly from authorised distributors. Tamper-evident seals on all chemical and pantry items.',
+      icon: PackageCheck,
+      title: 'Carefully packed, damage-free',
+      body: 'Every order is securely packed before dispatch. Products are bubble-wrapped and boxed to ensure zero damage on arrival.',
     },
     {
       icon: Phone,
       title: 'Need help?',
-      body: 'Call our B2B desk on 1800-PRIME-S for bulk pricing beyond 1,000 units, custom packs, or scheduled deliveries.',
+      body: 'Call our B2B desk for bulk pricing beyond 1,000 units, custom packs, or scheduled deliveries.',
     },
   ];
   return (
@@ -1297,7 +1277,7 @@ function RelatedProductCard({ product }: { product: Product }) {
         <p className="line-clamp-2 text-xs font-semibold leading-snug text-slate-800 group-hover:text-teal-700">
           {product.name}
         </p>
-        <p className="mt-auto pt-1 font-mono text-sm font-bold text-slate-900">
+        <p className="mt-auto pt-1 font-heading text-sm font-bold text-slate-900">
           {formatINR(product.base_price)}
           <span className="ml-1 text-[10px] font-normal text-slate-500">
             / <span className="capitalize">{product.unit_of_measure}</span>

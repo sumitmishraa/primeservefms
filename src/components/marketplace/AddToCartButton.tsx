@@ -178,7 +178,7 @@ function CartModal({ product, onClose, onAdd }: CartModalProps) {
         </div>
 
         {/* Price per unit */}
-        <p className="font-mono text-xl font-bold text-teal-700">
+        <p className="font-heading text-xl font-bold text-teal-700">
           {formatINR(unitPrice)}{' '}
           <span className="text-sm font-normal text-slate-500">
             / {product.unit_of_measure}
@@ -244,19 +244,19 @@ function CartModal({ product, onClose, onAdd }: CartModalProps) {
         <div className="mt-4 space-y-1.5 rounded-lg bg-slate-50 px-4 py-3">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500">Subtotal (excl. GST)</span>
-            <span className="font-mono text-sm font-bold text-slate-900">
+            <span className="font-heading text-sm font-bold text-slate-900">
               {formatINR(subtotal)}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500">GST ({product.gst_rate}%)</span>
-            <span className="font-mono text-sm font-semibold text-slate-700">
+            <span className="font-heading text-sm font-semibold text-slate-700">
               {formatINR(gstAmount)}
             </span>
           </div>
           <div className="flex items-center justify-between border-t border-slate-200 pt-1.5">
             <span className="text-xs font-semibold text-slate-700">Total incl. GST</span>
-            <span className="font-mono text-base font-bold text-teal-700">
+            <span className="font-heading text-base font-bold text-teal-700">
               {formatINR(total)}
             </span>
           </div>
@@ -445,7 +445,7 @@ export default function AddToCartButton({
 
       {/* Dynamic unit price */}
       <div className="flex items-baseline gap-2">
-        <span className="font-mono text-2xl font-bold text-teal-700">
+        <span className="font-heading text-2xl font-bold text-teal-700">
           {formatINR(unitPrice)}
         </span>
         <span className="text-sm text-slate-500">/ {product.unit_of_measure}</span>
@@ -476,19 +476,19 @@ export default function AddToCartButton({
       <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:grid-cols-3">
         <div>
           <p className="text-xs text-slate-500">Product price</p>
-          <p className="font-mono text-lg font-bold text-slate-900">
+          <p className="font-heading text-lg font-bold text-slate-900">
             {formatINR(subtotal)}
           </p>
         </div>
         <div className="sm:text-center">
           <p className="text-xs text-slate-500">GST ({product.gst_rate}%)</p>
-          <p className="font-mono text-sm font-semibold text-slate-600">
+          <p className="font-heading text-sm font-semibold text-slate-600">
             + {formatINR(gstAmount)}
           </p>
         </div>
         <div className="sm:text-right">
           <p className="text-xs font-semibold text-slate-700">Total incl. GST</p>
-          <p className="font-mono text-lg font-bold text-teal-700">
+          <p className="font-heading text-lg font-bold text-teal-700">
             {formatINR(total)}
           </p>
         </div>
