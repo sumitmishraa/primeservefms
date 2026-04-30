@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Settings, Package, LogOut, ChevronDown } from 'lucide-react';
+import { Settings, Package, LogOut, ChevronDown, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserProfile } from '@/types';
 
@@ -16,6 +16,18 @@ export default function UserMenu({ user }: UserMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const avatarInitial = user.full_name.charAt(0).toUpperCase();
+  const profileHref =
+    user.role === 'admin'
+      ? '/admin/profile'
+      : user.role === 'vendor'
+        ? '/vendor/profile'
+        : '/buyer/account/profile';
+  const ordersHref =
+    user.role === 'admin'
+      ? '/admin/orders'
+      : user.role === 'vendor'
+        ? '/vendor/orders'
+        : '/buyer/orders';
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -69,7 +81,7 @@ export default function UserMenu({ user }: UserMenuProps) {
           {/* My Account */}
           <div className="py-1" role="none">
             <Link
-              href="/buyer/account/profile"
+              href={profileHref}
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
               role="menuitem"
@@ -80,13 +92,23 @@ export default function UserMenu({ user }: UserMenuProps) {
 
             {/* My Orders */}
             <Link
-              href="/buyer/orders"
+              href={ordersHref}
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
               role="menuitem"
             >
               <Package className="w-4 h-4 text-slate-400" aria-hidden="true" />
               My Orders
+            </Link>
+
+            <Link
+              href="/contact"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+              role="menuitem"
+            >
+              <MessageCircle className="w-4 h-4 text-slate-400" aria-hidden="true" />
+              Contact Us
             </Link>
           </div>
 

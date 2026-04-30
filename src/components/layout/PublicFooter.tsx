@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Truck,
   CreditCard,
+  CheckCircle2,
   Facebook,
   Twitter,
   Instagram,
@@ -15,6 +16,7 @@ import {
 import toast from 'react-hot-toast';
 
 const QUICK_LINKS = [
+  { href: '/', label: 'Home Page' },
   { href: '/about', label: 'About Us' },
   { href: '/marketplace', label: 'Services' },
   { href: '/contact', label: 'Contact' },
@@ -26,17 +28,41 @@ const FOOTER_CATEGORIES = [
   { href: '/marketplace?category=cleaning_chemicals', label: 'Cleaning Chemicals' },
   { href: '/marketplace?category=office_stationeries', label: 'Office Stationery' },
   { href: '/marketplace?category=pantry_items', label: 'Pantry Items' },
+  { href: '/marketplace?category=facility_and_tools', label: 'Facility & Tools' },
+  { href: '/marketplace?category=printing_solution', label: 'Printing Solutions' },
 ];
 
 export default function PublicFooter() {
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [subscribedEmail, setSubscribedEmail] = useState('');
+
+  const rememberSubscription = (value: string) => {
+    if (typeof window === 'undefined') return;
+    const key = 'primeserve.newsletter.subscribed';
+    const existing = window.localStorage.getItem(key);
+    const emails = existing ? existing.split(',').filter(Boolean) : [];
+    if (!emails.includes(value)) {
+      window.localStorage.setItem(key, [...emails, value].join(','));
+    }
+  };
+
+  const hasRememberedSubscription = (value: string) => {
+    if (typeof window === 'undefined') return false;
+    const existing = window.localStorage.getItem('primeserve.newsletter.subscribed');
+    return existing?.split(',').includes(value) ?? false;
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       toast.error('Enter a valid email address');
+      return;
+    }
+    if (hasRememberedSubscription(normalizedEmail)) {
+      setSubscribedEmail(normalizedEmail);
       return;
     }
     setSubmitting(true);
@@ -44,14 +70,15 @@ export default function PublicFooter() {
       const res = await fetch('/api/newsletter', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email: email.trim(), source: 'footer' }),
+        body:    JSON.stringify({ email: normalizedEmail, source: 'footer' }),
       });
-      const json = (await res.json()) as { ok?: boolean; error?: string };
+      const json = (await res.json()) as { ok?: boolean; alreadySubscribed?: boolean; error?: string };
       if (!res.ok || !json.ok) {
         throw new Error(json.error ?? 'Could not subscribe. Please try again.');
       }
+      rememberSubscription(normalizedEmail);
+      setSubscribedEmail(normalizedEmail);
       setEmail('');
-      toast.success('Thanks for subscribing!');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not subscribe. Please try again.');
     } finally {
@@ -143,19 +170,40 @@ export default function PublicFooter() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setSubscribedEmail('');
+                }}
                 placeholder="Enter your email"
                 className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
               />
               <button
                 type="submit"
-                disabled={submitting}
-                className="flex items-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700 disabled:opacity-60"
+                disabled={submitting || Boolean(subscribedEmail)}
+                className={`flex min-w-[122px] items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:cursor-default ${
+                  subscribedEmail
+                    ? 'bg-emerald-600'
+                    : 'bg-teal-600 hover:bg-teal-700 disabled:opacity-60'
+                }`}
               >
-                <Send className="h-4 w-4" />
-                Subscribe
+                {subscribedEmail ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Subscribed
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Subscribe
+                  </>
+                )}
               </button>
             </form>
+            {subscribedEmail && (
+              <p className="mt-2 text-xs font-medium text-emerald-300">
+                You have subscribed.
+              </p>
+            )}
 
             <div className="mt-6 space-y-2.5">
               <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -188,6 +236,12 @@ export default function PublicFooter() {
             </Link>
             <Link href="/shipping" className="hover:text-teal-400">
               Shipping Policy
+            </Link>
+            <Link href="/refund-policy" className="hover:text-teal-400">
+              Refund Policy
+            </Link>
+            <Link href="/credit-terms" className="hover:text-teal-400">
+              Credit Terms
             </Link>
           </div>
         </div>

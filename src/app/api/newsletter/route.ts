@@ -43,12 +43,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .insert({ email, source });
 
     // 23505 = unique_violation — treat as success (already subscribed)
-    if (error && error.code !== '23505') {
+    if (error?.code === '23505') {
+      return NextResponse.json({ ok: true, alreadySubscribed: true });
+    }
+
+    if (error) {
       console.error('[api/newsletter POST] insert error:', error);
       return NextResponse.json({ error: 'Could not subscribe. Please try again.' }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, alreadySubscribed: false });
   } catch (error) {
     console.error('[api/newsletter POST]', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

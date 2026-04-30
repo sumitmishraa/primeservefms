@@ -219,7 +219,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
       // Order items joined with products — for top products and category breakdown
       (() => {
-        let q = supabase
+        const q = supabase
           .from('order_items')
           .select('quantity, unit_price, product:products(name, category)')
           .not('product', 'is', null);

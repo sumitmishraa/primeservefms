@@ -29,6 +29,7 @@ export default function PreviewDomainNotice() {
     // on localhost because localhost is auto-authorised by Firebase).
     if (host === PRODUCTION_HOSTNAME) return;
     if (host === 'localhost' || host === '127.0.0.1') return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowBanner(true);
   }, []);
 

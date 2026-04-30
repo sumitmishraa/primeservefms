@@ -26,7 +26,7 @@ function DashboardSkeleton() {
       <div className="fixed top-0 inset-x-0 h-16 bg-white border-b border-slate-200 z-40 flex items-center px-4 gap-3">
         <div className="w-8 h-8 rounded-lg bg-slate-200 lg:hidden" />
         <div className="w-28 h-5 rounded bg-slate-200" />
-        <div className="hidden md:block flex-1 max-w-xl mx-auto h-9 rounded-full bg-slate-200" />
+        <div className="hidden sm:block w-28 h-8 rounded-lg bg-slate-200" />
         <div className="ml-auto flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-slate-200" />
           <div className="w-8 h-8 rounded-lg bg-slate-200" />

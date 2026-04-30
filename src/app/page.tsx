@@ -1,6 +1,10 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
+  ChevronRight,
   Sparkles,
   Package,
   Building2,
@@ -156,6 +160,26 @@ const TESTIMONIALS = [
 ] as const;
 
 export default function HomePage() {
+  const featuredRailRef = useRef<HTMLDivElement>(null);
+  const featuredPausedRef = useRef(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const rail = featuredRailRef.current;
+      if (!rail || featuredPausedRef.current) return;
+      const nearEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 8;
+      rail.scrollTo({
+        left: nearEnd ? 0 : rail.scrollLeft + 326,
+        behavior: 'smooth',
+      });
+    }, 2600);
+    return () => clearInterval(timer);
+  }, []);
+
+  const scrollFeaturedNext = () => {
+    featuredRailRef.current?.scrollBy({ left: 326, behavior: 'smooth' });
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <PublicHeader />
@@ -213,22 +237,22 @@ export default function HomePage() {
           <div className="relative flex items-center justify-center">
             <div className="grid w-full max-w-md grid-cols-3 gap-3">
               {/* Row 1 */}
-              <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
-                <Package className="mb-2 h-6 w-6 text-teal-400" />
+              <div className="hero-stat-card flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
+                <Package className="hero-stat-icon mb-2 h-6 w-6 text-teal-400" />
                 <p className="font-heading text-lg font-extrabold text-white">500+</p>
                 <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-400">
                   Products
                 </p>
               </div>
-              <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
-                <Building2 className="mb-2 h-6 w-6 text-teal-400" />
+              <div className="hero-stat-card flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
+                <Building2 className="hero-stat-icon mb-2 h-6 w-6 text-teal-400" />
                 <p className="font-heading text-lg font-extrabold text-white">100+</p>
                 <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-400">
                   Businesses
                 </p>
               </div>
-              <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
-                <Sparkles className="mb-2 h-6 w-6 text-teal-400" />
+              <div className="hero-stat-card flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
+                <Sparkles className="hero-stat-icon mb-2 h-6 w-6 text-teal-400" />
                 <p className="font-heading text-sm font-extrabold text-white">GST</p>
                 <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-400">
                   Compliant
@@ -236,8 +260,8 @@ export default function HomePage() {
               </div>
 
               {/* Row 2 */}
-              <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
-                <Truck className="mb-2 h-6 w-6 text-teal-400" />
+              <div className="hero-stat-card flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
+                <Truck className="hero-stat-icon mb-2 h-6 w-6 text-teal-400" />
                 <p className="font-heading text-[11px] font-extrabold text-white">
                   Fast
                 </p>
@@ -245,15 +269,15 @@ export default function HomePage() {
                   Delivery
                 </p>
               </div>
-              <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-teal-400/30 bg-teal-500/15 p-4 text-center backdrop-blur-sm">
-                <CreditCard className="mb-2 h-7 w-7 text-teal-300" />
+              <div className="hero-stat-card hero-stat-card-active flex aspect-square flex-col items-center justify-center rounded-2xl border border-teal-400/30 bg-teal-500/15 p-4 text-center backdrop-blur-sm">
+                <CreditCard className="hero-stat-icon mb-2 h-7 w-7 text-teal-300" />
                 <p className="font-heading text-lg font-extrabold text-white">45 Day</p>
                 <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-teal-200">
                   Credit Terms
                 </p>
               </div>
-              <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
-                <ShieldCheck className="mb-2 h-6 w-6 text-teal-400" />
+              <div className="hero-stat-card flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
+                <ShieldCheck className="hero-stat-icon mb-2 h-6 w-6 text-teal-400" />
                 <p className="font-heading text-[11px] font-extrabold text-white">
                   Secure
                 </p>
@@ -263,8 +287,8 @@ export default function HomePage() {
               </div>
 
               {/* Row 3 */}
-              <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
-                <Headphones className="mb-2 h-6 w-6 text-teal-400" />
+              <div className="hero-stat-card flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
+                <Headphones className="hero-stat-icon mb-2 h-6 w-6 text-teal-400" />
                 <p className="font-heading text-[11px] font-extrabold text-white">
                   24/7
                 </p>
@@ -272,15 +296,15 @@ export default function HomePage() {
                   Support
                 </p>
               </div>
-              <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
-                <TrendingUp className="mb-2 h-6 w-6 text-teal-400" />
+              <div className="hero-stat-card flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
+                <TrendingUp className="hero-stat-icon mb-2 h-6 w-6 text-teal-400" />
                 <p className="font-heading text-lg font-extrabold text-white">98%</p>
                 <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-400">
                   On-time
                 </p>
               </div>
-              <div className="flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
-                <Sparkles className="mb-2 h-6 w-6 text-teal-400" />
+              <div className="hero-stat-card flex aspect-square flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center backdrop-blur-sm">
+                <Sparkles className="hero-stat-icon mb-2 h-6 w-6 text-teal-400" />
                 <p className="font-heading text-[11px] font-extrabold text-white">
                   Verified
                 </p>
@@ -366,8 +390,15 @@ export default function HomePage() {
               let cards bleed to the viewport edge so the last/first card
               hints there's more to scroll. Custom scrollbar utilities are
               inlined as arbitrary variants so we don't depend on a plugin. */}
-          <div className="-mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+          <div
+            className="relative -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+            onMouseEnter={() => { featuredPausedRef.current = true; }}
+            onMouseLeave={() => { featuredPausedRef.current = false; }}
+            onFocus={() => { featuredPausedRef.current = true; }}
+            onBlur={() => { featuredPausedRef.current = false; }}
+          >
             <div
+              ref={featuredRailRef}
               className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {FEATURED_PRODUCTS.map((product) => (
@@ -455,6 +486,14 @@ export default function HomePage() {
                 </p>
               </Link>
             </div>
+            <button
+              type="button"
+              onClick={scrollFeaturedNext}
+              className="absolute right-5 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-teal-100 bg-white text-teal-700 shadow-lg shadow-slate-900/10 transition-all hover:-translate-y-[calc(50%+2px)] hover:border-teal-300 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500 lg:flex"
+              aria-label="Show more featured products"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </section>
@@ -475,7 +514,7 @@ export default function HomePage() {
             {BENEFITS.map(({ Icon, title, body }) => (
               <div
                 key={title}
-                className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 transition-shadow hover:shadow-md"
+                className="flex flex-col rounded-xl border border-slate-200 bg-white p-6 transition-colors duration-200 hover:border-teal-500 hover:bg-teal-50/20"
               >
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50 text-teal-600">
                   <Icon className="h-5 w-5" />

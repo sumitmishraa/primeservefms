@@ -159,6 +159,7 @@ export default function ProductForm({
 
   // Reset subcategory fields when category changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setValues((v) => ({ ...v, subcategory_id: '', subcategory_slug: '' }));
   }, [values.category]);
 

@@ -35,6 +35,7 @@ export function OTPInput({ onComplete, error = false, isLoading = false, resetKe
 
   // ── Reset when parent signals a retry ────────────────────────────────────
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDigits(['', '', '', '', '', '']);
     inputRefs.current[0]?.focus();
   }, [resetKey]);
@@ -42,6 +43,7 @@ export function OTPInput({ onComplete, error = false, isLoading = false, resetKe
   // ── Trigger shake on error ────────────────────────────────────────────────
   useEffect(() => {
     if (!error) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShake(true);
     const t = setTimeout(() => setShake(false), 600);
     return () => clearTimeout(t);

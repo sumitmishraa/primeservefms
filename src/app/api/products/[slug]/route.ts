@@ -52,7 +52,7 @@ export async function GET(
     }
 
     // 3. Fetch related products (same category, different product/group)
-    let relatedQuery = supabase
+    const relatedQuery = supabase
       .from('products')
       .select('*')
       .eq('category', product.category)

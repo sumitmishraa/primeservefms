@@ -15,13 +15,13 @@ import {
   Printer,
   User,
   LayoutDashboard,
-  Phone,
   Menu,
   X,
   Loader2,
   Settings,
   Package,
   LogOut,
+  MessageCircle,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCartStore } from '@/stores/cartStore';
@@ -93,6 +93,7 @@ export default function PublicHeader() {
   // dropdown that triggered the navigation would stay visually open on
   // the destination page.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAccountOpen(false);
     setMobileOpen(false);
     setCategoriesOpen(false);
@@ -253,24 +254,17 @@ export default function PublicHeader() {
 
           <Link
             href={authResolved && isAuthenticated ? dashboardHref : '/login'}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-teal-600"
+            className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-teal-600"
             aria-label="Go to dashboard"
             title="Dashboard"
           >
             <LayoutDashboard className="h-5 w-5" />
+            <span>Dashboard</span>
           </Link>
         </nav>
 
-        {/* Right: phone + cart + Sign In */}
+        {/* Right: cart + Sign In */}
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
-          <a
-            href="tel:+919876543210"
-            className="hidden items-center gap-2 text-sm font-semibold text-slate-700 hover:text-teal-600 xl:flex"
-          >
-            <Phone className="h-4 w-4" />
-            +91 98765 43210
-          </a>
-
           {/* Cart icon — hidden for vendor/admin (the cart is a buyer feature).
               Buyers go straight to /buyer/cart; anonymous visitors hit the
               login wall first and bounce back to the cart after sign-in. */}
@@ -352,6 +346,16 @@ export default function PublicHeader() {
                     >
                       <Package className="h-4 w-4 text-slate-400" />
                       My Orders
+                    </Link>
+
+                    <Link
+                      href="/contact"
+                      role="menuitem"
+                      onClick={() => setAccountOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-teal-50 hover:text-teal-700"
+                    >
+                      <MessageCircle className="h-4 w-4 text-slate-400" />
+                      Contact Us
                     </Link>
 
                     <div className="my-1 h-px bg-slate-100" />
@@ -533,6 +537,13 @@ export default function PublicHeader() {
                       className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                     >
                       <Package className="h-4 w-4" /> My Orders
+                    </Link>
+                    <Link
+                      href="/contact"
+                      onClick={() => setMobileOpen(false)}
+                      className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <MessageCircle className="h-4 w-4" /> Contact Us
                     </Link>
                     <button
                       type="button"

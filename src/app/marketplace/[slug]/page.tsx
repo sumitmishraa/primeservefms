@@ -32,10 +32,8 @@ import {
   ChevronRight,
   ChevronLeft,
   AlertCircle,
-  ShieldCheck,
   Tag,
   Truck,
-  FileText,
   Sparkles,
   Phone,
   Info,
@@ -656,7 +654,7 @@ export default function ProductDetailPage({
             {/* ── PRICE CARD ───────────────────────────────────────── */}
             <div
               key={`price-${product.id}`}
-              className="pdp-fade-up rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-teal-50/40 p-4 shadow-sm"
+              className="hidden"
             >
               <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
                 Rate per <span className="capitalize">{product.unit_of_measure}</span>
@@ -699,7 +697,7 @@ export default function ProductDetailPage({
               {product.hsn_code && (
                 <p className="mt-2 text-[11px] text-slate-500">
                   HSN&nbsp;<span className="font-mono font-semibold text-slate-700">{product.hsn_code}</span>
-                  &nbsp;· GST-compliant B2B invoicing
+                  &nbsp;· HSN mapped for billing
                 </p>
               )}
 
@@ -966,26 +964,6 @@ function ProductGallery({
 // TrustPill — small icon + 2-line label
 // ---------------------------------------------------------------------------
 
-interface TrustPillProps {
-  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
-  title: string;
-  subtitle: string;
-}
-
-function TrustPill({ icon: Icon, title, subtitle }: TrustPillProps) {
-  return (
-    <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-50">
-        <Icon className="h-4 w-4 text-teal-600" aria-hidden />
-      </div>
-      <div className="min-w-0 leading-tight">
-        <p className="truncate text-xs font-semibold text-slate-800">{title}</p>
-        <p className="truncate text-[10px] text-slate-500">{subtitle}</p>
-      </div>
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // TabBar — pill-style tab navigation for the details section
 // ---------------------------------------------------------------------------
@@ -1004,7 +982,7 @@ function TabBar({ active, onChange, hasSpecs, hasTiers }: TabBarProps) {
     { key: 'description',    label: 'Description',     show: true     },
     { key: 'specifications', label: 'Specifications',  show: hasSpecs },
     { key: 'pricing',        label: 'Volume Pricing',  show: hasTiers },
-    { key: 'shipping',       label: 'Delivery & GST',  show: true     },
+    { key: 'shipping',       label: 'Delivery',         show: true     },
   ];
 
   return (
@@ -1076,7 +1054,6 @@ function DescriptionPanel({
         <KvRow k="Product"   v={productName} />
         {hsnCode && <KvRow k="HSN Code"  v={hsnCode} mono />}
         <KvRow k="GST Rate"  v={`${gstRate}%`} mono />
-        <KvRow k="Invoicing" v="GST B2B invoice" />
         <KvRow k="Pricing"   v="Bulk tiers" />
       </aside>
     </div>
@@ -1199,11 +1176,6 @@ function ShippingPanel() {
       icon: Truck,
       title: 'Fast delivery — 24 to 48 hours',
       body: 'Pan-India express delivery to your registered branch address. Free shipping on orders above ₹5,000; flat ₹150 below that.',
-    },
-    {
-      icon: FileText,
-      title: 'GST-compliant invoicing',
-      body: 'Every order ships with a GST B2B invoice in your registered company name, suitable for input tax credit.',
     },
     {
       icon: PackageCheck,

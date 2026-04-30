@@ -8,10 +8,8 @@
 
 'use client';
 
-import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Menu, Search, ShoppingCart, Bell } from 'lucide-react';
+import { Menu, ShoppingCart, Bell, Home } from 'lucide-react';
 import type { UserProfile } from '@/types';
 import UserMenu from './UserMenu';
 import { useCartStore } from '@/stores/cartStore';
@@ -32,10 +30,6 @@ interface NavbarProps {
  * @param onMobileMenuToggle - Opens the MobileMenu slide-out panel
  */
 export default function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
-  const router = useRouter();
-
   const cartCount = useCartStore((state) => state.items.length);
   const notificationCount = 0;
 
@@ -45,18 +39,6 @@ export default function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
       : user.role === 'vendor'
         ? '/vendor'
         : '/buyer/marketplace';
-
-  /**
-   * Submits the search query by navigating to the marketplace with a ?q= param.
-   * @param e - Form submit event
-   */
-  const handleSearch = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const q = searchQuery.trim();
-    if (q) {
-      router.push(`/marketplace?q=${encodeURIComponent(q)}`);
-    }
-  };
 
   return (
     <header className="fixed top-0 inset-x-0 h-16 bg-white border-b border-slate-200 z-40 flex items-center px-4 gap-3">
@@ -75,39 +57,18 @@ export default function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         >
           PrimeServe
         </Link>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700 sm:px-3"
+        >
+          <Home className="h-3.5 w-3.5" aria-hidden="true" />
+          Back to Home
+        </Link>
       </div>
 
       {/* ── Center: search bar (desktop) ──────────────────────────────────── */}
-      <form
-        onSubmit={handleSearch}
-        className="hidden md:flex flex-1 max-w-xl mx-auto"
-        role="search"
-        aria-label="Search products and orders"
-      >
-        <div
-          className={`relative flex items-center w-full bg-slate-100 rounded-full transition-all ${
-            searchFocused ? 'ring-2 ring-teal-500' : ''
-          }`}
-        >
-          <Search
-            className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none"
-            aria-hidden="true"
-          />
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            placeholder="Search products, orders..."
-            className="w-full bg-transparent pl-9 pr-4 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none rounded-full"
-            aria-label="Search"
-          />
-        </div>
-      </form>
-
       {/* ── Right: cart, bell, avatar ─────────────────────────────────────── */}
-      <div className="flex items-center gap-1 ml-auto md:ml-0">
+      <div className="ml-auto flex items-center gap-1">
         {/* Cart — buyers only */}
         {user.role === 'buyer' && (
           <Link

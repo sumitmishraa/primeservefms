@@ -105,6 +105,9 @@ interface CreditAccount {
   notes: string | null;
 }
 
+type CheckoutStep = 'address' | 'payment';
+type PaymentChoice = 'upi' | 'credit_card' | 'debit_card' | 'credit_45day';
+
 // ---------------------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------------------
@@ -331,7 +334,8 @@ export default function CheckoutPage() {
   const [orderNotes, setOrderNotes] = useState('');
 
   // ── Payment method ────────────────────────────────────────────────────────
-  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'credit_45day'>('razorpay');
+  const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>('address');
+  const [paymentChoice, setPaymentChoice] = useState<PaymentChoice>('upi');
 
   // ── Order summary collapse ─────────────────────────────────────────────────
   const [showAllItems, setShowAllItems] = useState(false);
@@ -419,7 +423,6 @@ export default function CheckoutPage() {
         phone: prev.phone || profile.phone || '',
       }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAddressId, profile]);
 
   const updateShipping = useCallback((field: keyof AddressFields, value: string) => {
@@ -465,14 +468,23 @@ export default function CheckoutPage() {
   }
 
   // ── Place order ───────────────────────────────────────────────────────────
+  function handleProceedToPayment() {
+    if (!validateForm()) {
+      toast.error('Please complete the address details before payment');
+      return;
+    }
+    setCheckoutStep('payment');
+  }
+
   async function handlePlaceOrder() {
+    const orderPaymentMethod = paymentChoice === 'credit_45day' ? 'credit_45day' : 'razorpay';
     if (!validateForm()) {
       toast.error('Please fix the errors before proceeding');
       return;
     }
 
     // Credit-specific guard before making the API call
-    if (paymentMethod === 'credit_45day') {
+    if (orderPaymentMethod === 'credit_45day') {
       if (!credit || credit.status !== 'active') {
         toast.error('Your credit account is not active. Please choose instant payment.');
         return;
@@ -498,11 +510,11 @@ export default function CheckoutPage() {
         billing_address: sameBilling ? null : toShippingAddress(billing),
         gst_number: gstNumber.trim().toUpperCase() || null,
         notes: orderNotes.trim() || null,
-        payment_method: paymentMethod,
+        payment_method: orderPaymentMethod,
       };
 
       // ── Instant payment: Razorpay modal flow ────────────────────────────────
-      if (paymentMethod === 'razorpay') {
+      if (orderPaymentMethod === 'razorpay') {
         const loaded = await loadRazorpayScript();
         if (!loaded || typeof window.Razorpay === 'undefined') {
           throw new Error('Payment system not ready — please try again');
@@ -612,6 +624,13 @@ export default function CheckoutPage() {
   const visibleItems = showAllItems ? items : items.slice(0, 3);
   const hiddenCount = items.length - 3;
   const creditAvailable = credit?.status === 'active' && (credit?.available ?? 0) >= grandTotal;
+  const isCreditPayment = paymentChoice === 'credit_45day';
+  const paymentChoiceLabel: Record<PaymentChoice, string> = {
+    upi: 'UPI via Razorpay',
+    credit_card: 'Credit card via Razorpay',
+    debit_card: 'Debit card via Razorpay',
+    credit_45day: '45-day credit',
+  };
 
   // ── Loading state ─────────────────────────────────────────────────────────
   if (profileLoading) {
@@ -848,6 +867,7 @@ export default function CheckoutPage() {
           </section>
 
           {/* ── PAYMENT METHOD ───────────────────────────────────────────── */}
+          {checkoutStep === 'payment' && (
           <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
             <h2 className="text-base font-semibold text-slate-900 mb-4">Payment Method</h2>
 
@@ -855,7 +875,7 @@ export default function CheckoutPage() {
               {/* Instant payment card */}
               <label
                 className={`flex flex-col gap-2 rounded-xl border p-4 cursor-pointer transition-colors ${
-                  paymentMethod === 'razorpay'
+                  paymentChoice === 'upi'
                     ? 'border-teal-400 bg-teal-50 ring-1 ring-teal-400'
                     : 'border-slate-200 hover:border-teal-200 hover:bg-slate-50'
                 }`}
@@ -864,20 +884,20 @@ export default function CheckoutPage() {
                   <input
                     type="radio"
                     name="payment-method"
-                    checked={paymentMethod === 'razorpay'}
-                    onChange={() => setPaymentMethod('razorpay')}
+                    checked={paymentChoice === 'upi'}
+                    onChange={() => setPaymentChoice('upi')}
                     className="h-4 w-4 text-teal-600 focus:ring-teal-500 shrink-0"
                   />
                   <div className="flex items-center gap-2">
                     <Zap className="w-4 h-4 text-teal-600" aria-hidden="true" />
-                    <span className="text-sm font-semibold text-slate-800">Pay Now</span>
+                    <span className="text-sm font-semibold text-slate-800">UPI</span>
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 pl-7">
-                  Instant payment via Razorpay. Order confirmed immediately.
+                  Pay through UPI using Razorpay. Order confirmed immediately.
                 </p>
                 <div className="flex flex-wrap gap-1.5 pl-7 pt-1">
-                  {['UPI', 'Credit Card', 'Debit Card', 'Net Banking', 'Wallets'].map((m) => (
+                  {['Razorpay', 'UPI Apps', 'QR'].map((m) => (
                     <span
                       key={m}
                       className="px-1.5 py-0.5 text-[10px] border border-slate-200 rounded bg-white text-slate-500"
@@ -888,6 +908,56 @@ export default function CheckoutPage() {
                 </div>
               </label>
 
+              <label
+                className={`flex flex-col gap-2 rounded-xl border p-4 cursor-pointer transition-colors ${
+                  paymentChoice === 'credit_card'
+                    ? 'border-teal-400 bg-teal-50 ring-1 ring-teal-400'
+                    : 'border-slate-200 hover:border-teal-200 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    checked={paymentChoice === 'credit_card'}
+                    onChange={() => setPaymentChoice('credit_card')}
+                    className="h-4 w-4 text-teal-600 focus:ring-teal-500 shrink-0"
+                  />
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-teal-600" aria-hidden="true" />
+                    <span className="text-sm font-semibold text-slate-800">Credit Card</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 pl-7">
+                  Use a credit card through secure Razorpay checkout.
+                </p>
+              </label>
+
+              <label
+                className={`flex flex-col gap-2 rounded-xl border p-4 cursor-pointer transition-colors ${
+                  paymentChoice === 'debit_card'
+                    ? 'border-teal-400 bg-teal-50 ring-1 ring-teal-400'
+                    : 'border-slate-200 hover:border-teal-200 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    checked={paymentChoice === 'debit_card'}
+                    onChange={() => setPaymentChoice('debit_card')}
+                    className="h-4 w-4 text-teal-600 focus:ring-teal-500 shrink-0"
+                  />
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-teal-600" aria-hidden="true" />
+                    <span className="text-sm font-semibold text-slate-800">Debit Card</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 pl-7">
+                  Pay with a debit card through secure Razorpay checkout.
+                </p>
+              </label>
+
               {/* 45-day credit card */}
               <label
                 className={`flex flex-col gap-2 rounded-xl border p-4 transition-colors ${
@@ -895,7 +965,7 @@ export default function CheckoutPage() {
                     ? 'cursor-pointer'
                     : 'cursor-not-allowed opacity-60'
                 } ${
-                  paymentMethod === 'credit_45day'
+                  paymentChoice === 'credit_45day'
                     ? 'border-amber-400 bg-amber-50 ring-1 ring-amber-400'
                     : 'border-slate-200 hover:border-amber-200 hover:bg-slate-50'
                 }`}
@@ -904,9 +974,9 @@ export default function CheckoutPage() {
                   <input
                     type="radio"
                     name="payment-method"
-                    checked={paymentMethod === 'credit_45day'}
+                    checked={paymentChoice === 'credit_45day'}
                     onChange={() => {
-                      if (credit?.status === 'active') setPaymentMethod('credit_45day');
+                      if (credit?.status === 'active') setPaymentChoice('credit_45day');
                     }}
                     disabled={credit?.status !== 'active'}
                     className="h-4 w-4 text-amber-600 focus:ring-amber-500 shrink-0"
@@ -969,6 +1039,7 @@ export default function CheckoutPage() {
               </label>
             </div>
           </section>
+          )}
 
           {/* ── ORDER NOTES ──────────────────────────────────────────────── */}
           <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
@@ -1064,10 +1135,15 @@ export default function CheckoutPage() {
 
             {/* Payment method summary */}
             <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600 flex items-center gap-2">
-              {paymentMethod === 'razorpay' ? (
+              {checkoutStep === 'address' ? (
+                <>
+                  <MapPin className="w-3 h-3 text-teal-600 shrink-0" />
+                  Complete address details to choose payment
+                </>
+              ) : !isCreditPayment ? (
                 <>
                   <Zap className="w-3 h-3 text-teal-600 shrink-0" />
-                  Pay now via Razorpay (UPI / Card / Net Banking)
+                  {paymentChoiceLabel[paymentChoice]}
                 </>
               ) : (
                 <>
@@ -1079,25 +1155,27 @@ export default function CheckoutPage() {
 
             {/* Place order button */}
             <button
-              onClick={handlePlaceOrder}
+              onClick={checkoutStep === 'address' ? handleProceedToPayment : handlePlaceOrder}
               disabled={
                 isPlacing ||
                 items.length === 0 ||
-                (paymentMethod === 'credit_45day' && !creditAvailable)
+                (checkoutStep === 'payment' && isCreditPayment && !creditAvailable)
               }
               className="mt-4 w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-teal-600 text-white rounded-lg font-semibold text-base hover:bg-teal-700 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isPlacing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  {paymentMethod === 'razorpay' ? 'Opening payment…' : 'Placing order…'}
+                  {!isCreditPayment ? 'Opening payment...' : 'Placing order...'}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-                  {paymentMethod === 'razorpay'
-                    ? `Pay ${formatINR(grandTotal)}`
-                    : `Place Order — ${formatINR(grandTotal)}`}
+                  {checkoutStep === 'address'
+                    ? 'Proceed to Pay'
+                    : !isCreditPayment
+                      ? `Pay ${formatINR(grandTotal)}`
+                      : `Place Order - ${formatINR(grandTotal)}`}
                 </>
               )}
             </button>
@@ -1105,12 +1183,14 @@ export default function CheckoutPage() {
             {/* Security / trust line */}
             <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-400">
               <Lock className="w-3 h-3 shrink-0" aria-hidden="true" />
-              {paymentMethod === 'razorpay'
-                ? 'Secure payment powered by Razorpay'
-                : 'Order placed on your approved credit line'}
+              {checkoutStep === 'address'
+                ? 'Payment method appears after address confirmation'
+                : !isCreditPayment
+                  ? 'Secure payment powered by Razorpay'
+                  : 'Order placed on your approved credit line'}
             </div>
 
-            {paymentMethod === 'razorpay' && (
+            {checkoutStep === 'payment' && !isCreditPayment && (
               <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
                 {['Visa', 'Mastercard', 'UPI', 'Net Banking'].map((method) => (
                   <span
@@ -1121,6 +1201,16 @@ export default function CheckoutPage() {
                   </span>
                 ))}
               </div>
+            )}
+
+            {checkoutStep === 'payment' && (
+              <button
+                type="button"
+                onClick={() => setCheckoutStep('address')}
+                className="mt-3 w-full text-xs font-medium text-slate-500 transition-colors hover:text-teal-600"
+              >
+                Back to address details
+              </button>
             )}
 
             <div className="mt-4 text-center">

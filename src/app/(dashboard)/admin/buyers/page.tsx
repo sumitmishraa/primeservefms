@@ -22,6 +22,8 @@ import { formatDate } from '@/lib/utils/formatting';
 import AssignClientModal from '@/components/admin/AssignClientModal';
 import type { BuyerRow } from '@/app/api/admin/buyers/route';
 
+const PAGE_LOAD_TIME_MS = Date.now();
+
 // ---------------------------------------------------------------------------
 // Last active indicator
 // ---------------------------------------------------------------------------
@@ -34,7 +36,7 @@ function LastActiveBadge({ dateStr }: { dateStr: string | null }) {
   if (!dateStr) {
     return <span className="text-xs text-slate-400">Never ordered</span>;
   }
-  const now  = Date.now();
+  const now  = PAGE_LOAD_TIME_MS;
   const diff = now - new Date(dateStr).getTime();
   const days = diff / (1000 * 60 * 60 * 24);
 

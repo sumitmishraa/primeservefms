@@ -98,7 +98,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // Fetch last order date per buyer in one query
     const rawRows = (data ?? []) as unknown as RawBuyerRow[];
     const buyerIds = rawRows.map((r) => r.id);
-    let lastOrderMap: Record<string, string> = {};
+    const lastOrderMap: Record<string, string> = {};
 
     if (buyerIds.length > 0) {
       const { data: orderRows } = await supabase
