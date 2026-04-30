@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import {
   Send,
@@ -14,6 +14,9 @@ import {
   Linkedin,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const NEWSLETTER_EMAILS_KEY = 'primeserve.newsletter.subscribed';
+const NEWSLETTER_SESSION_KEY = 'primeserve.newsletter.hasSubscribed';
 
 const QUICK_LINKS = [
   { href: '/', label: 'Home Page' },
@@ -37,20 +40,30 @@ export default function PublicFooter() {
   const [submitting, setSubmitting] = useState(false);
   const [subscribedEmail, setSubscribedEmail] = useState('');
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.localStorage.getItem(NEWSLETTER_SESSION_KEY) === 'true') {
+      setSubscribedEmail('remembered');
+    }
+  }, []);
+
   const rememberSubscription = (value: string) => {
     if (typeof window === 'undefined') return;
-    const key = 'primeserve.newsletter.subscribed';
-    const existing = window.localStorage.getItem(key);
+    const existing = window.localStorage.getItem(NEWSLETTER_EMAILS_KEY);
     const emails = existing ? existing.split(',').filter(Boolean) : [];
     if (!emails.includes(value)) {
-      window.localStorage.setItem(key, [...emails, value].join(','));
+      window.localStorage.setItem(NEWSLETTER_EMAILS_KEY, [...emails, value].join(','));
     }
+    window.localStorage.setItem(NEWSLETTER_SESSION_KEY, 'true');
   };
 
   const hasRememberedSubscription = (value: string) => {
     if (typeof window === 'undefined') return false;
-    const existing = window.localStorage.getItem('primeserve.newsletter.subscribed');
-    return existing?.split(',').includes(value) ?? false;
+    const existing = window.localStorage.getItem(NEWSLETTER_EMAILS_KEY);
+    return (
+      window.localStorage.getItem(NEWSLETTER_SESSION_KEY) === 'true' ||
+      (existing?.split(',').includes(value) ?? false)
+    );
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -166,43 +179,34 @@ export default function PublicFooter() {
               Subscribe to our newsletter for exclusive deals, bulk discounts, and
               the latest product updates.
             </p>
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setSubscribedEmail('');
-                }}
-                placeholder="Enter your email"
-                className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
-              />
-              <button
-                type="submit"
-                disabled={submitting || Boolean(subscribedEmail)}
-                className={`flex min-w-[122px] items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:cursor-default ${
-                  subscribedEmail
-                    ? 'bg-emerald-600'
-                    : 'bg-teal-600 hover:bg-teal-700 disabled:opacity-60'
-                }`}
-              >
-                {subscribedEmail ? (
-                  <>
-                    <CheckCircle2 className="h-4 w-4" />
-                    Subscribed
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Subscribe
-                  </>
-                )}
-              </button>
-            </form>
-            {subscribedEmail && (
-              <p className="mt-2 text-xs font-medium text-emerald-300">
-                You have subscribed.
-              </p>
+            {subscribedEmail ? (
+              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-emerald-200">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Subscribed
+                </div>
+                <p className="mt-1 text-xs font-medium text-emerald-300">
+                  You have subscribed.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="flex gap-2">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                />
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex min-w-[122px] items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700 disabled:cursor-default disabled:opacity-60"
+                >
+                  <Send className="h-4 w-4" />
+                  Subscribe
+                </button>
+              </form>
             )}
 
             <div className="mt-6 space-y-2.5">

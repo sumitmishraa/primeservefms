@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -162,22 +162,32 @@ const TESTIMONIALS = [
 export default function HomePage() {
   const featuredRailRef = useRef<HTMLDivElement>(null);
   const featuredPausedRef = useRef(false);
+  const [featuredAtEnd, setFeaturedAtEnd] = useState(false);
+
+  const updateFeaturedArrow = useCallback(() => {
+    const rail = featuredRailRef.current;
+    if (!rail) return;
+    setFeaturedAtEnd(rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 12);
+  }, []);
 
   useEffect(() => {
+    updateFeaturedArrow();
     const timer = setInterval(() => {
       const rail = featuredRailRef.current;
       if (!rail || featuredPausedRef.current) return;
       const nearEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 8;
-      rail.scrollTo({
-        left: nearEnd ? 0 : rail.scrollLeft + 326,
-        behavior: 'smooth',
-      });
-    }, 2600);
+      if (nearEnd) {
+        setFeaturedAtEnd(true);
+        return;
+      }
+      rail.scrollBy({ left: 300, behavior: 'smooth' });
+    }, 2200);
     return () => clearInterval(timer);
-  }, []);
+  }, [updateFeaturedArrow]);
 
   const scrollFeaturedNext = () => {
-    featuredRailRef.current?.scrollBy({ left: 326, behavior: 'smooth' });
+    featuredRailRef.current?.scrollBy({ left: 340, behavior: 'smooth' });
+    window.setTimeout(updateFeaturedArrow, 450);
   };
 
   return (
@@ -399,7 +409,8 @@ export default function HomePage() {
           >
             <div
               ref={featuredRailRef}
-              className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              onScroll={updateFeaturedArrow}
+              className="flex snap-x snap-mandatory scroll-smooth gap-6 overflow-x-auto pb-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {FEATURED_PRODUCTS.map((product) => (
                 <div
@@ -486,14 +497,16 @@ export default function HomePage() {
                 </p>
               </Link>
             </div>
-            <button
-              type="button"
-              onClick={scrollFeaturedNext}
-              className="absolute right-5 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-teal-100 bg-white text-teal-700 shadow-lg shadow-slate-900/10 transition-all hover:-translate-y-[calc(50%+2px)] hover:border-teal-300 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500 lg:flex"
-              aria-label="Show more featured products"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
+            {!featuredAtEnd && (
+              <button
+                type="button"
+                onClick={scrollFeaturedNext}
+                className="absolute right-0 top-1/2 hidden h-11 w-11 -translate-y-1/2 translate-x-6 items-center justify-center rounded-full border border-teal-100 bg-white text-teal-700 shadow-lg shadow-slate-900/10 transition-all hover:-translate-y-[calc(50%+2px)] hover:border-teal-300 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500 lg:flex xl:translate-x-10"
+                aria-label="Show more featured products"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            )}
           </div>
         </div>
       </section>
