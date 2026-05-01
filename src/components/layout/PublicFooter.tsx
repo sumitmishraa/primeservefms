@@ -14,6 +14,7 @@ import {
   Linkedin,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { POLICY_LINKS } from '@/lib/legal/policy-links';
 
 const NEWSLETTER_EMAILS_KEY = 'primeserve.newsletter.subscribed';
 const NEWSLETTER_SESSION_KEY = 'primeserve.newsletter.hasSubscribed';
@@ -232,21 +233,11 @@ export default function PublicFooter() {
             © {new Date().getFullYear()} PrimeServe. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-5 text-xs text-slate-500">
-            <Link href="/terms" className="hover:text-teal-400">
-              Terms of Service
-            </Link>
-            <Link href="/privacy" className="hover:text-teal-400">
-              Privacy Policy
-            </Link>
-            <Link href="/shipping" className="hover:text-teal-400">
-              Shipping Policy
-            </Link>
-            <Link href="/refund-policy" className="hover:text-teal-400">
-              Refund Policy
-            </Link>
-            <Link href="/credit-terms" className="hover:text-teal-400">
-              Credit Terms
-            </Link>
+            {POLICY_LINKS.map((policy) => (
+              <Link key={policy.slug} href={policy.href} className="hover:text-teal-400">
+                {policy.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

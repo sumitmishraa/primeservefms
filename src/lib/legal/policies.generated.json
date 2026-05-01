@@ -1,0 +1,2838 @@
+[
+    {
+        "slug":  "terms-and-conditions",
+        "title":  "Terms and Conditions",
+        "lastUpdated":  "1 May 2026",
+        "effectiveDate":  "1 May 2026",
+        "blocks":  [
+                       {
+                           "type":  "heading",
+                           "text":  "1. Introduction"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "These Terms and Conditions (\"Terms\") govern the access to and use of the PrimeServe Facility Solutions web application, mobile application, websites, and all associated services (collectively, the \"Platform\") operated by Primeserve Facility Solutions, having its registered office at No. 5/1, Jogpalya, Halasuru (Ulsoor), Bengaluru – 560008, Karnataka, India (\"PrimeServe\", \"we\", \"us\", or \"our\")."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "These Terms constitute a binding legal agreement between PrimeServe and the business entity (\"Buyer\", \"you\", or \"your\") that registers on, accesses, or transacts through the Platform. By creating an account, browsing the catalog, placing an order, or otherwise using the Platform, you confirm that you have read, understood, and accepted these Terms in their entirety."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "2. Acceptance of Terms"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Use of the Platform is conditional upon your acceptance of these Terms together with PrimeServe\u0027s Privacy Policy, Credit Policy, Shipping \u0026 Delivery Policy, and Refund Policy, each of which is incorporated into these Terms by reference. If you do not agree with any part of these Terms or the referenced policies, you must immediately discontinue use of the Platform."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Continued use of the Platform after any modification to these Terms shall constitute deemed acceptance of the modified Terms."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "3. About PrimeServe"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe operates a business-to-business (B2B) procurement platform through which verified business buyers may purchase facility, housekeeping, cleaning, pantry, office, stationery, and related enterprise supplies (\"Products\"). PrimeServe sources Products from manufacturers, authorized distributors, and wholesale suppliers, and sells such Products to Buyers in its own name and under its own invoice."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "4. B2B Nature of the Platform"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Platform is strictly intended for use by registered businesses, partnerships, sole proprietorships, limited liability partnerships, companies, hospitals, hotels, restaurants, cafés, retail establishments, IT companies, multinational corporations, technology companies, and other commercial entities for purchase of goods for business use only."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Platform is NOT intended for personal, domestic, household, or consumer use. Any individual purchasing goods for personal consumption is not the intended user of the Platform and shall not enjoy any consumer protections that would apply to a consumer transaction."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "5. Eligibility"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "To use the Platform, you must:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Be a legally registered business entity or an unincorporated business with valid trade documentation;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Be at least 18 (eighteen) years of age and competent to enter into a contract under the Indian Contract Act, 1872;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Have the legal authority to bind the business entity on whose behalf you are placing the order;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Not be a person disqualified or prohibited from contracting under any law in force in India; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Not have been previously suspended, blacklisted, or terminated from the Platform."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "6. Authorized Representative Clause"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Each individual placing an order, accessing the Platform, or transacting on behalf of a business entity (\"Authorized Representative\") represents and warrants to PrimeServe that:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "They are duly authorized by the Buyer to place orders, accept these Terms, agree to credit terms, receive deliveries, sign delivery challans, and otherwise bind the Buyer in respect of all transactions made through the Platform;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "All actions taken by them on the Platform shall be deemed to be the actions of the Buyer and shall be binding on the Buyer;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "PrimeServe shall not be required to verify the internal authority of any Authorized Representative beyond their assertion at the time of registration or order placement; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "The Buyer shall indemnify PrimeServe in full against any claim, loss, or liability arising from any unauthorized order placement by any person purporting to act on its behalf."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "7. Account Registration"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "To transact on the Platform, the Buyer must register for an account by submitting accurate and complete information, including (without limitation) business name, registered address, GSTIN (if applicable), PAN, contact details of authorized representatives, and shipping address(es)."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer is solely responsible for maintaining the confidentiality of its account credentials. Any activity that occurs under the Buyer\u0027s account shall be deemed to have been performed by the Buyer, regardless of whether it was actually authorized."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "8. Business Verification"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe reserves the right to conduct verification of the Buyer\u0027s business credentials at any time, including reviewing GSTIN, PAN, business address, bank account, trade references, and any other documents PrimeServe deems necessary. PrimeServe may approve, reject, suspend, or limit any account at its sole discretion based on the outcome of such verification."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Buyers seeking credit terms are subject to additional verification under the Credit Policy."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "9. GST and Billing Details"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer is solely responsible for providing accurate, complete, and up-to-date GSTIN, billing name, billing address, shipping address, PAN, and other tax-related details. The Buyer warrants that the GSTIN provided is valid, active, and matches the legal name of the Buyer."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe shall not be liable for any loss of input tax credit (ITC), tax mismatch, GSTR reconciliation failure, or any other tax-related consequence caused by inaccurate, incomplete, or outdated information provided by the Buyer. Once an invoice has been issued and the relevant GST return filed, PrimeServe shall not be obligated to re-issue, amend, or correct any invoice except where required under applicable GST law."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "10. User Responsibilities"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer shall:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Use the Platform only for lawful business purposes;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Not interfere with the operation, security, or integrity of the Platform;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Not attempt to access any portion of the Platform that is not made available to the Buyer;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Not scrape, copy, harvest, or extract product data, pricing, images, or catalog information for any commercial use, competitive analysis, or republication;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Not impersonate any other person or entity;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Cooperate with PrimeServe in connection with any audit, dispute, or compliance matter; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Comply with all applicable laws, including taxation, anti-money laundering, anti-bribery, and consumer protection laws."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "11. Product Information and Catalog Accuracy"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe makes good-faith efforts to ensure that product descriptions, specifications, dimensions, weights, packaging details, and ingredient information displayed on the Platform are accurate. However, the Buyer acknowledges that:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Product information may be supplied by manufacturers or distributors and may contain errors, omissions, or out-of-date specifications;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "PrimeServe does not warrant that all information is complete, current, or free from typographical or other errors; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "In case of discrepancy, the actual product specifications declared by the manufacturer on the product packaging shall prevail."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "12. Product Images and Descriptions Disclaimer"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "All product images displayed on the Platform are for illustrative purposes only. While PrimeServe takes care to ensure that images accurately represent the product, the actual product packaging, labeling, color, design, batch number, or minor design elements may vary from the images displayed due to manufacturer changes, batch variation, or stock rotation. The actual product delivered shall match the specification, brand, and grade ordered, even if the packaging design differs from the image displayed."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "13. Pricing"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "All prices listed on the Platform are quoted in Indian Rupees (INR) and are exclusive of applicable Goods and Services Tax (GST), which shall be added at the prevailing rate at the time of invoice generation. Prices are subject to change without prior notice. The applicable price for any order shall be the price displayed at the time the order is confirmed by PrimeServe."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe reserves the right to correct any pricing errors and, in the event of a manifest pricing error (where the displayed price is significantly lower than the actual market price due to system, data, or human error), to cancel the order and refund any amount paid, without further liability."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "14. GST, Taxes, and Invoice Generation"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe shall issue a tax invoice for each order in compliance with applicable GST law, containing the Buyer\u0027s GSTIN, billing name, address, HSN/SAC codes, tax breakup, and total amount. The Buyer agrees to receive invoices in electronic form, including via email or download from the Platform."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Upon dispatch of goods, the invoice shall be deemed accepted by the Buyer unless an objection is raised in writing within 7 (seven) days of receipt of the invoice. Post such period, no objection to the invoice shall be entertained except in the case of a clear and demonstrable arithmetical or tax-related error."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "15. Order Placement"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer may place an order through the Platform by adding products to the cart, providing required details, selecting a payment method, and submitting the order. An order placed by the Buyer constitutes an offer to purchase the selected products from PrimeServe on the terms set out in these Terms and the referenced policies."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "16. Order Acceptance and Rejection"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "All orders are subject to acceptance by PrimeServe. The order shall be deemed accepted only when PrimeServe issues an order confirmation (in writing, by email, or via the Platform). PrimeServe may, at its sole discretion, reject or partially reject any order, including but not limited to the following circumstances:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Stock unavailability;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Pricing or catalog error;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Failure of payment authorization;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Failure of credit verification or breach of credit limit;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Suspected fraud, misrepresentation, or unauthorized order;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Delivery address being outside the serviceable area;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Buyer being on credit hold or under suspension; or"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any compliance or regulatory concern."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "In case of order rejection, PrimeServe shall refund any amount already paid by the Buyer in respect of the rejected order, in accordance with the Refund Policy."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "17. Purchase Order Process"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where the Buyer is a corporate or enterprise buyer with internal procurement protocols, the Buyer may place orders by issuing a digital purchase order (PO) through the Platform. Each PO shall contain item-wise details, quantities, unit prices, GST, delivery address, and authorized signatory details. The PO, once accepted by PrimeServe, shall form the basis of the transaction together with these Terms."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "18. Delivery Challan Process"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "All deliveries shall be accompanied by a delivery challan (DC) generated by PrimeServe, containing item-wise details, quantities, batch numbers (where applicable), and the corresponding invoice reference. The Buyer\u0027s authorized representative at the delivery location shall verify the DC against the goods received and shall sign and stamp the DC as acknowledgment of receipt. The signed DC shall serve as conclusive proof of delivery, subject to the discrepancy reporting clause."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "19. Partial Fulfillment"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe may, at its discretion, fulfill an order in full or in part. Where partial fulfillment is necessary due to stock unavailability, PrimeServe shall notify the Buyer and may dispatch the available items immediately and either (a) dispatch the balance items as soon as available; or (b) cancel the unfulfilled portion of the order and refund the corresponding amount in accordance with the Refund Policy."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "20. Product Availability"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Inclusion of any product on the Platform does not guarantee its availability at the time of order placement. Stock levels are dynamic and may change between the time of cart addition and order confirmation. PrimeServe reserves the right to cancel any order or portion of an order due to stock unavailability without further liability beyond refund of amounts already paid."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "21. Product Substitution"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe shall not substitute any ordered product with an alternative product, brand, or grade without the prior written consent of the Buyer. Where a substitute is offered and accepted by the Buyer, the substitute product shall be deemed to be the product ordered for all purposes including pricing, invoicing, return, and refund."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "22. Payment Methods"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe accepts the following payment methods, subject to availability and Buyer eligibility:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Advance payment by credit card, debit card, or net banking through the integrated payment gateway (Razorpay or such other gateway as PrimeServe may engage from time to time);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Unified Payments Interface (UPI);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Cash on Delivery (COD), subject to operational and security limits set by PrimeServe;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Bank transfer (NEFT/RTGS/IMPS) to PrimeServe\u0027s designated bank account; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Credit terms, subject to approval and the Credit Policy."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Payment-related disputes arising from the operation, success, or failure of any third-party payment gateway shall be addressed in accordance with the policies of the relevant payment gateway. PrimeServe shall not be liable for any failure, delay, or error attributable to a third-party payment gateway."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "23. Credit Orders"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Credit orders are governed by the PrimeServe Credit Policy, which is incorporated into these Terms by reference. Credit is granted at PrimeServe\u0027s sole discretion, is subject to verification, may be revoked or limited at any time, and is conditional upon timely payment of all outstanding amounts. Late payment shall attract late payment charges, credit suspension, order hold, recovery action, and other remedies as set out in the Credit Policy."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "24. Delivery Terms"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "All deliveries are governed by the PrimeServe Shipping \u0026 Delivery Policy. PrimeServe shall use commercially reasonable efforts to deliver within the estimated timelines published on the Platform. Delivery timelines are estimates and not guarantees, and PrimeServe shall not be liable for delays caused by circumstances outside its reasonable control, including without limitation traffic conditions, weather, civil disturbance, supplier delays, force majeure events, or inaccurate delivery information provided by the Buyer."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "25. Returns, Replacements, Refunds, and Cancellation"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Returns, replacements, refunds, and cancellations are governed by the Refund Policy and applicable provisions of the Shipping \u0026 Delivery Policy. The Buyer shall comply with the reporting timelines, documentation requirements, and product condition requirements set out in those policies. Failure to comply shall result in rejection of the return, replacement, or refund request."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "26. Buyer Inspection Obligation at Delivery"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer shall, at the time of delivery, inspect the consignment in the presence of the delivery personnel for the following:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Number of cartons / packages against the delivery challan;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Visible damage, leakage, or tampering of packaging;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Quantity and item-wise verification (where time permits);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Match with order details on PO and DC; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any visible defect or shortage."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Any visible discrepancy must be recorded on the DC at the time of delivery and reported to PrimeServe within 24 (twenty-four) hours, with photographic and video evidence as applicable."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "27. Proof of Delivery"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Acknowledgment of delivery may be captured through one or more of the following: (a) signature on physical delivery challan with stamp where applicable; (b) digital signature or OTP verification on the Platform; (c) photograph of received goods at the delivery location; or (d) GPS-tagged timestamp of delivery. Such proof of delivery shall constitute conclusive evidence of delivery, subject only to discrepancies reported within the timeline specified in the Shipping \u0026 Delivery Policy."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "28. Discrepancy Reporting"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "All discrepancies (visible damage, shortage, wrong item, leakage, expiry issues, or quality concerns) must be reported to PrimeServe at the support email or phone number listed on the Platform within 24 (twenty-four) hours of delivery, accompanied by photographic and/or video evidence, the order number, the delivery challan number, and a clear description of the issue. Discrepancies reported after this window may be rejected at PrimeServe\u0027s discretion."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "29. Prohibited Activities"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer shall not, and shall not permit any of its representatives to:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Use the Platform for any unlawful, fraudulent, or harmful purpose;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Place orders without intent to pay or with the intent to fraudulently claim returns, refunds, or chargebacks;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Resell, redistribute, or rebrand PrimeServe products in any manner that misrepresents their origin or quality;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Reverse-engineer, decompile, scrape, or otherwise attempt to derive the source code, structure, or pricing logic of the Platform;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Introduce viruses, malware, or other harmful code to the Platform;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Interfere with or disrupt the Platform\u0027s servers, networks, or security mechanisms;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Engage in any conduct that abuses, harasses, or threatens any PrimeServe employee, supplier, delivery personnel, or representative; or"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Use the Platform in any manner that violates applicable law."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "30. Fraud Prevention"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe employs internal controls and may use third-party fraud-detection services to prevent and detect fraudulent activity, including (without limitation) suspicious order patterns, payment fraud, account takeover, and false return or shortage claims. PrimeServe reserves the right to suspend, cancel, or refuse any order, suspend any account, withhold any refund, and report suspected fraud to law-enforcement authorities, where it has reasonable grounds to believe fraud is occurring."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "31. Anti-Bypass Clause"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where PrimeServe introduces, connects, or facilitates a relationship between the Buyer and any supplier, distributor, manufacturer, or fulfillment partner (\"Introduced Party\"), the Buyer agrees that:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "It shall not, for the duration of its relationship with PrimeServe and for a period of 12 (twelve) months thereafter, directly or indirectly engage with the Introduced Party for the supply of products of the same category, with the intention or effect of bypassing the Platform;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any breach of this clause shall constitute a material breach of these Terms entitling PrimeServe to suspend or terminate the Buyer\u0027s account; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "PrimeServe reserves all rights and remedies available under law in respect of such bypass, without prejudice to other clauses of these Terms."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "32. Pricing Confidentiality (Non-Disclosure)"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "All prices, discounts, credit terms, volume rates, and quotations made available to the Buyer through the Platform or in any communication from PrimeServe are confidential and proprietary to PrimeServe. The Buyer shall not disclose, reproduce, or share such information with any competitor of PrimeServe, any other procurement platform, or any third party, except where required by law, internal audit, or with PrimeServe\u0027s prior written consent. Breach of this clause may, in addition to other remedies, result in account suspension and a claim for damages."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "33. Intellectual Property"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "All intellectual property rights in the Platform, including without limitation the PrimeServe name, logo, trademarks, website design, software code, product images, content, catalog structure, and pricing methodology, are owned by or licensed to PrimeServe. The Buyer is granted a limited, non-exclusive, non-transferable, revocable license to use the Platform solely for the purpose of placing and managing orders. No other rights are granted to the Buyer."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "34. Platform Availability"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe shall use commercially reasonable efforts to ensure that the Platform is available at all times. However, the Platform may be unavailable due to scheduled maintenance, system upgrades, technical issues, or events outside PrimeServe\u0027s reasonable control. PrimeServe shall not be liable for any loss arising from such unavailability, and the Buyer\u0027s sole remedy shall be to retry access at a later time."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe reserves the right to modify, update, suspend, or discontinue any feature of the Platform at any time without prior notice."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "35. Third-Party Services"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Platform may integrate with third-party services, including payment gateways, logistics partners, communication providers, analytics services, and credit assessment partners. PrimeServe is not responsible for the performance, availability, security, or terms of any third-party service. The Buyer\u0027s use of such third-party services may be governed by the respective third party\u0027s own terms and policies."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "36. Payment Gateway Disclaimer"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Online payments processed through the Platform are facilitated by Razorpay (or such other payment service provider as PrimeServe may engage). PrimeServe does not store full credit card or banking credentials. Any failure, delay, or error in the processing of an online payment shall be addressed in accordance with the policies of the relevant payment service provider. PrimeServe\u0027s liability is limited to refund of any amount actually received by PrimeServe in respect of an unfulfilled order."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "37. Limitation of Liability"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "To the maximum extent permitted by applicable law:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "PrimeServe\u0027s aggregate liability to the Buyer arising out of or in connection with any single order, claim, or series of related claims shall not exceed the total amount actually paid by the Buyer to PrimeServe for the specific order giving rise to the claim;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "PrimeServe shall not be liable for any indirect, incidental, consequential, exemplary, special, or punitive damages, including without limitation loss of profit, loss of business, loss of goodwill, loss of data, loss of opportunity, or business interruption;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "PrimeServe shall not be liable for any loss arising from the Buyer\u0027s misuse of products, failure to follow product instructions, or use of products by untrained personnel; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Nothing in these Terms shall limit any liability that cannot be excluded or limited under applicable law."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "38. Indemnity"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer shall indemnify, defend, and hold harmless PrimeServe, its directors, officers, employees, agents, and affiliates from and against any and all claims, demands, losses, liabilities, damages, costs, and expenses (including reasonable legal fees) arising out of or in connection with:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any breach of these Terms by the Buyer;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any unauthorized order placed using the Buyer\u0027s account;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any inaccurate or false information provided by the Buyer (including incorrect GSTIN, billing or shipping information);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any misuse of products purchased through the Platform;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any breach of applicable law by the Buyer; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any third-party claim arising from the Buyer\u0027s actions or omissions."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "39. Suspension or Termination of Account"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe may suspend, restrict, or terminate the Buyer\u0027s account at any time, with or without notice, in the event of:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Breach of these Terms or any referenced policy;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Non-payment or overdue payment;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Suspected fraud, misrepresentation, or unauthorized activity;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Insolvency, bankruptcy, or initiation of winding-up proceedings against the Buyer;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Repeated false claims of damage, shortage, or non-delivery;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Violation of the anti-bypass or pricing confidentiality clauses;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Court or regulatory order; or"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any other circumstance which, in PrimeServe\u0027s reasonable opinion, warrants suspension or termination."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Termination shall not relieve the Buyer of any obligation to pay outstanding amounts, indemnity obligations, confidentiality obligations, or any other obligation that by its nature survives termination."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "40. Non-Payment and Overdue Dues"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where the Buyer fails to pay any amount due to PrimeServe by the applicable due date, PrimeServe may, in addition to remedies under the Credit Policy:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Suspend further deliveries and place existing orders on hold;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Levy late payment charges as set out in the Credit Policy;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Initiate recovery proceedings (including under MSME Samadhaan, where applicable);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Set off the overdue amount against any refund or credit note due to the Buyer; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Refer the matter to a collection agency or commence legal proceedings, recovering all costs (including legal fees) from the Buyer."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "41. Force Majeure"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Neither party shall be liable for any failure or delay in performance of its obligations (other than payment obligations) caused by events beyond its reasonable control, including without limitation acts of God, natural disasters, fire, flood, earthquake, pandemic, epidemic, war, terrorism, civil unrest, riot, strike, labor dispute, governmental action, regulatory order, internet or telecommunications failure, transportation failure, or supplier default (\"Force Majeure Event\"). The affected party shall promptly notify the other and take reasonable steps to mitigate the impact. If a Force Majeure Event continues for more than 30 (thirty) days, either party may terminate the affected order without further liability."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "42. Governing Law"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "These Terms shall be governed by and construed in accordance with the laws of the Republic of India."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "43. Dispute Resolution and Jurisdiction"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Any dispute, claim, or controversy arising out of or in connection with these Terms or any transaction conducted through the Platform shall first be addressed through good-faith negotiation. If the dispute is not resolved within 30 (thirty) days of written notice, it shall be referred to and finally resolved by arbitration under the Arbitration and Conciliation Act, 1996. The arbitration shall be conducted by a sole arbitrator appointed by mutual agreement of the parties (failing which, by such procedure as the Act prescribes), the seat and venue of arbitration shall be Bengaluru, Karnataka, India, and the language of arbitration shall be English. The arbitral award shall be final and binding on the parties."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Subject to the arbitration clause above, the courts at Bengaluru, Karnataka, India shall have exclusive jurisdiction over all matters arising out of or in connection with these Terms."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "44. Amendments to Terms"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe reserves the right to amend these Terms at any time. The amended Terms shall be posted on the Platform with an updated \"Last updated\" date. The Buyer\u0027s continued use of the Platform following the posting of amended Terms shall constitute deemed acceptance of the amended Terms. Where any amendment materially affects the Buyer\u0027s rights or obligations, PrimeServe shall use reasonable efforts to provide notice through email or in-app notification."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "45. Severability"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "If any provision of these Terms is held to be invalid, illegal, or unenforceable by a court or arbitral tribunal of competent jurisdiction, the remaining provisions shall continue in full force and effect. The invalid, illegal, or unenforceable provision shall be replaced with a valid, legal, and enforceable provision that most closely reflects the intent of the original."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "46. Waiver"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "No failure or delay by PrimeServe in exercising any right or remedy under these Terms shall operate as a waiver of that right or remedy. No single or partial exercise of any right or remedy shall preclude any other or further exercise of the same."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "47. Entire Agreement"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "These Terms, together with the Privacy Policy, Credit Policy, Shipping \u0026 Delivery Policy, and Refund Policy, constitute the entire agreement between PrimeServe and the Buyer in respect of the use of the Platform and the supply of products through the Platform. They supersede all prior agreements, understandings, and communications, whether written or oral, except where a separate written agreement is signed between PrimeServe and an enterprise Buyer for a specific scope of supply."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "48. Contact Details"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "For any query, complaint, or notice in respect of these Terms, the Buyer may contact PrimeServe at:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Email: info@primeservefs.com"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Phone: +91 7795242918"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Registered Address: No. 5/1, Jogpalya, Halasuru (Ulsoor), Bengaluru – 560008, Karnataka, India"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Business Hours: Monday to Saturday, 9:00 AM to 9:00 PM IST"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Chat \u0026 Call Support: 24/7"
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "49. Legal Review Disclaimer"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "These Terms have been prepared as a draft for the operation of PrimeServe. Buyers and PrimeServe are advised to seek independent legal advice before relying on any specific provision. Nothing in these Terms is intended to constitute legal advice from PrimeServe to the Buyer."
+                       }
+                   ]
+    },
+    {
+        "slug":  "privacy-policy",
+        "title":  "Privacy Policy",
+        "lastUpdated":  "1 May 2026",
+        "effectiveDate":  "1 May 2026",
+        "blocks":  [
+                       {
+                           "type":  "heading",
+                           "text":  "1. Introduction"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Primeserve Facility Solutions (\"PrimeServe\", \"we\", \"us\", or \"our\") respects the privacy of every individual and business that uses the PrimeServe web application, mobile application, websites, and related services (collectively, the \"Platform\"). This Privacy Policy describes how we collect, use, store, share, retain, and protect personal and business information processed through the Platform."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Privacy Policy is published in accordance with the provisions of the Information Technology Act, 2000, the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, and the Digital Personal Data Protection Act, 2023 (the \"DPDP Act\"), as applicable and as progressively notified."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "2. Scope"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Privacy Policy applies to all users of the Platform, including authorized representatives of business buyers, employees of buyer organizations, prospective customers, visitors to the website, and any individual whose personal information is provided to PrimeServe in connection with a transaction or potential transaction."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "3. Role of PrimeServe"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "In respect of the personal information we collect directly from users for the operation of the Platform, PrimeServe acts as a Data Fiduciary (under the DPDP Act). In some cases, where personal information is provided by a buyer organization in respect of its employees or representatives, PrimeServe may act as a Data Processor on behalf of the buyer organization. The buyer organization is responsible for ensuring that such personal information has been lawfully obtained and shared with PrimeServe."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "4. Information We Collect"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "We may collect the following categories of information:"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "4.1 Personal Information"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Full name, designation, and role of authorized representatives;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Email address and mobile number;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Username and account credentials (passwords are stored in hashed form using bcrypt and are never accessible to PrimeServe staff);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Photograph or signature captured for proof of delivery (where applicable)."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "4.2 Business Information"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Business name, registered address, branch addresses, and shipping locations;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "GSTIN, PAN, business registration number, CIN, and other tax identifiers;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Trade references and business background;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Bank account details (for refunds and credit verification)."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "4.3 Transaction Information"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Order history, cart activity, product preferences, purchase patterns, and reorder cycles;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Invoices, delivery challans, and payment records;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Communication and support interactions in connection with orders."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "4.4 Payment Information"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Payment method selected (UPI, card, net banking, COD, credit, NEFT);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Transaction reference numbers, success or failure status, and amount;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "PrimeServe does NOT store full credit card numbers, CVV, or net banking passwords. These are handled directly by the payment service provider (Razorpay) in accordance with PCI-DSS standards."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "4.5 Credit Assessment Information"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Documents submitted in connection with a credit application, including bank statements, GST returns, financial information, and authorization letters;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Internal scoring and credit history maintained by PrimeServe in respect of payment behavior."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "4.6 Device, Technical, and Usage Information"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "IP address, browser type and version, device type, operating system, and screen resolution;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Pages visited on the Platform, time spent, click paths, and search queries;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Cookies and similar tracking technologies, including persistent and session cookies;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Approximate geolocation derived from IP or device location (where permission is granted)."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "4.7 Delivery Information"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Delivery address(es), special instructions, time-window preferences;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Proof of delivery: signature on delivery challan, OTP, photograph of received goods, GPS-tagged timestamp."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "4.8 Communications"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Email, SMS, WhatsApp, in-app chat, and call records (where calls are recorded for quality and training, with prior intimation as required by law);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Marketing preferences and consent records."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "5. How We Collect Information"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "We collect information through:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Direct submission by users during registration, ordering, credit application, and support interactions;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Automated logging through cookies, pixels, server logs, and analytics tools;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Communications received from buyer organizations (where they nominate authorized representatives);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Third-party sources such as the GSTIN public registry (for verification), payment gateways (for transaction status), and credit information bureaus (where the user has consented or where permitted by law)."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "6. Purposes of Processing"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "We process personal and business information for the following purposes:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To register and verify user accounts and business credentials;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To accept, process, fulfill, deliver, and invoice orders;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To issue GST-compliant tax invoices and maintain books of account as required by law;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To assess, approve, monitor, and recover credit extended to buyer organizations;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To prevent and detect fraud, unauthorized access, and abuse of the Platform;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To respond to queries, complaints, and grievances;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To send transactional communications (order confirmations, delivery updates, invoice copies, payment reminders, account notices);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To send marketing and promotional communications by email, SMS, WhatsApp, or push notifications, where consent has been provided or where permitted under applicable law;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To analyze and improve the Platform, the catalog, pricing, and the customer experience;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To comply with legal, regulatory, audit, and tax obligations; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To enforce these Terms and other policies, and to protect PrimeServe\u0027s legal rights."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "7. Legal Basis and Consent"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Personal information is processed on one or more of the following legal bases:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Consent of the data principal (where applicable);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Performance of a contract with the buyer organization;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Compliance with a legal obligation (such as tax and accounting laws);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Legitimate purposes (such as fraud prevention, network and information security, and direct marketing to existing customers within the limits of applicable law)."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Consent, where required, is obtained at the time of registration, order placement, credit application, or marketing opt-in. The user may withdraw consent at any time by contacting the Grievance Officer or by using the in-app opt-out / unsubscribe controls. Withdrawal of consent shall not affect the lawfulness of processing prior to such withdrawal."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "8. Use of Information for Order Fulfillment"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Information necessary to fulfill an order — including the buyer\u0027s name, business name, delivery address, contact number, and order details — is shared with internal warehouse staff, delivery personnel, and (where applicable) third-party logistics providers, solely to enable delivery and post-delivery support."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "9. Use of Information for GST and Tax Compliance"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "GSTIN, PAN, billing details, invoice information, and transaction records are used to issue GST-compliant tax invoices, file GST returns, maintain books of account, comply with audit requirements, and respond to lawful requests from tax authorities. Such information is retained for the period prescribed under the GST law and the Income Tax Act, 1961."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "10. Use of Information for Credit Assessment"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Credit application documents and payment behavior records are used to assess creditworthiness, set credit limits, monitor outstanding balances, and recover overdue amounts. Aggregated and anonymized credit data may be used for internal risk modeling. PrimeServe does not currently use third-party credit bureaus for B2B credit assessment in the beta phase, but may do so in the future with separate consent."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "11. Use of Information for Fraud Prevention"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe uses transaction patterns, IP and device data, and order behavior signals to detect and prevent fraudulent activity. Where a transaction is flagged as suspicious, additional verification may be requested or the transaction may be declined."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "12. Sharing of Information"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe does not sell or rent personal information. We may share information with the following categories of recipients, only to the extent necessary for the purpose for which the information was collected:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Suppliers, distributors, and manufacturers — for procurement of ordered products;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Logistics partners and own-fleet delivery staff — for delivery and post-delivery service;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Payment gateways and banks — for processing of payments and refunds;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "IT and cloud service providers, including database, analytics, communication, and infrastructure providers — for hosting and operation of the Platform;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Auditors, accountants, and legal advisors — for audit and legal compliance;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Government, regulatory, and law-enforcement authorities — where required by law or to protect PrimeServe\u0027s legal rights;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Marketing service providers — for sending promotional communications, where consent has been obtained;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Successors in interest — in connection with a merger, acquisition, restructuring, or sale of assets, subject to appropriate confidentiality obligations on the successor."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "13. Cookies and Tracking Technologies"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe uses cookies and similar tracking technologies to operate, secure, and improve the Platform. These include:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Strictly necessary cookies — required for login, session management, cart, and checkout;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Functional cookies — to remember preferences (language, location);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Analytics cookies — including Google Analytics — to understand how the Platform is used and to improve performance;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Advertising and remarketing cookies — including Meta Pixel — to deliver relevant advertising on third-party platforms."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The user may control non-essential cookies through the cookie consent banner displayed on first visit, the browser settings, and the in-app preferences. Disabling certain cookies may limit functionality of the Platform."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "14. Marketing Communications"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "By registering on the Platform, the user consents to receive transactional communications relating to their orders, account, and platform notices through email, SMS, WhatsApp, and push notifications."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Marketing communications (promotional offers, new product launches, seasonal campaigns) are sent only where the user has provided consent at the time of registration or subsequently. The user may opt out of marketing communications at any time by:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Using the unsubscribe link in any marketing email;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Replying STOP to any marketing SMS or WhatsApp message;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Updating preferences in the account settings on the Platform; or"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Contacting the Grievance Officer."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Opt-out from marketing communications shall not affect transactional communications, which are essential to the operation of the account."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "15. Data Retention"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Personal and business information is retained for the following periods, except where a longer or shorter period is required or permitted by law:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Account information: for the duration of the account, plus 3 (three) years following account closure;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Transaction records, invoices, and tax documents: for 8 (eight) years from the end of the financial year, in accordance with GST and Income Tax law;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Credit application documents: for 7 (seven) years from the date of credit closure;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Marketing consent and preferences: until consent is withdrawn or for 3 (three) years of inactivity, whichever is earlier;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Server logs and security records: for 12 (twelve) months;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Support communications: for 3 (three) years;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Cookies: as per the duration set on each cookie type."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "After the applicable retention period, information is securely deleted, anonymized, or archived in a manner that prevents identification of the data principal."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "16. Data Security"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe implements reasonable security practices and procedures to protect personal and business information, including:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Encryption of data in transit using TLS/SSL;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Hashing of passwords using bcrypt;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Role-based access controls within the admin and operational systems;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Secure cloud hosting on Supabase (India region) with industry-standard data center controls;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Regular review of security configurations and access logs; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Internal training and confidentiality obligations for staff with access to data."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Despite these measures, no system is completely secure. PrimeServe shall not be liable for unauthorized access, loss, or corruption of data caused by events outside its reasonable control, except to the extent required by applicable law. In the event of a data breach involving personal information, PrimeServe shall notify the affected data principals and the Data Protection Board (under the DPDP Act) within the timelines and in the manner prescribed."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "17. User Rights"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Subject to applicable law and operational feasibility, the user has the following rights in respect of their personal information:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Right to access — to obtain confirmation of whether and how PrimeServe processes their personal information, and to obtain a summary of such information;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Right to correction — to request correction of inaccurate or outdated personal information;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Right to erasure — to request deletion of personal information, except where retention is required by law or for legitimate business purposes;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Right to withdraw consent — to withdraw consent for processing where the legal basis is consent;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Right to grievance redressal — to file a grievance with the Grievance Officer;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Right to nominate — to nominate another individual to exercise rights in the event of death or incapacity, in accordance with the DPDP Act."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Requests should be sent to the Grievance Officer with sufficient information to verify the identity of the requester. PrimeServe shall respond within the timeline prescribed by applicable law (typically 30 days under DPDP Rules, where notified)."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "18. Business Account Administration"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where multiple authorized representatives of a buyer organization use the same business account, the buyer organization is responsible for managing internal access, removing former employees, and notifying PrimeServe of any changes. Personal information of authorized representatives may be visible to other authorized representatives within the same buyer organization for the purpose of internal procurement coordination."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "19. Cross-Border Transfer"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "All personal and business information is hosted within India on Supabase infrastructure and on PrimeServe\u0027s primary databases. Cross-border transfer of personal information is not currently undertaken. Should this position change in future (for example, with the use of cloud services hosted outside India), this Privacy Policy shall be updated, and where required, separate consent shall be obtained or appropriate safeguards put in place under the DPDP Act."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "20. Children\u0027s Privacy"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Platform is not intended for use by individuals under the age of 18 (eighteen). PrimeServe does not knowingly collect personal information of minors. If PrimeServe becomes aware that personal information of a minor has been collected, such information shall be deleted promptly."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "21. Third-Party Links"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Platform may contain links to third-party websites, payment gateways, or services. PrimeServe is not responsible for the privacy practices of any third party. Users are encouraged to review the privacy policies of any third party before providing information to it."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "22. Updates to this Privacy Policy"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe may update this Privacy Policy from time to time. The updated policy shall be posted on the Platform with a revised \"Last updated\" date. Material changes shall be notified through email or in-app notification. Continued use of the Platform after such notification shall constitute acceptance of the updated Privacy Policy."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "23. Grievance Officer / Contact"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Any grievance, query, or request relating to personal information or this Privacy Policy may be addressed to the Grievance Officer:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Name: [Grievance Officer Name to be designated]"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Email: grievance@primeservefs.com"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Phone: +91 7795242918"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Address: No. 5/1, Jogpalya, Halasuru (Ulsoor), Bengaluru – 560008, Karnataka, India"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Hours: Monday to Saturday, 9:00 AM to 9:00 PM IST"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where the grievance is not satisfactorily addressed, the user may approach the Data Protection Board of India (or any successor regulator) under the DPDP Act, 2023."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "24. Legal Review Disclaimer"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Privacy Policy has been drafted in good faith and reflects practices applicable as of the effective date. As the DPDP Act and its rules are progressively notified, this Privacy Policy shall be updated. Independent legal advice is recommended for any specific situation."
+                       }
+                   ]
+    },
+    {
+        "slug":  "credit-policy",
+        "title":  "Credit Policy",
+        "lastUpdated":  "1 May 2026",
+        "effectiveDate":  "1 May 2026",
+        "blocks":  [
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Credit Policy carries direct monetary consequences for both PrimeServe and the Buyer. Buyers are advised to read the policy carefully before applying for or accepting credit terms. Acceptance of credit terms constitutes a binding contractual commitment to pay on the due date."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "1. Introduction"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Credit Policy governs the grant, use, monitoring, and recovery of business credit extended by Primeserve Facility Solutions (\"PrimeServe\") to its business buyers (\"Buyer\") for the purchase of products through the PrimeServe Platform. This Credit Policy is incorporated into and forms part of the Terms and Conditions."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "2. Applicability"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Credit Policy applies to every Buyer that places an order on credit terms with PrimeServe. Buyers paying through advance payment, UPI, COD, or other non-credit methods are not subject to this Credit Policy in respect of those transactions."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "3. Discretionary Nature of Credit"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Credit is offered solely at the discretion of PrimeServe. No Buyer has an automatic right to credit. PrimeServe reserves the right to grant, refuse, suspend, modify, or withdraw credit at any time, without assigning any reason, subject to settlement of any outstanding amount."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "4. Eligibility for Credit"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "To be considered for credit, the Buyer must:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Be a verified business with a satisfactory operational history;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Have a registered office or place of business within India, and operate within PrimeServe\u0027s serviceable area;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Have a valid GSTIN (where applicable to the Buyer\u0027s turnover and business model);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Submit the documents listed in clause 7 below;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Not have any prior history of cheque bounce, credit default, or fraud reported in respect of PrimeServe or any related party;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Pass internal verification by the PrimeServe credit team."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "5. Credit Application Process"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "To apply for credit, the Buyer shall:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Submit the credit application form available on the Platform or through PrimeServe\u0027s sales representative;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Provide accurate and complete information regarding the business, ownership, financial position, and bank details;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Submit the supporting documents listed in clause 7;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Provide an authorization letter signed by an authorized signatory of the Buyer entity authorizing PrimeServe to verify the information and to process credit applications and transactions;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Cooperate with PrimeServe in any reference checks, telephonic verification, or in-person visits."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe shall communicate the outcome of the credit application within a reasonable period, typically within 7 (seven) to 14 (fourteen) working days of receipt of the complete application."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "6. Verification by PrimeServe"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe may verify the information submitted by the Buyer through public registries (such as the GSTIN portal), trade references, internal reviews, telephonic interviews, on-site visits, and other reasonable means. The Buyer consents to such verification by submitting the credit application."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "7. Documents Required"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The following documents are typically required for a credit application:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Copy of GST registration certificate (where applicable);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Copy of PAN card of the business entity;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Proof of business address (utility bill, lease deed, property tax receipt, or similar);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "A cancelled cheque from the Buyer\u0027s primary current account;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Authorization letter signed by an authorized signatory, on the Buyer\u0027s letterhead;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Bank statement for the last 6 (six) months;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Trade references (where requested);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Identity proof of the authorized signatory and key directors / partners / proprietors;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any other document PrimeServe may reasonably require to assess creditworthiness."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "All documents shall be submitted in clear, legible scanned form. Submission of forged, fabricated, or misleading documents shall constitute fraud and shall result in immediate rejection of the application, blacklisting of the Buyer, and may attract legal action."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "8. Credit Limit"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where credit is approved, PrimeServe shall communicate to the Buyer:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "The approved credit limit (in INR);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "The applicable credit period;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any conditions or restrictions; and"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "The effective date of the credit facility."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer\u0027s outstanding balance (sum of all unpaid invoices) shall not, at any point of time, exceed the approved credit limit. Where the Buyer attempts to place an order that would breach the credit limit, the order may be held, partially fulfilled, or rejected at PrimeServe\u0027s discretion until prior balances are settled."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "As the Buyer establishes a satisfactory payment record on PrimeServe, the credit limit may be reviewed and increased at PrimeServe\u0027s discretion. Buyers may also request a credit limit increase, which shall be evaluated based on payment history, order volumes, and updated documentation."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "9. Credit Period"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The standard credit period is 45 (forty-five) days from the date of invoice. The credit period may be customized for specific Buyers under a separate written agreement, particularly for enterprise Buyers with formal procurement and accounts-payable cycles."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Each invoice shall clearly state the invoice date and the corresponding due date. The Buyer is solely responsible for tracking due dates and ensuring timely payment."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "10. Credit Approval and Rejection"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe reserves the right to approve or reject any credit application without assigning a reason. Rejection of a credit application does not preclude the Buyer from continuing to transact on the Platform on advance payment, UPI, COD, or other non-credit methods."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "11. Credit Limit Revision"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe may revise (increase, decrease, or freeze) the credit limit of any Buyer at any time, based on payment behavior, order patterns, market conditions, internal risk assessment, or any other reasonable consideration. Buyers shall be notified of any reduction or freezing of the credit limit. Increases may be implemented automatically based on payment performance."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "12. Credit Suspension or Withdrawal"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe may suspend or withdraw the credit facility, with immediate effect, in any of the following circumstances:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Failure to pay any outstanding amount by the due date;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Repeated short payments or unjustified deductions;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Cheque bounce or payment dishonor;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Material adverse change in the Buyer\u0027s financial position;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Initiation of insolvency, winding-up, or liquidation proceedings against the Buyer;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Submission of false or misleading information;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Suspected fraud or unauthorized use of the Buyer\u0027s account;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Violation of any provision of the Terms and Conditions;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Court or regulatory order; or"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any other circumstance which, in PrimeServe\u0027s reasonable opinion, increases the risk of non-payment."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Upon suspension or withdrawal, all outstanding amounts (regardless of original due date) may be declared immediately due and payable at PrimeServe\u0027s option."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "13. Invoice Due Dates"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Each invoice shall mention the due date, calculated as the invoice date plus the applicable credit period. Where the due date falls on a Sunday or a public holiday, the next working day shall be the effective due date."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "14. Payment Obligations"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer shall:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Make payment in full (less only any agreed credit notes or set-offs) on or before the due date;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Make payment by the methods notified by PrimeServe (typically NEFT/RTGS/IMPS to PrimeServe\u0027s designated current account, or through the integrated payment gateway);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Quote the relevant invoice number(s) in the payment narration;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Send the payment advice and UTR / transaction reference to the PrimeServe accounts team within 1 (one) working day of payment;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Not deduct TDS unless required by law and against a valid TDS certificate issued in PrimeServe\u0027s name."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "15. Partial Disputes"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where the Buyer disputes a portion of an invoice, the undisputed portion of the invoice shall be paid in full by the due date. The disputed portion shall be subject to the discrepancy reporting and resolution process under the Terms and Conditions and the Refund Policy. The Buyer shall not withhold the entire invoice amount on account of a partial dispute."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "16. Late Payment Charges"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where any invoice remains unpaid beyond the due date, PrimeServe shall be entitled to charge late payment charges as follows:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Interest at the rate of 2% (two per cent) per month, calculated on the unpaid invoice amount on a daily-accrual basis, from the day after the due date until the date of actual realization of payment; OR"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "A flat charge of ₹100 (Rupees one hundred) per day, on the overdue invoice;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Whichever is higher."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Late payment charges shall be invoiced separately and shall themselves be payable within 7 (seven) days of the date of such invoice. The charging of late payment charges shall be without prejudice to PrimeServe\u0027s other rights, including the right to suspend deliveries, withdraw credit, and initiate recovery proceedings."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "17. Recovery Costs"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where PrimeServe is required to engage external collection agencies, legal counsel, or initiate legal proceedings (including arbitration or litigation) for recovery of overdue amounts, the Buyer shall be liable to reimburse all reasonable costs and expenses incurred, including legal fees, court fees, arbitration costs, and collection agency charges, in addition to the principal and late payment charges."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "18. Credit Hold"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where any invoice is overdue or where the Buyer is otherwise in breach of this Credit Policy, PrimeServe may place the Buyer\u0027s account on credit hold, with the following consequences:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "New orders may not be accepted;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Pending orders may be held or cancelled at PrimeServe\u0027s discretion;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "All future orders may be required to be paid in advance until the credit hold is lifted;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "All outstanding invoices may be declared immediately due and payable."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "19. Order Blocking for Overdue Accounts"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe\u0027s order management system may automatically block the placement of new orders by any Buyer whose account is in arrears beyond a defined threshold. The Buyer shall not be entitled to claim any loss arising from such order blocking."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "20. Set-Off and Adjustment"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe may, at its discretion, set off any amount due from PrimeServe to the Buyer (such as approved refunds, credit notes, or replacement adjustments) against any amount due from the Buyer to PrimeServe, without further notice."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "21. Credit Notes"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where a credit note is issued to the Buyer (for example, in respect of an approved return, short delivery adjustment, or invoice correction), the credit note shall be applied against the next invoice or, where there are no further outstanding invoices, refunded in accordance with the Refund Policy."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "22. Returned Goods and Credit Adjustment"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where goods are returned and the return is approved under the Refund Policy, the credit note shall be issued in accordance with applicable GST law, and the corresponding amount shall be adjusted in the Buyer\u0027s ledger."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "23. Third-Party Credit / BNPL Disclaimer"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe may, in future, partner with third-party financing or buy-now-pay-later providers to extend credit to Buyers. Such third-party credit shall be governed by the terms of the relevant provider, and PrimeServe shall not be liable for any dispute arising under such third-party credit arrangements except to the extent of the underlying supply of goods."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "24. Enterprise-Specific Credit Agreements"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Enterprise Buyers may enter into separate written master credit or supply agreements with PrimeServe, which may modify or supplement the standard credit terms. In the event of any conflict between such written agreement and this Credit Policy, the terms of the written agreement shall prevail in respect of the enterprise Buyer."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "25. Fraud or Misuse of Credit"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Any of the following shall constitute fraud or misuse of credit:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Placement of orders by any person without authority of the Buyer;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Placement of orders with no genuine intent or capacity to pay;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Submission of false or fabricated documents in connection with the credit application;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Diversion or resale of goods in breach of the Terms and Conditions;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Refusal to acknowledge delivery of goods that have actually been delivered;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any other act of fraud, misrepresentation, or dishonest conduct."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where fraud or misuse is suspected or established, PrimeServe shall be entitled to (a) immediately suspend or terminate the account; (b) declare all outstanding amounts immediately due and payable; (c) initiate civil and / or criminal proceedings; (d) blacklist the Buyer and its authorized signatories; and (e) report the matter to law-enforcement and regulatory authorities."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "26. Personal Responsibility of Authorized Signatory"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The authorized signatory who executes the credit application or authorization letter on behalf of the Buyer represents and warrants that they are duly authorized by the Buyer to do so. Where it is established that the authorized signatory acted without authority, such signatory shall be personally liable to PrimeServe for any loss arising as a result, in addition to the Buyer\u0027s liability."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "27. Account Suspension for Non-Payment"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where any invoice remains unpaid for more than 30 (thirty) days beyond the due date, PrimeServe may, in addition to other remedies:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Suspend the Buyer\u0027s ability to log in to the Platform;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Issue a formal demand notice;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Refer the matter to a collection agency;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Initiate legal proceedings;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Where applicable, refer the matter to MSME Samadhaan or initiate proceedings under the Insolvency and Bankruptcy Code, 2016, at PrimeServe\u0027s option;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Disclose the default to relevant credit information bureaus, where permitted by law."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "28. Legal Action for Non-Payment"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where amicable resolution fails, PrimeServe shall be entitled to initiate any one or more of the following:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Civil suit for recovery of outstanding amounts together with interest and costs;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Arbitration proceedings under clause 43 of the Terms and Conditions;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Summary suit under Order XXXVII of the Code of Civil Procedure, 1908;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Application under section 138 of the Negotiable Instruments Act, 1881, in case of cheque dishonor;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Insolvency proceedings under the Insolvency and Bankruptcy Code, 2016, where the Buyer is a corporate person and the threshold is met."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "29. Governing Law and Jurisdiction"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Credit Policy is governed by the laws of India. Disputes shall be resolved in accordance with the dispute resolution and jurisdiction clauses set out in the Terms and Conditions (Bengaluru, Karnataka)."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "30. Contact for Credit-Related Matters"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Credit applications, payment advice, dispute notices, and queries should be addressed to:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Email: info@primeservefs.com"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Phone: +91 7795242918"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Address: No. 5/1, Jogpalya, Halasuru (Ulsoor), Bengaluru – 560008, Karnataka, India"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Hours: Monday to Saturday, 9:00 AM to 9:00 PM IST"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Chat \u0026 Call Support: 24/7"
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "31. Legal Review Disclaimer"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Credit Policy has been drafted as a standard policy. The applicability of the late payment charges, recovery rights, and remedies is subject to applicable law and the specific facts of each case. Independent legal advice is recommended."
+                       }
+                   ]
+    },
+    {
+        "slug":  "shipping-and-delivery-policy",
+        "title":  "Shipping \u0026 Delivery Policy",
+        "lastUpdated":  "1 May 2026",
+        "effectiveDate":  "1 May 2026",
+        "blocks":  [
+                       {
+                           "type":  "paragraph",
+                           "text":  "Note on combined policy: Because PrimeServe operates its own delivery fleet (rather than handing off shipments to a third-party logistics carrier), shipping and delivery are operationally a single process. This combined Shipping \u0026 Delivery Policy avoids duplication and contradiction."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "1. Scope"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Shipping \u0026 Delivery Policy describes the dispatch, transportation, and delivery process for orders placed through the PrimeServe Platform. This Policy is incorporated into the Terms and Conditions."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "2. Serviceable Area"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "During the initial operating phase, PrimeServe delivers within the city of Bengaluru, Karnataka, India and immediately surrounding areas served by PrimeServe\u0027s own delivery fleet. Specific pincodes serviceable at any given time may be checked at the time of order placement on the Platform."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe shall progressively expand its serviceable area to other cities in India and shall update the Platform accordingly. Until such expansion, orders for delivery outside the serviceable area shall not be accepted."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "3. Delivery Method"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Deliveries are made by PrimeServe\u0027s own delivery fleet. Where operationally necessary, PrimeServe may engage logistics partners for specific consignments, in which case the standards of this Policy shall continue to apply substantively."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "4. Delivery Timelines"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe targets next-business-day delivery for orders placed within the serviceable area, subject to the following:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Order is confirmed by PrimeServe and payment (where applicable) is successfully processed before the cut-off time published on the Platform;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "All ordered items are in stock at the time of order confirmation;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "The delivery address is correctly and completely provided;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Operational and traffic conditions allow."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Estimated delivery is by 9:00 PM IST on the next business day. Delivery timelines are estimates and not guarantees. PrimeServe shall not be liable for delays caused by circumstances outside its reasonable control, including without limitation traffic, weather, civil disturbance, road closure, supplier delay, force majeure events, and inaccurate or incomplete delivery information provided by the Buyer."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "5. Free Delivery Threshold"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Delivery is provided free of charge for any order with a total invoice value (excluding GST) of ₹5,000 (Rupees five thousand) or more. For orders below this threshold, a delivery charge may be applied as displayed at checkout. There is no minimum order value to use the Platform; the Buyer may order any quantity of any item available."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "6. Order Tracking"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer may track the status of an order through the Platform. Status updates are typically issued at the following milestones:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Order Placed;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Order Confirmed;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Order Processed;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Out for Delivery;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Delivered;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Cancelled (where applicable)."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "7. Packaging"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe shall pack goods in a manner appropriate to the nature of the goods, taking reasonable care to prevent damage in transit. In particular:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Cleaning chemicals and liquids are packed with leak-resistant outer cartons and absorbent material;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Hazardous or corrosive chemicals are packed with additional safety measures, including secondary containment and clear hazard labeling;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Fragile items are packed with cushioning and labeled \"Handle with care\";"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Items are sealed at the dispatch point and the cartons are tamper-evident at the time of dispatch."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where the Buyer specifically requests sustainable packaging or any custom packaging requirement, PrimeServe shall use commercially reasonable efforts to accommodate such requests, subject to availability and additional charges where applicable."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "8. Address Accuracy"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer is solely responsible for providing a complete and accurate delivery address, including pincode, building name, floor, room or office number, landmark, contact person, and contact number. PrimeServe shall not be liable for any failed delivery, delay, or wrong delivery resulting from inaccurate or incomplete address information provided by the Buyer. Re-delivery in such cases may attract an additional charge."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "9. Delivery to Business Premises"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Deliveries are made during business hours of the Buyer\u0027s premises. Where the Buyer\u0027s premises has a security gate, reception, mailroom, or central goods receiving area, the delivery shall be made at such designated point unless the Buyer has communicated specific instructions for in-floor delivery."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "10. Authorized Receiver"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer shall ensure that an authorized representative is available at the delivery address during the delivery window to receive the goods, verify against the delivery challan, and acknowledge receipt. Where the goods are received by a security guard, receptionist, or other person at the delivery address, such person shall be deemed to have authority to receive on behalf of the Buyer."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "11. Proof of Delivery"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Acknowledgment of delivery shall be captured in one or more of the following ways:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Signature on the physical delivery challan;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Stamp of the Buyer\u0027s office on the delivery challan;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "OTP entered on the delivery executive\u0027s device;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Photograph of the delivered goods at the delivery location;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "GPS-tagged time-stamp of the delivery."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Such proof of delivery shall be conclusive evidence of the delivery and acceptance of the goods, subject only to discrepancies reported within the timeline specified below."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "12. Inspection at Delivery"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer\u0027s authorized representative shall, at the time of delivery and in the presence of the delivery executive, inspect the consignment as set out in clause 26 of the Terms and Conditions. Any visible damage, leakage, shortage, or wrong item must be recorded on the delivery challan and reported to PrimeServe within 24 (twenty-four) hours."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "13. Reporting Visible Damage, Shortage, or Wrong Items"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where the Buyer notes visible damage, leakage, shortage, or wrong items at the time of delivery, the Buyer shall:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Record the issue clearly on the delivery challan and obtain the delivery executive\u0027s signature;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Take photographs and / or videos clearly showing the issue, the packaging, and the delivery challan;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Contact PrimeServe within 24 (twenty-four) hours of delivery, providing the order number, delivery challan number, photograph / video evidence, and a description of the issue;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Retain the affected goods and packaging until PrimeServe has reviewed the report."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Reports made beyond 24 hours may be rejected unless the Buyer can demonstrate good cause for the delay."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "14. Reporting Leakage of Chemicals"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Cleaning chemicals are packaged with leak-resistant care; however, leakage may occasionally occur in transit. The Buyer shall:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Take immediate care to contain any spillage and ensure safety of personnel;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Not store leaking chemicals near food, electrical equipment, or sensitive surfaces;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Photograph and video the leak and packaging;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Report to PrimeServe within 24 hours."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe shall replace or refund the affected items in accordance with the Refund Policy. PrimeServe shall not be liable for any consequential loss caused by chemical spillage, except to the extent that such loss is directly caused by PrimeServe\u0027s negligence in packaging."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "15. Partial Delivery"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where stock is partially available, PrimeServe may dispatch the available items first and the balance items thereafter. Each dispatch shall be accompanied by its own delivery challan and shall be invoiced separately. The Buyer\u0027s inspection and reporting obligations shall apply to each delivery individually."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "16. Failed Delivery"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where a delivery cannot be completed because (a) no authorized representative is available; (b) the address is inaccessible or incorrect; (c) the receiver refuses to accept the goods; or (d) any other reason attributable to the Buyer:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "PrimeServe shall make a reasonable attempt to contact the Buyer to reschedule;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "PrimeServe may attempt re-delivery on the next business day;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Where re-delivery is not possible after 2 (two) attempts, the order may be returned to PrimeServe and treated as a Buyer-initiated cancellation, with applicable adjustments;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Re-delivery, where required due to fault of the Buyer, may attract an additional charge."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "17. Refused Delivery"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where the Buyer\u0027s authorized representative refuses to accept a delivery despite the delivery being in accordance with the order:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "The goods shall be returned to PrimeServe;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "The Buyer shall remain liable to pay for the goods (where applicable) and may forfeit any free-delivery eligibility on a subsequent re-order;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Where the order was prepaid, refund shall be processed in accordance with the Refund Policy, less applicable charges."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "18. Rescheduling"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer may request a delivery reschedule before dispatch through the Platform or by contacting support. Once dispatch has commenced, rescheduling may not be possible. Frequent rescheduling at the Buyer\u0027s instance may attract an additional handling charge."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "19. Risk Transfer"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Risk in the goods shall pass to the Buyer upon delivery and acknowledgment by the Buyer\u0027s authorized representative (or deemed acknowledgment under clauses 10 and 11). Title to the goods shall pass upon (a) full payment by the Buyer, in case of advance / COD orders; or (b) delivery, in case of credit orders subject to PrimeServe\u0027s right of retention of title until full payment."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "20. Multi-Floor / Multi-Location Delivery"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Standard delivery is to a single goods-receiving point at the Buyer\u0027s premises (such as the security gate, reception, or central goods receiving area). Where the Buyer requests delivery to a specific floor, room, or location within the premises (or to multiple internal locations), PrimeServe shall use reasonable efforts to accommodate such requests, subject to access, availability of lifts, and reasonable additional charges where applicable."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "21. Unloading Responsibility for Bulk Goods"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "For bulk consignments (typically those exceeding 10 cartons or any single item above 25 kg), the Buyer shall arrange for unloading manpower at the delivery location, unless specific unloading service has been agreed and invoiced. PrimeServe\u0027s delivery executives shall not be required to manually carry bulk consignments to upper floors in the absence of working lifts."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "22. Hazardous Goods"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Cleaning chemicals such as concentrated acids, alkalis, sanitizers, and disinfectants may be classified as hazardous goods. Such goods shall be:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Packaged with appropriate hazard labels;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Delivered with the relevant Material Safety Data Sheet (MSDS) where requested by the Buyer or required under law;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Handled and stored by the Buyer in accordance with the manufacturer\u0027s instructions and applicable safety regulations."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe shall not be liable for any injury, damage, or loss caused by the Buyer\u0027s mishandling, untrained use, or improper storage of hazardous goods."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "23. Delivery Disputes"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Any dispute relating to delivery (such as alleged non-delivery, alleged short delivery, or alleged wrong delivery) shall be raised in accordance with the discrepancy reporting clause and the Refund Policy. PrimeServe shall investigate by reviewing the delivery challan, GPS records, photographs, and OTP / digital signature logs. The Buyer agrees that, in the absence of a discrepancy report within 24 hours of delivery, the proof-of-delivery records maintained by PrimeServe shall be accepted as conclusive."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "24. Force Majeure"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Delivery obligations shall be excused or extended for the period during which a Force Majeure Event (as defined in the Terms and Conditions) prevents performance. PrimeServe shall use reasonable efforts to communicate any delay caused by Force Majeure."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "25. Contact for Delivery Issues"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "For any delivery-related concern, the Buyer may contact:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Email: info@primeservefs.com"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Phone: +91 7795242918"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Hours: Monday to Saturday, 9:00 AM to 9:00 PM IST"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Chat \u0026 Call Support: 24/7"
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "26. Legal Review Disclaimer"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Shipping \u0026 Delivery Policy reflects PrimeServe\u0027s standard delivery operations. Specific terms may be modified for enterprise Buyers under separate written agreement."
+                       }
+                   ]
+    },
+    {
+        "slug":  "refund-policy",
+        "title":  "Refund Policy",
+        "lastUpdated":  "1 May 2026",
+        "effectiveDate":  "1 May 2026",
+        "blocks":  [
+                       {
+                           "type":  "paragraph",
+                           "text":  "Important for Buyers: PrimeServe takes care to ensure that goods delivered are correct, undamaged, unexpired, and as ordered. In the rare instance that a discrepancy occurs, this Refund Policy and the embedded Return \u0026 Replacement provisions describe how the issue will be resolved. Compliance with the reporting timelines and documentation requirements is essential — failure to comply may result in rejection of the refund or return claim."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "1. Scope"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Refund Policy governs the circumstances under which PrimeServe shall issue refunds, replacements, or credit notes in respect of orders placed on the Platform. This Refund Policy includes provisions on returns and replacements, and is incorporated into the Terms and Conditions."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "2. General Principles"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Refunds are not automatic. Each refund or return claim is subject to verification by PrimeServe, including review of evidence and inspection of returned goods (where applicable). Refunds shall be processed once the claim has been verified and approved."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "3. Refund Eligibility"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The Buyer may be eligible for a refund, replacement, or credit note in the following circumstances:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Goods received are damaged or leaking;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Goods received are wrong (incorrect item, brand, grade, or quantity);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Goods received are short of the quantity invoiced;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Goods received are expired or close to expiry beyond reasonable tolerance;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Order was prepaid but cancelled before dispatch;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Order was prepaid but stock could not be fulfilled;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Duplicate payment was processed for the same order;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Excess payment was received against an invoice;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Approved return has been picked up and inspected;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Pricing or invoice correction is required by mutual confirmation."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "4. Reporting Window"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "To be eligible for a refund, replacement, or credit note, the Buyer shall report the issue within the following windows:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Visible damage, wrong item, leakage, shortage: at the time of delivery (recorded on the delivery challan), and in any case within 24 (twenty-four) hours of delivery, with photographic and / or video evidence;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Expired or near-expiry items: within 48 (forty-eight) hours of delivery;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Sealed consumables found defective on first use (where the defect is not visible from the outside): within 72 (seventy-two) hours of delivery, where reasonable;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Duplicate or excess payment: within 30 (thirty) days of the payment;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Pricing or invoice correction: within 7 (seven) days of receipt of invoice."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Reports made beyond these windows may be rejected at PrimeServe\u0027s discretion."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "5. Documentation Required"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "To process a refund or return claim, the Buyer shall provide:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Order number and invoice number;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Delivery challan number;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Clear photographs and / or videos of the issue, packaging, and labels (showing batch and expiry where applicable);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Description of the issue;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Where relevant, a copy of the page of the delivery challan on which the issue was recorded at delivery;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Any other information PrimeServe may reasonably require."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "6. Non-Returnable Categories"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "The following categories of goods are not eligible for return except where the goods are wrong, damaged, expired, or defective on receipt:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Cleaning chemicals where the seal has been broken;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Custom-procured items (items procured specifically for the Buyer\u0027s order on a non-stock basis);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Perishable items (where applicable);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Branded items where the seal or tamper-evident packaging has been broken;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Items where more than 7 (seven) days have elapsed from the date of delivery, unless the issue could not reasonably have been discovered earlier;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Items that have been used, mixed, diluted, or partially consumed;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Items that, by their nature, cannot be returned safely (such as opened hazardous chemicals)."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "7. Product Condition Requirements for Return"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "To be eligible for return, products must be:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "In their original packaging, unopened, and undamaged (except where the issue is damage or leakage on receipt);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "With all original tags, labels, manuals, batch markings, and accessories intact;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Accompanied by the original delivery challan and / or invoice copy;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Free from any modification, marking, or alteration."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "8. Refund Process"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Upon receipt of a refund / return claim, PrimeServe shall:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Acknowledge the claim, typically within 1 (one) working day;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Review the evidence provided;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Where return of goods is required, schedule a free pickup at the delivery address;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Inspect the returned goods (where applicable) and confirm whether the claim is approved;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Issue a refund, replacement, or credit note in accordance with this Refund Policy;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Communicate the outcome to the Buyer."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "9. Pickup and Replacement"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where a return pickup is required, PrimeServe shall arrange the pickup free of charge for the Buyer in cases where the issue is attributable to PrimeServe (wrong, damaged, expired, leaking, short, or defective items). Where the issue is attributable to the Buyer (such as Buyer-initiated cancellation after dispatch or change of requirement), pickup charges may apply."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Replacement, where approved, shall be dispatched as soon as stock is available, in accordance with the Shipping \u0026 Delivery Policy."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "10. Inspection of Returned Goods"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Returned goods shall be inspected at PrimeServe\u0027s warehouse. Where inspection reveals that:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "The goods are not in the condition required by clause 7 above;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "The goods do not match the items in respect of which the claim was made;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "The goods have been used, opened, mixed, or altered;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "The claim is not substantiated by the evidence;"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe may, at its discretion, reject the return claim and may either return the goods to the Buyer (at the Buyer\u0027s cost) or hold them for collection."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "11. Refund of Prepaid Cancelled Orders"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where a prepaid order is cancelled before dispatch (whether by the Buyer or by PrimeServe), the full amount paid shall be refunded to the original payment method, subject to payment gateway processing timelines."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "12. Refund for Stock Unavailability"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where a prepaid order cannot be fulfilled due to stock unavailability, the affected portion of the order shall be cancelled and the corresponding amount refunded."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "13. Refund for Duplicate or Excess Payments"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where a duplicate or excess payment is identified, the excess amount shall be refunded after verification, typically within 7 (seven) working days. The Buyer shall provide payment details and bank reference numbers as required."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "14. Refund Method"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Refunds shall be issued in one of the following ways:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "To the original payment method (credit card, debit card, net banking, UPI, wallet) — preferred where the original transaction was through Razorpay or another payment gateway;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "By NEFT / RTGS / IMPS to the verified bank account of the Buyer — for amounts where original-method refund is not possible (such as COD, NEFT-paid orders, or where the original card has expired);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "By account credit / credit note — to be adjusted against future invoices;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "By such other method as may be mutually agreed in writing."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "15. Refund Timeline"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Once the refund claim is approved, refunds shall typically be processed within 7 (seven) working days. The actual time for credit to reflect in the Buyer\u0027s account depends on the relevant payment gateway, bank, and intermediary networks, and may take an additional 5–7 working days. PrimeServe shall not be liable for delays attributable to such third-party intermediaries."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "16. Payment Gateway Dependency"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Refunds processed through the payment gateway are dependent on the gateway\u0027s policies and procedures. PrimeServe shall use reasonable efforts to ensure timely initiation of refunds; however, PrimeServe shall not be liable for delays caused by the gateway, the issuing bank, or any intermediary."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "17. Partial Refunds"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where part of an order is approved for refund and part is not, PrimeServe shall issue a refund for the approved portion only. The Buyer\u0027s payment for the remainder of the invoice shall remain due."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "18. Refund After Verification Only"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "All refund claims are subject to verification. Refunds shall not be processed until the relevant evidence has been reviewed, return goods (where applicable) inspected, and the claim approved. Verbal claims, claims without evidence, and claims that do not satisfy the documentation requirements may be rejected."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "19. Refund for Credit Orders"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where the order was placed on credit and not yet paid, the approved refund amount shall be applied as a credit note to the Buyer\u0027s ledger and shall be adjusted against future invoices in accordance with the Credit Policy. Where there are no future orders, the credit note may be settled by NEFT after closure of the account."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "20. GST and Credit Note Treatment"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where a refund or replacement is approved for an item against which a tax invoice has been issued, the corresponding GST credit note shall be issued in compliance with applicable GST law. The Buyer shall reverse any input tax credit availed on the original invoice in respect of such returned items, in compliance with applicable law. PrimeServe shall not be liable for any tax consequence arising from the Buyer\u0027s non-compliance with GST credit-note treatment."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "21. Chargebacks and Disputed Transactions"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where the Buyer initiates a chargeback or payment dispute through their card-issuing bank or wallet without first raising the issue with PrimeServe and following the refund process described in this Policy:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "PrimeServe shall be entitled to dispute the chargeback with full evidence;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "PrimeServe may withhold any pending refund pending resolution of the chargeback;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Repeated, unjustified chargebacks may result in account suspension and may be considered fraudulent under the Terms and Conditions."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "22. Fraudulent Refund Claims"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Any of the following shall constitute a fraudulent refund claim:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Reporting damage, leakage, shortage, or wrong item that did not in fact occur;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Reporting non-delivery of goods that have actually been delivered;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Submission of fabricated photographs, videos, or documents;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Returning goods that are not the goods originally delivered;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Returning goods that have been used, opened, or altered, while claiming they are unused;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Repeated frivolous claims with no genuine basis."
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe shall be entitled to (a) reject any such claim; (b) suspend or terminate the Buyer\u0027s account; (c) recover any costs incurred; (d) withhold any pending refund in respect of unrelated orders to the extent of the alleged fraud; and (e) initiate civil and / or criminal proceedings."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "23. Restocking Fee"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe does not charge a restocking fee for returns made due to fault of PrimeServe (wrong, damaged, expired, leaking, short, or defective items). For Buyer-initiated returns due to change of requirement (where accepted at PrimeServe\u0027s discretion under non-returnable category exceptions), PrimeServe reserves the right to charge a reasonable handling charge to cover transport and inspection costs."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "24. Cancellation Refunds"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Where an order is cancelled in accordance with the order cancellation flow on the Platform:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "If cancelled before order confirmation: full refund of any prepaid amount;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "If cancelled after confirmation but before procurement / packing: full refund of any prepaid amount;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "If cancelled after procurement but before dispatch: full refund, subject to deduction for any non-recoverable cost (rare, applies typically to custom-procured items);"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "If cancelled after dispatch: cancellation may not be possible; if accepted at PrimeServe\u0027s discretion, refund may be issued less applicable handling and return charges;"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Custom-procured items: cancellation may not be possible after procurement begins."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "25. Set-Off"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "PrimeServe may set off any approved refund or credit note against any amount owed by the Buyer to PrimeServe (such as overdue invoices, late payment charges, or recovery costs), in accordance with the Credit Policy."
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "26. Contact for Refund and Return Claims"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "Refund and return claims should be raised through the Platform support flow or directly at:"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Email: info@primeservefs.com"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Phone: +91 7795242918"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Hours: Monday to Saturday, 9:00 AM to 9:00 PM IST"
+                       },
+                       {
+                           "type":  "listItem",
+                           "text":  "Chat \u0026 Call Support: 24/7"
+                       },
+                       {
+                           "type":  "heading",
+                           "text":  "27. Legal Review Disclaimer"
+                       },
+                       {
+                           "type":  "paragraph",
+                           "text":  "This Refund Policy is drafted as a standard policy for the operation of PrimeServe. Specific terms may be modified for enterprise Buyers under separate written agreement."
+                       }
+                   ]
+    }
+]

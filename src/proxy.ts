@@ -12,6 +12,7 @@
  *   /about         About Us page
  *   /contact       Contact page
  *   /categories    Category overview page
+ *   /legal         Legal policy pages
  *   /api/auth/*    Auth endpoints (login, register, logout, me)
  *   /api/products  Public product API (read-only catalogue)
  *   /_next/*       Next.js static assets
@@ -133,6 +134,7 @@ function isPublicPath(pathname: string): boolean {
     "/about",
     "/contact",
     "/categories",
+    "/legal",
   ];
   for (const prefix of publicPrefixes) {
     if (prefix === "/") {
