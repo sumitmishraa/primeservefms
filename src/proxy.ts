@@ -13,6 +13,7 @@
  *   /contact       Contact page
  *   /categories    Category overview page
  *   /legal         Legal policy pages
+ *   legacy policy URLs (/terms, /privacy, etc.) redirect to /legal/*
  *   /api/auth/*    Auth endpoints (login, register, logout, me)
  *   /api/products  Public product API (read-only catalogue)
  *   /_next/*       Next.js static assets
@@ -135,6 +136,16 @@ function isPublicPath(pathname: string): boolean {
     "/contact",
     "/categories",
     "/legal",
+    "/terms",
+    "/terms-and-conditions",
+    "/privacy",
+    "/privacy-policy",
+    "/shipping",
+    "/shipping-policy",
+    "/shipping-and-delivery-policy",
+    "/refund-policy",
+    "/credit-terms",
+    "/credit-policy",
   ];
   for (const prefix of publicPrefixes) {
     if (prefix === "/") {
