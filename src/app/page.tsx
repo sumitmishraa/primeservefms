@@ -20,20 +20,14 @@ import {
 import { PublicHeader, PublicFooter } from '@/components/layout';
 import { PRODUCT_CATEGORIES } from '@/lib/constants/categories';
 
-// Unsplash cover photo per category — keyed by the product_category enum value.
+// Category cover images — keyed by the product_category enum value.
 const CATEGORY_IMAGES: Record<string, string> = {
-  housekeeping_materials:
-    'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=900&auto=format&fit=crop&q=80',
-  cleaning_chemicals:
-    'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=900&auto=format&fit=crop&q=80',
-  office_stationeries:
-    'https://images.unsplash.com/photo-1456735190827-d1262f71b8a3?w=900&auto=format&fit=crop&q=80',
-  pantry_items:
-    'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=900&auto=format&fit=crop&q=80',
-  facility_and_tools:
-    'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=900&auto=format&fit=crop&q=80',
-  printing_solution:
-    'https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=900&auto=format&fit=crop&q=80',
+  housekeeping_materials: '/images/categories/housekeeping-materials.png',
+  cleaning_chemicals: '/images/categories/cleaning-chemicals.png',
+  office_stationeries: '/images/categories/office-stationeries.png',
+  pantry_items: '/images/categories/pantry-items.png',
+  facility_and_tools: '/images/categories/facility-tools.png',
+  printing_solution: '/images/categories/printing-solution.png',
 };
 
 const FEATURED_PRODUCTS = [
@@ -349,12 +343,12 @@ export default function HomePage() {
                 href={`/marketplace?category=${cat.value}`}
                 className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg"
               >
-                <div className="relative h-48 w-full overflow-hidden bg-slate-100">
+                <div className="relative aspect-[2/1] w-full overflow-hidden bg-white">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={CATEGORY_IMAGES[cat.value]}
                     alt={cat.label}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-full object-contain"
                     loading="lazy"
                   />
                 </div>
