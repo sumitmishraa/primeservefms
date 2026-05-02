@@ -162,10 +162,10 @@ function MarketplaceContent() {
     <div className="flex min-h-screen flex-col bg-slate-50">
       <PublicHeader />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="w-full flex-1 py-5">
         {/* Active filter chips */}
         {hasActiveFilter && (
-          <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center gap-2 px-4 sm:px-5 lg:pl-0 lg:pr-5">
             {urlCategory && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700">
                 {getCategoryLabel(urlCategory)}
@@ -217,17 +217,19 @@ function MarketplaceContent() {
           </div>
         )}
 
-        <div className="flex flex-col gap-6 lg:flex-row">
-          <ProductSidebar
-            selectedCategory={urlCategory}
-            selectedSubcategory={urlSubcategory}
-            searchQuery={urlSearch}
-            onCategoryChange={handleCategoryChange}
-            onSubcategoryChange={handleSubcategoryChange}
-            onSearchChange={handleSearchChange}
-          />
+        <div className="flex flex-col gap-5 lg:flex-row lg:gap-6">
+          <div className="px-4 sm:px-5 lg:px-0">
+            <ProductSidebar
+              selectedCategory={urlCategory}
+              selectedSubcategory={urlSubcategory}
+              searchQuery={urlSearch}
+              onCategoryChange={handleCategoryChange}
+              onSubcategoryChange={handleSubcategoryChange}
+              onSearchChange={handleSearchChange}
+            />
+          </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1 px-4 sm:px-5 lg:pl-0 lg:pr-5">
             {/* Header row */}
             <div className="mb-4 flex flex-col items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center">
               <p className="text-sm text-slate-600">
@@ -268,7 +270,7 @@ function MarketplaceContent() {
             {/* Loading */}
             {isLoading && (
               <div
-                className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+                className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
                 aria-label="Loading products"
               >
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -320,7 +322,7 @@ function MarketplaceContent() {
             {/* Grid */}
             {!isLoading && !error && products.length > 0 && (
               <>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                   {products.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}

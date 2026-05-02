@@ -33,7 +33,7 @@ export default function ProductSidebar({
   const subcategories = getSubcategoriesByCategory(selectedCategory);
 
   return (
-    <aside className="w-full space-y-4 lg:w-72 lg:shrink-0">
+    <aside className="w-full space-y-4 lg:w-80 lg:shrink-0">
       {/* Search */}
       <div className="rounded-xl border border-slate-200 bg-white p-3">
         <div className="relative">
