@@ -1163,39 +1163,32 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const supabase = createAdminClient();
 
-    // Pre-fetch existing slugs (split by activity) and subcategories.
-    // Active rows  → "this is already imported, skip".
-    // Inactive rows → "this was previously soft-deleted, reactivate it".
-    const [{ data: existing }, { data: subcatRows }] = await Promise.all([
-      supabase.from('products').select('id, slug, is_active'),
-      supabase.from('subcategories').select('id, slug, category'),
-    ]);
-    mark('database context loaded', {
-      products: existing?.length ?? 0,
-      subcategories: subcatRows?.length ?? 0,
-    });
+    // 3a. Fetch subcategories only — small table, always needed for mapping.
+    // We intentionally do NOT fetch all existing product slugs here; instead
+    // we parse the workbook first, collect only the candidate slugs, then
+    // fetch just those from the DB. This cuts the Supabase round-trip from
+    // O(catalog size) → O(import batch size) and prevents Vercel timeout on
+    // large catalogs.
+    const { data: subcatRows } = await supabase
+      .from('subcategories')
+      .select('id, slug, category');
+    mark('subcategories loaded', { count: subcatRows?.length ?? 0 });
 
-    const dbSlugs        = new Set<string>();
-    const inactiveByslug = new Map<string, string>();
-    for (const p of (existing ?? []) as Array<{ id: string; slug: string; is_active: boolean }>) {
-      if (p.is_active) dbSlugs.add(p.slug);
-      else             inactiveByslug.set(p.slug, p.id);
-    }
-
+    // 4. First parsing pass — empty DB sets so parsers stage every row.
+    //    Within-batch slug deduplication still works via batchSlugs.
     const ctx: ImportContext = {
       user:            { id: user.id },
-      dbSlugs,
-      inactiveByslug,
+      dbSlugs:         new Set<string>(),
+      inactiveByslug:  new Map<string, string>(),
       batchSlugs:      new Set<string>(),
       subcats:         (subcatRows ?? []) as Array<{ id: string; slug: string; category: string }>,
       errors:          [],
       skippedExisting: { count: 0 },
       reactivated:     { count: 0 },
-      skippedNoImage:   { count: 0 },
+      skippedNoImage:  { count: 0 },
     };
 
-    // 4. Parse each sheet using the appropriate parser.
-    const ops: StagedOp[] = [];
+    const allOps: StagedOp[] = [];
 
     for (const sheetName of workbook.SheetNames) {
       const sheet = workbook.Sheets[sheetName];
@@ -1207,11 +1200,59 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           ? parseCrescentSheet(sheetName, rawRows, ctx)
           : parseLegacySheet(sheetName, rawRows, ctx);
 
-      ops.push(...sheetOps);
+      allOps.push(...sheetOps);
     }
 
-    const inserts      = ops.filter((o): o is Extract<StagedOp, { kind: 'insert' }>     => o.kind === 'insert');
-    const reactivates  = ops.filter((o): o is Extract<StagedOp, { kind: 'reactivate' }> => o.kind === 'reactivate');
+    mark('sheets parsed', {
+      ops: allOps.length,
+      skippedWithoutImages: ctx.skippedNoImage.count,
+      errors: ctx.errors.length,
+    });
+
+    // 5. Targeted DB lookup — only the slugs present in this import batch.
+    //    Much faster than fetching the entire products table.
+    const candidateSlugs = allOps
+      .filter((o): o is Extract<StagedOp, { kind: 'insert' }> => o.kind === 'insert')
+      .map((o) => o.payload.slug);
+
+    if (candidateSlugs.length > 0) {
+      const { data: existing } = await supabase
+        .from('products')
+        .select('id, slug, is_active')
+        .in('slug', candidateSlugs);
+
+      for (const p of (existing ?? []) as Array<{ id: string; slug: string; is_active: boolean }>) {
+        if (p.is_active) ctx.dbSlugs.add(p.slug);
+        else             ctx.inactiveByslug.set(p.slug, p.id);
+      }
+      mark('slug collision check', {
+        candidates: candidateSlugs.length,
+        alreadyActive: ctx.dbSlugs.size,
+        softDeleted: ctx.inactiveByslug.size,
+      });
+    }
+
+    // 6. Classify ops now that we have DB context.
+    const inserts:     Array<Extract<StagedOp, { kind: 'insert' }>>     = [];
+    const reactivates: Array<Extract<StagedOp, { kind: 'reactivate' }>> = [];
+
+    for (const op of allOps) {
+      if (op.kind === 'reactivate') { reactivates.push(op); continue; }
+
+      const { slug } = op.payload;
+      if (ctx.dbSlugs.has(slug)) {
+        ctx.skippedExisting.count++;
+        continue;
+      }
+      const reactivateId = ctx.inactiveByslug.get(slug);
+      if (reactivateId) {
+        const { slug: _s, uploaded_by: _u, vendor_id: _v, ...refresh } = op.payload;
+        void _s; void _u; void _v;
+        reactivates.push({ kind: 'reactivate', id: reactivateId, payload: { ...refresh, is_active: true } });
+      } else {
+        inserts.push(op);
+      }
+    }
 
     mark('rows staged', {
       inserts: inserts.length,
@@ -1223,14 +1264,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     let inserted = 0;
 
-    // 5a. Batch INSERT new rows (chunks of 50).
+    // 7a. Batch INSERT new rows in chunks of 50.
     const CHUNK = 50;
     for (let i = 0; i < inserts.length; i += CHUNK) {
       const chunk = inserts.slice(i, i + CHUNK).map((o) => o.payload);
       const { error: bulkErr } = await supabase.from('products').insert(chunk);
       if (!bulkErr) {
         inserted += chunk.length;
-        mark('insert chunk complete', {
+        mark('insert chunk', {
           inserted,
           processed: Math.min(i + CHUNK, inserts.length),
           total: inserts.length,
@@ -1239,7 +1280,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
       console.error('[IMPORT] Bulk insert error:', bulkErr.message);
 
-      // Fallback: insert row-by-row to isolate the offender(s).
+      // Fallback: row-by-row to isolate the offending row.
       for (const product of chunk) {
         const { error: singleErr } = await supabase.from('products').insert(product);
         if (!singleErr) {
@@ -1254,15 +1295,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           });
         }
       }
-      mark('insert fallback chunk complete', {
-        inserted,
-        processed: Math.min(i + CHUNK, inserts.length),
-        total: inserts.length,
-        errors: ctx.errors.length,
-      });
     }
 
-    // 5b. Reactivate previously soft-deleted rows one-by-one (small N — fine).
+    // 7b. Reactivate soft-deleted rows one-by-one (small N).
     for (const op of reactivates) {
       const { error: updErr } = await supabase
         .from('products')
