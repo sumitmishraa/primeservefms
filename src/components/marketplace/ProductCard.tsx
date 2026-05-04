@@ -35,6 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const isLowStock = product.stock_status === 'low_stock';
   const sku = product.id.slice(0, 8).toUpperCase();
   const detailHref = `/marketplace/${product.slug}`;
+  const variantCount = product.variant_count ?? 1;
 
   const openDetails = (target: EventTarget): boolean => {
     if (target instanceof Element && target.closest('a, button, input, select, textarea')) {
@@ -108,11 +109,15 @@ export default function ProductCard({ product }: ProductCardProps) {
           <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-400">
             {sku}
           </p>
-          {product.size_variant && (
+          {variantCount > 1 ? (
+            <span className="truncate rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-semibold text-teal-700">
+              {variantCount} options
+            </span>
+          ) : product.size_variant ? (
             <span className="truncate rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
               {product.size_variant}
             </span>
-          )}
+          ) : null}
         </div>
 
         {/* Name */}

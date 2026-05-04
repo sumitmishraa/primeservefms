@@ -24,7 +24,6 @@ import {
   ArrowRight,
   ShoppingBag,
 } from 'lucide-react';
-import Image from 'next/image';
 import { useCartStore } from '@/stores/cartStore';
 import { formatINR } from '@/lib/utils/formatting';
 import type { CartItem, PricingTier } from '@/types';
@@ -109,12 +108,11 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
         {/* Thumbnail */}
         <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
           {item.thumbnail_url ? (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               src={item.thumbnail_url}
               alt={item.product_name}
-              fill
-              sizes="64px"
-              className="object-cover"
+              className="h-full w-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-slate-300">

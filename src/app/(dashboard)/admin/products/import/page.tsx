@@ -155,7 +155,7 @@ export default function ImportProductsPage() {
 
       {/* Instructions card */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800 space-y-2">
-        <p className="font-semibold">Two workbook formats are supported:</p>
+        <p className="font-semibold">Three workbook formats are supported:</p>
         <ul className="list-disc list-inside space-y-1 text-blue-700">
           <li>
             <strong>Diversey / TASKI 2025 price list</strong> (sheet:&nbsp;
@@ -167,6 +167,12 @@ export default function ImportProductsPage() {
           <li>
             <strong>Legacy Housekeeping / Stationery workbook</strong> — headers near rows
             4–5 with SL.No | Item Descriptions | Size/Brand | Units | Category | Sub-category.
+          </li>
+          <li>
+            <strong>Crescent GST-filled price list</strong> - headers at row 5 with
+            SL.No | Item Descriptions | Brand | Qty | Rate | GST % | Image url. Rows without
+            an image URL are skipped, and rows sharing the same image become variants under
+            one marketplace product card.
           </li>
           <li>Section header / note rows are skipped automatically.</li>
           <li>Same-name + different-pack rows are grouped as variants on the product page.</li>

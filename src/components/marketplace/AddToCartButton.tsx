@@ -43,6 +43,8 @@ export interface CartableProduct {
   name: string;
   brand: string | null;
   size_variant: string | null;
+  group_slug?: string | null;
+  variant_count?: number;
   base_price: number;
   gst_rate: number;
   moq: number;
