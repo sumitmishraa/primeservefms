@@ -32,8 +32,14 @@ import toast from 'react-hot-toast';
 
 interface ImportResult {
   imported: number;
-  skipped:  number;
-  errors:   { row: number; reason: string }[];
+  skipped: number;
+  skipped_without_images?: number;
+  errors: { row: number; reason: string }[];
+}
+
+interface ImportApiResponse {
+  data: ImportResult | null;
+  error: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -50,6 +56,40 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024)       return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function summariseHtmlError(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 180);
+}
+
+async function readImportResponse(res: Response): Promise<ImportApiResponse> {
+  const contentType = res.headers.get('content-type') ?? '';
+  const bodyText = await res.text();
+
+  if (contentType.includes('application/json')) {
+    try {
+      return JSON.parse(bodyText) as ImportApiResponse;
+    } catch {
+      return {
+        data: null,
+        error: `Import returned invalid JSON (${res.status}). Please retry once; the server response was incomplete.`,
+      };
+    }
+  }
+
+  const fallback = bodyText ? summariseHtmlError(bodyText) : '';
+  return {
+    data: null,
+    error: res.status === 504 || res.status === 408
+      ? 'Import timed out before the server could respond. Re-uploading is safe; existing rows will be skipped.'
+      : `Import failed with HTTP ${res.status}${fallback ? `: ${fallback}` : ''}`,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -119,20 +159,27 @@ export default function ImportProductsPage() {
         body:   form,
       });
 
-      const json = (await res.json()) as {
-        data: ImportResult | null;
-        error: string | null;
-      };
+      const json = await readImportResponse(res);
 
       if (!res.ok || json.error) {
         setApiError(json.error ?? 'Import failed');
         return;
       }
 
-      setResult(json.data!);
-      toast.success(`Imported ${json.data!.imported} products`);
-    } catch {
-      setApiError('Network error — please try again');
+      if (!json.data) {
+        setApiError('Import completed without a result summary. Please refresh the catalog before retrying.');
+        return;
+      }
+
+      setResult(json.data);
+      toast.success(`Imported ${json.data.imported} products`);
+    } catch (error) {
+      const message = error instanceof TypeError
+        ? 'Connection lost while importing. The upload may still have completed; refresh the catalog before retrying.'
+        : error instanceof Error
+          ? error.message
+          : 'Import failed. Please try again.';
+      setApiError(message);
     } finally {
       setLoading(false);
     }
@@ -280,7 +327,7 @@ export default function ImportProductsPage() {
               <CheckCircle2 className="w-6 h-6" />
               <h2 className="text-lg font-semibold font-heading">Import Complete</h2>
             </div>
-            <div className="grid grid-cols-3 gap-4 pt-2">
+            <div className="grid grid-cols-2 gap-4 pt-2 sm:grid-cols-4">
               <div className="text-center">
                 <p className="text-3xl font-bold text-emerald-700 font-mono">{result.imported}</p>
                 <p className="text-sm text-emerald-600 mt-1">Products imported</p>
@@ -288,6 +335,12 @@ export default function ImportProductsPage() {
               <div className="text-center">
                 <p className="text-3xl font-bold text-amber-600 font-mono">{result.skipped}</p>
                 <p className="text-sm text-amber-600 mt-1">Duplicates skipped</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-sky-600 font-mono">
+                  {result.skipped_without_images ?? 0}
+                </p>
+                <p className="text-sm text-sky-600 mt-1">Without images skipped</p>
               </div>
               <div className="text-center">
                 <p className={`text-3xl font-bold font-mono ${result.errors.length > 0 ? 'text-rose-600' : 'text-slate-400'}`}>

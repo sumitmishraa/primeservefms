@@ -50,6 +50,8 @@ import type { Enums } from '@/types/database';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+const MAX_IMPORT_FILE_BYTES = 10 * 1024 * 1024;
+
 // ---------------------------------------------------------------------------
 // Shared types
 // ---------------------------------------------------------------------------
@@ -1123,6 +1125,11 @@ function parseLegacySheet(
  * Returns counts of inserted, skipped, and per-row errors.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const startedAt = Date.now();
+  const mark = (message: string, extra: Record<string, unknown> = {}) => {
+    console.log('[IMPORT]', message, { ms: Date.now() - startedAt, ...extra });
+  };
+
   try {
     // 1. Auth
     const user = await verifyAuth(request);
@@ -1132,6 +1139,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (user.role !== 'admin') {
       return NextResponse.json({ data: null, error: 'Forbidden — admin access only' }, { status: 403 });
     }
+    mark('auth ok', { userId: user.id });
 
     // 2. Multipart form
     const formData = await request.formData();
@@ -1143,11 +1151,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!fileObj.name.endsWith('.xlsx')) {
       return NextResponse.json({ data: null, error: 'Only .xlsx files are supported' }, { status: 400 });
     }
+    if (fileObj.size > MAX_IMPORT_FILE_BYTES) {
+      return NextResponse.json({ data: null, error: 'File is too large (max 10 MB)' }, { status: 413 });
+    }
+    mark('file received', { name: fileObj.name, bytes: fileObj.size });
 
     // 3. Read workbook
     const buffer = Buffer.from(await fileObj.arrayBuffer());
     const workbook = XLSX.read(buffer, { type: 'buffer' });
-    console.log('[IMPORT] Sheets in workbook:', workbook.SheetNames);
+    mark('workbook parsed', { sheets: workbook.SheetNames });
 
     const supabase = createAdminClient();
 
@@ -1158,6 +1170,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       supabase.from('products').select('id, slug, is_active'),
       supabase.from('subcategories').select('id, slug, category'),
     ]);
+    mark('database context loaded', {
+      products: existing?.length ?? 0,
+      subcategories: subcatRows?.length ?? 0,
+    });
 
     const dbSlugs        = new Set<string>();
     const inactiveByslug = new Map<string, string>();
@@ -1197,7 +1213,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const inserts      = ops.filter((o): o is Extract<StagedOp, { kind: 'insert' }>     => o.kind === 'insert');
     const reactivates  = ops.filter((o): o is Extract<StagedOp, { kind: 'reactivate' }> => o.kind === 'reactivate');
 
-    console.log('[IMPORT] Inserts queued:', inserts.length, 'Reactivations queued:', reactivates.length);
+    mark('rows staged', {
+      inserts: inserts.length,
+      reactivations: reactivates.length,
+      skipped: ctx.skippedExisting.count,
+      skippedWithoutImages: ctx.skippedNoImage.count,
+      errors: ctx.errors.length,
+    });
 
     let inserted = 0;
 
@@ -1208,6 +1230,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const { error: bulkErr } = await supabase.from('products').insert(chunk);
       if (!bulkErr) {
         inserted += chunk.length;
+        mark('insert chunk complete', {
+          inserted,
+          processed: Math.min(i + CHUNK, inserts.length),
+          total: inserts.length,
+        });
         continue;
       }
       console.error('[IMPORT] Bulk insert error:', bulkErr.message);
@@ -1227,6 +1254,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           });
         }
       }
+      mark('insert fallback chunk complete', {
+        inserted,
+        processed: Math.min(i + CHUNK, inserts.length),
+        total: inserts.length,
+        errors: ctx.errors.length,
+      });
     }
 
     // 5b. Reactivate previously soft-deleted rows one-by-one (small N — fine).
@@ -1246,12 +1279,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    console.log(
-      '[IMPORT] Done. Inserted:', inserted,
-      'Reactivated:', ctx.reactivated.count,
-      'Skipped:', ctx.skippedExisting.count,
-      'Errors:', ctx.errors.length,
-    );
+    mark('complete', {
+      inserted,
+      reactivated: ctx.reactivated.count,
+      skipped: ctx.skippedExisting.count,
+      skippedWithoutImages: ctx.skippedNoImage.count,
+      errors: ctx.errors.length,
+    });
 
     const total = inserted + ctx.reactivated.count;
     return NextResponse.json({
@@ -1266,7 +1300,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       error: null,
     });
   } catch (error) {
-    console.error('[api/admin/products/import POST]', error);
+    console.error('[api/admin/products/import POST]', {
+      ms: Date.now() - startedAt,
+      error,
+    });
     return NextResponse.json(
       { data: null, error: 'Internal server error' },
       { status: 500 }
