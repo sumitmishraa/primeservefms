@@ -93,12 +93,6 @@ interface RawOrder {
   buyer_id: string;
 }
 
-interface RawOrderItem {
-  quantity: number;
-  unit_price: number;
-  product: { name: string; category: string } | null;
-}
-
 interface RawOrderWithClient {
   total_amount: number;
   status: string;

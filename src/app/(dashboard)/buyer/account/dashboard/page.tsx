@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   TrendingUp, CreditCard, AlertTriangle, Clock, CheckCircle2,
   Package, FileText, Building2, ShoppingBag, Loader2, ArrowRight,
-  CalendarDays, ChevronDown,
+  CalendarDays,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatINR, formatDate } from '@/lib/utils/formatting';

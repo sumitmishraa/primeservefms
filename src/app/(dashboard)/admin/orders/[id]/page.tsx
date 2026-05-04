@@ -19,8 +19,6 @@ import {
   Mail,
   MessageSquare,
   CheckCircle2,
-  Clock,
-  Truck,
   Package,
   XCircle,
   Building2,
@@ -96,18 +94,6 @@ function StatusTimeline({ order }: { order: OrderDetail }) {
           const isCompleted = !isCancelled && currentIdx > idx;
           const isCurrent   = !isCancelled && currentIdx === idx;
           const ts          = isCompleted || isCurrent ? getStepTimestamp(order, step.key) : null;
-
-          // For cancelled: mark the last completed step as cancelled
-          const wasCancelledHere =
-            isCancelled &&
-            idx === Math.max(
-              TIMELINE_STEPS.findIndex((s) => {
-                // Find what the status was before cancellation — we don't track that,
-                // so show cancel icon on last valid step if cancelled
-                return false;
-              }),
-              0
-            );
 
           return (
             <div key={step.key} className="relative z-10 flex flex-1 flex-col items-center">
