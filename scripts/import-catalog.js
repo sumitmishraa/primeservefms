@@ -66,7 +66,7 @@ const ST_MAP = {
 const STRIP_RE = /\b(extra\s+large|super\s+king|monkey\s+brand|good\s+quality|heavy\s+duty|hanuman|monkey|regulars?|premium|economic|jumbo|small|medium|large|big|mini|super|xl|3m|dc[-\s]?\d+|sd[-\s]?\d+|ct[-\s]?\d+|dp\s*\d+|ss\s*\d+|prima[-\s]?\d+)\b/gi;
 const MEASURE_RE = /\b\d+\s*(ml|lts?|l\b|kg|gms?|g\b|pull|mm|cm|gsm|mtr|gm|nos?|pcs?|pkt|pack|liter|litre)\b/gi;
 const DIM_RE = /\d+[/"']*\s*[x×]\s*\d+[/"']*/gi;
-const PARENS_RE = /\s*\([^)]*\)\s*/g;
+const PARENS_RE = /\s*\([^)]*\)?\s*/g;
 const NUM_RE = /\b\d+\b/g;
 
 function normKey(name) {
