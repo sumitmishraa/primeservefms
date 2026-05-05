@@ -174,6 +174,8 @@ export default function EditProductPage({
     unit_of_measure:   product.unit_of_measure,
     stock_status:      product.stock_status,
     tags:              product.tags?.join(', ') ?? '',
+    thumbnail_url:     product.thumbnail_url ?? '',
+    images:            Array.isArray(product.images) ? product.images as string[] : [],
     pricing_tiers: Array.isArray(product.pricing_tiers)
       ? (product.pricing_tiers as { min_qty: number; max_qty: number | null; price: number }[]).map(
           (t) => ({
@@ -201,6 +203,7 @@ export default function EditProductPage({
       </div>
 
       <ProductForm
+        productId={productId!}
         initialValues={initial}
         onSubmit={(values) => void handleSubmit(values)}
         isLoading={saving}
