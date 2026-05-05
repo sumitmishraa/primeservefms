@@ -576,77 +576,53 @@ export default function ProductDetailPage({
               )}
             </div>
 
-            {/* ── VARIANT (size/format) CARDS ──────────────────────── */}
-            {showSizeCards && (
-              <div className="space-y-2.5">
+            {/* ── VARIANT DROPDOWN ─────────────────────────────────── */}
+            {showVariants && (
+              <div className="space-y-2">
                 <div className="flex items-baseline justify-between">
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                    {isChemical ? 'Choose Litre / Format' : 'Choose Size / Format'}
+                    {isChemical ? 'Choose Format' : 'Choose Variant'}
                   </p>
                   <span className="text-[11px] text-slate-400">
-                    {variants.length} option{variants.length > 1 ? 's' : ''}
+                    {variants.length} option{variants.length !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <div
-                  className="grid grid-cols-2 gap-2.5 sm:grid-cols-3"
-                  role="radiogroup"
-                  aria-label="Select product format"
-                >
-                  {variants.map((v) => (
-                    <VariantCard
-                      key={v.id}
-                      variant={v}
-                      isSelected={v.id === product.id}
-                      badge={variantBadges.get(v.id) ?? null}
-                      onSelect={handleVariantSelect}
-                    />
-                  ))}
+                <div className="relative">
+                  <select
+                    value={product.id}
+                    onChange={(e) => {
+                      const v = variants.find((x) => x.id === e.target.value);
+                      if (v) handleVariantSelect(v);
+                    }}
+                    className="w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-3 pl-4 pr-10 text-sm font-semibold text-slate-800 shadow-sm transition-colors focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 hover:border-slate-300"
+                  >
+                    {variants.map((v) => {
+                      const label = v.size_variant || v.short_description || v.name;
+                      const price = formatINR(v.base_price);
+                      const oos   = v.stock_status === 'out_of_stock';
+                      return (
+                        <option key={v.id} value={v.id} disabled={oos}>
+                          {label} — {price}{oos ? ' (Out of stock)' : ''}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  {/* Custom chevron */}
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </span>
                 </div>
-                {isChemical && (
-                  <p className="flex items-start gap-1.5 text-[11px] leading-snug text-slate-500">
-                    <Info className="mt-0.5 h-3 w-3 shrink-0 text-teal-500" aria-hidden="true" />
-                    <span>
-                      Larger packs offer better per-litre value — ideal for monthly
-                      facility use. Each format is shipped in its own sealed container.
-                    </span>
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* ── COLOUR PICKER ────────────────────────────────────── */}
-            {showColourPicker && (
-              <div className="space-y-2.5">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Choose Colour
-                </p>
-                <div className="flex flex-wrap items-center gap-3" role="radiogroup" aria-label="Select product colour">
-                  {colourEntries.map(({ variant: v, color }) => {
-                    const isSelected = v.id === product.id;
-                    return (
-                      <div key={v.id} className="flex flex-col items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleVariantSelect(v)}
-                          aria-pressed={isSelected}
-                          aria-label={`Colour: ${color}${isSelected ? ' (selected)' : ''}`}
-                          className={[
-                            'flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all duration-150',
-                            'focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1',
-                            isSelected
-                              ? 'border-teal-500 shadow-md ring-2 ring-teal-500/25'
-                              : 'border-white shadow-sm hover:scale-105',
-                          ].join(' ')}
-                          style={{ backgroundColor: getSwatchCss(color) }}
-                        >
-                          {isSelected && <CheckIcon />}
-                        </button>
-                        <span className="text-[10px] font-medium capitalize text-slate-600">
-                          {color}
-                        </span>
-                      </div>
-                    );
-                  })}
+                {/* Selected variant price highlight */}
+                <div className="flex items-center gap-3 rounded-xl border border-teal-100 bg-teal-50 px-4 py-2.5">
+                  <span className="text-xs font-semibold text-teal-700 uppercase tracking-wide">Selected</span>
+                  <span className="text-sm font-bold text-teal-800">
+                    {product.size_variant || product.short_description || product.name}
+                  </span>
+                  <span className="ml-auto font-heading text-base font-bold text-teal-700">
+                    {formatINR(product.base_price)}
+                  </span>
                 </div>
               </div>
             )}
