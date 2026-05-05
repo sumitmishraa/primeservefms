@@ -1,21 +1,6 @@
-/**
- * Admin — Product Catalog Manager
- *
- * Features:
- *   - Search by name, filter by category + subcategory + stock status
- *   - Paginated table (25 per page) with inline price editing
- *   - Toggle stock status per row
- *   - Bulk actions: set price, change category, delete
- *   - ₹0 price rows highlighted amber ("needs pricing")
- *   - Edit / Delete per-row actions
- *
- * Data flow: fetches from GET /api/admin/products
- * Mutations: PUT /api/admin/products/:id  (price, stock, soft-delete)
- */
-
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Plus,
@@ -27,6 +12,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
+  ChevronDown,
+  ChevronUp,
+  Layers,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatINR } from '@/lib/utils/formatting';
@@ -49,16 +37,19 @@ interface PaginatedProducts {
   per_page: number;
 }
 
+interface GroupEntry {
+  key:            string;
+  representative: Product;
+  variants:       Product[];
+  isGroup:        boolean;
+}
+
 const PER_PAGE = 25;
 
 // ---------------------------------------------------------------------------
 // Inline price editor cell
 // ---------------------------------------------------------------------------
 
-/**
- * Shows the price as text. On click, switches to an input that saves on
- * Enter or blur. Renders in red + "Set Price" when base_price is 0.
- */
 function PriceCell({
   product,
   onSave,
@@ -122,9 +113,6 @@ function PriceCell({
 // Stock toggle
 // ---------------------------------------------------------------------------
 
-/**
- * Toggle switch that flips a product between in_stock and out_of_stock.
- */
 function StockToggle({
   product,
   onToggle,
@@ -159,19 +147,22 @@ function StockToggle({
 
 export default function AdminProductsPage() {
   // Filters
-  const [search,         setSearch]         = useState('');
-  const [category,       setCategory]       = useState('');
-  const [subcategory,    setSubcategory]    = useState('');
-  const [stockFilter,    setStockFilter]    = useState('');
+  const [search,          setSearch]          = useState('');
+  const [category,        setCategory]        = useState('');
+  const [subcategory,     setSubcategory]     = useState('');
+  const [stockFilter,     setStockFilter]     = useState('');
   const [includeInactive, setIncludeInactive] = useState(false);
-  const [page,           setPage]           = useState(1);
+  const [page,            setPage]            = useState(1);
 
   // Data
   const [data,    setData]    = useState<PaginatedProducts | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
 
-  // Bulk selection
+  // Group expand/collapse
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Bulk selection (operates on individual product IDs)
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // Debounce search
@@ -184,7 +175,7 @@ export default function AdminProductsPage() {
     return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
   }, [search]);
 
-  // Fetch products
+  // Fetch products — always fetch a full-ish page so grouping looks right
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -214,12 +205,33 @@ export default function AdminProductsPage() {
 
   // Reset page when filters change
   useEffect(() => { setPage(1); }, [category, subcategory, debouncedSearch, stockFilter, includeInactive]);
-
-  // Reset subcategory when category changes
   useEffect(() => { setSubcategory(''); }, [category]);
-
-  // Reset selection on page/filter change
   useEffect(() => { setSelected(new Set()); }, [page, category, subcategory, debouncedSearch]);
+  // Collapse all groups when data refreshes
+  useEffect(() => { setExpandedGroups(new Set()); }, [data]);
+
+  // ---------------------------------------------------------------------------
+  // Group products by group_slug (client-side)
+  // ---------------------------------------------------------------------------
+
+  const groupedProducts = useMemo<GroupEntry[]>(() => {
+    const products = data?.products ?? [];
+    const seen = new Map<string, Product[]>();
+    for (const p of products) {
+      const key = p.group_slug ?? p.id;
+      if (!seen.has(key)) seen.set(key, []);
+      seen.get(key)!.push(p);
+    }
+    return [...seen.entries()].map(([key, variants]) => {
+      const sorted = [...variants].sort((a, b) => Number(a.base_price) - Number(b.base_price));
+      return {
+        key,
+        representative: sorted[0],
+        variants:       sorted,
+        isGroup:        variants.length > 1,
+      };
+    });
+  }, [data]);
 
   // ---------------------------------------------------------------------------
   // Mutations
@@ -240,9 +252,7 @@ export default function AdminProductsPage() {
     try {
       const updated = await updateProduct(id, { base_price: price });
       setData((prev) =>
-        prev
-          ? { ...prev, products: prev.products.map((p) => (p.id === id ? updated : p)) }
-          : prev
+        prev ? { ...prev, products: prev.products.map((p) => (p.id === id ? updated : p)) } : prev
       );
       toast.success('Price updated');
     } catch (err) {
@@ -254,9 +264,7 @@ export default function AdminProductsPage() {
     try {
       const updated = await updateProduct(id, { stock_status: status });
       setData((prev) =>
-        prev
-          ? { ...prev, products: prev.products.map((p) => (p.id === id ? updated : p)) }
-          : prev
+        prev ? { ...prev, products: prev.products.map((p) => (p.id === id ? updated : p)) } : prev
       );
       toast.success(status === 'in_stock' ? 'Marked in stock' : 'Marked out of stock');
     } catch (err) {
@@ -267,7 +275,7 @@ export default function AdminProductsPage() {
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Deactivate "${name}"? It will be hidden from the catalog.`)) return;
     try {
-      const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+      const res  = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
       const json = (await res.json()) as { error: string | null };
       if (!res.ok || json.error) throw new Error(json.error ?? 'Delete failed');
       toast.success('Product deactivated');
@@ -277,58 +285,35 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleDeleteGroup = async (variants: Product[]) => {
+    const label = variants[0].name;
+    if (!confirm(`Deactivate all ${variants.length} variants of "${label}"?`)) return;
+    await Promise.all(variants.map((v) => fetch(`/api/admin/products/${v.id}`, { method: 'DELETE' })));
+    toast.success(`Deactivated ${variants.length} variants`);
+    void fetchProducts();
+  };
+
   // ---------------------------------------------------------------------------
   // Bulk actions
   // ---------------------------------------------------------------------------
 
   const handleBulkDelete = async () => {
     if (!confirm(`Deactivate ${selected.size} products?`)) return;
-    const ids = [...selected];
-    let failed = 0;
-    await Promise.all(
-      ids.map(async (id) => {
-        try {
-          await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
-        } catch { failed++; }
-      })
-    );
-    toast.success(`Deactivated ${ids.length - failed} products`);
+    await Promise.all([...selected].map((id) => fetch(`/api/admin/products/${id}`, { method: 'DELETE' })));
+    toast.success(`Deactivated ${selected.size} products`);
     setSelected(new Set());
     void fetchProducts();
   };
 
-  /**
-   * Permanently removes the selected products from the DB. Used to wipe the
-   * catalog before a fresh Excel import. Products that are referenced by
-   * existing orders will fail with a 409 — those rows are reported back to
-   * the admin so they can be handled separately.
-   */
   const handleBulkHardDelete = async () => {
-    const msg =
-      `Permanently delete ${selected.size} product${selected.size !== 1 ? 's' : ''}?\n\n` +
-      `This cannot be undone. Products that appear in past orders will be skipped.`;
-    if (!confirm(msg)) return;
-    const ids = [...selected];
-    let removed = 0;
-    let blocked = 0;
-    await Promise.all(
-      ids.map(async (id) => {
-        try {
-          const res  = await fetch(`/api/admin/products/${id}?hard=true`, { method: 'DELETE' });
-          const json = (await res.json()) as { error: string | null };
-          if (res.ok && !json.error) {
-            removed++;
-          } else if (res.status === 409) {
-            blocked++;
-          }
-        } catch {
-          /* network errors silently grouped into the unaccounted-for remainder */
-        }
-      })
-    );
-    if (blocked > 0) {
-      toast.error(`${blocked} product(s) skipped — they appear in past orders`);
-    }
+    if (!confirm(`Permanently delete ${selected.size} product(s)? Cannot be undone.`)) return;
+    let removed = 0; let blocked = 0;
+    await Promise.all([...selected].map(async (id) => {
+      const res  = await fetch(`/api/admin/products/${id}?hard=true`, { method: 'DELETE' });
+      const json = (await res.json()) as { error: string | null };
+      if (res.ok && !json.error) removed++; else if (res.status === 409) blocked++;
+    }));
+    if (blocked > 0) toast.error(`${blocked} product(s) skipped — they appear in past orders`);
     toast.success(`Permanently deleted ${removed} products`);
     setSelected(new Set());
     void fetchProducts();
@@ -345,11 +330,28 @@ export default function AdminProductsPage() {
       return next;
     });
 
+  const toggleSelectGroup = (variants: Product[]) => {
+    const ids = variants.map((v) => v.id);
+    const allSelected = ids.every((id) => selected.has(id));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => allSelected ? next.delete(id) : next.add(id));
+      return next;
+    });
+  };
+
   const toggleAll = () => {
     const pageIds = (data?.products ?? []).map((p) => p.id);
     const allSelected = pageIds.every((id) => selected.has(id));
     setSelected(allSelected ? new Set() : new Set(pageIds));
   };
+
+  const toggleGroupExpand = (key: string) =>
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
 
   // ---------------------------------------------------------------------------
   // Derived values
@@ -357,8 +359,32 @@ export default function AdminProductsPage() {
 
   const subcats        = getSubcategoriesByCategory(category);
   const totalPages     = data ? Math.ceil(data.total / PER_PAGE) : 1;
-  const products       = data?.products ?? [];
-  const allOnPageSelected = products.length > 0 && products.every((p) => selected.has(p.id));
+  const allProducts    = data?.products ?? [];
+  const allOnPageSelected = allProducts.length > 0 && allProducts.every((p) => selected.has(p.id));
+
+  // ---------------------------------------------------------------------------
+  // Render helpers
+  // ---------------------------------------------------------------------------
+
+  const priceRange = (variants: Product[]) => {
+    const prices = variants.map((v) => Number(v.base_price)).filter((p) => p > 0);
+    if (prices.length === 0) return <span className="text-rose-600 font-semibold text-sm">Set Price</span>;
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    return (
+      <span className="font-mono text-sm text-slate-800">
+        {min === max ? formatINR(min) : `${formatINR(min)} – ${formatINR(max)}`}
+      </span>
+    );
+  };
+
+  const stockSummary = (variants: Product[]) => {
+    const allIn  = variants.every((v) => v.stock_status === 'in_stock');
+    const allOut = variants.every((v) => v.stock_status === 'out_of_stock');
+    if (allIn)  return <span className="text-xs text-emerald-600 font-medium">All in stock</span>;
+    if (allOut) return <span className="text-xs text-rose-600 font-medium">All out of stock</span>;
+    return <span className="text-xs text-amber-600 font-medium">Mixed</span>;
+  };
 
   // ---------------------------------------------------------------------------
   // Render
@@ -373,7 +399,7 @@ export default function AdminProductsPage() {
           <h1 className="text-2xl font-heading font-bold text-slate-900">Product Catalog</h1>
           {data && (
             <span className="bg-teal-100 text-teal-700 text-xs font-semibold px-2.5 py-1 rounded-full">
-              {data.total.toLocaleString('en-IN')} products
+              {groupedProducts.length} listings · {data.total} SKUs
             </span>
           )}
         </div>
@@ -397,7 +423,6 @@ export default function AdminProductsPage() {
 
       {/* Filter bar */}
       <div className="flex flex-wrap gap-3 items-center">
-        {/* Search */}
         <div className="relative flex-1 min-w-48 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -409,7 +434,6 @@ export default function AdminProductsPage() {
           />
         </div>
 
-        {/* Category */}
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
@@ -421,7 +445,6 @@ export default function AdminProductsPage() {
           ))}
         </select>
 
-        {/* Subcategory */}
         {subcats.length > 0 && (
           <select
             value={subcategory}
@@ -435,12 +458,11 @@ export default function AdminProductsPage() {
           </select>
         )}
 
-        {/* Stock status */}
         <div className="flex items-center gap-1 border border-slate-200 rounded-lg p-1 bg-slate-50 text-sm">
           {[
-            { value: '',              label: 'All' },
-            { value: 'in_stock',      label: 'In Stock' },
-            { value: 'out_of_stock',  label: 'Out of Stock' },
+            { value: '',             label: 'All' },
+            { value: 'in_stock',     label: 'In Stock' },
+            { value: 'out_of_stock', label: 'Out of Stock' },
           ].map((opt) => (
             <button
               key={opt.value}
@@ -457,7 +479,6 @@ export default function AdminProductsPage() {
           ))}
         </div>
 
-        {/* Show inactive toggle */}
         <label className="flex items-center gap-2 text-sm text-slate-600 select-none">
           <input
             type="checkbox"
@@ -489,7 +510,6 @@ export default function AdminProductsPage() {
               type="button"
               onClick={handleBulkDelete}
               className="text-sm text-amber-700 hover:text-amber-800 font-medium px-3 py-1.5 border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors"
-              title="Hide selected products from the catalog (recoverable)"
             >
               Deactivate
             </button>
@@ -497,7 +517,6 @@ export default function AdminProductsPage() {
               type="button"
               onClick={handleBulkHardDelete}
               className="text-sm text-white font-semibold px-3 py-1.5 bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
-              title="Permanently remove selected products from the database"
             >
               Delete permanently
             </button>
@@ -520,14 +539,12 @@ export default function AdminProductsPage() {
       )}
 
       {/* Empty state */}
-      {!loading && !error && products.length === 0 && (
+      {!loading && !error && groupedProducts.length === 0 && (
         <div className="text-center py-20 space-y-4">
           <Package className="w-12 h-12 text-slate-300 mx-auto" />
           <div>
             <p className="text-slate-700 font-semibold">No products in catalog</p>
-            <p className="text-slate-400 text-sm mt-1">
-              Import your Excel file to get started
-            </p>
+            <p className="text-slate-400 text-sm mt-1">Import your Excel file to get started</p>
           </div>
           <Link
             href="/admin/products/import"
@@ -539,9 +556,10 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* Table — desktop */}
-      {!loading && !error && products.length > 0 && (
+      {/* Table */}
+      {!loading && !error && groupedProducts.length > 0 && (
         <>
+          {/* Desktop table */}
           <div className="overflow-x-auto rounded-xl border border-slate-200 hidden sm:block">
             <table className="w-full text-sm">
               <thead>
@@ -554,68 +572,109 @@ export default function AdminProductsPage() {
                       className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                     />
                   </th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">#</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Name</th>
+                  <th className="text-left px-4 py-3 font-semibold text-slate-600 w-8">#</th>
+                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Product</th>
                   <th className="text-left px-4 py-3 font-semibold text-slate-600">Category</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Subcategory</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Size/Brand</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Unit</th>
+                  <th className="text-left px-4 py-3 font-semibold text-slate-600">Size / Brand</th>
                   <th className="text-right px-4 py-3 font-semibold text-slate-600">Price (₹)</th>
                   <th className="text-center px-4 py-3 font-semibold text-slate-600">Stock</th>
                   <th className="text-center px-4 py-3 font-semibold text-slate-600">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {products.map((product, idx) => {
-                  const rowNum    = (page - 1) * PER_PAGE + idx + 1;
-                  const needsPrice = product.base_price === 0;
-                  return (
+                {groupedProducts.map((group, idx) => {
+                  const { key, representative: rep, variants, isGroup } = group;
+                  const expanded    = expandedGroups.has(key);
+                  const rowNum      = (page - 1) * PER_PAGE + idx + 1;
+                  const needsPrice  = variants.every((v) => v.base_price === 0);
+                  const allSelected = variants.every((v) => selected.has(v.id));
+
+                  return [
+                    // ── Group / standalone header row ──
                     <tr
-                      key={product.id}
-                      className={`border-b border-slate-100 last:border-0 transition-colors ${
-                        selected.has(product.id) ? 'bg-teal-50' :
-                        needsPrice               ? 'bg-amber-50/60' : 'hover:bg-slate-50'
+                      key={key}
+                      className={`border-b border-slate-100 transition-colors ${
+                        allSelected     ? 'bg-teal-50' :
+                        needsPrice      ? 'bg-amber-50/60' :
+                        isGroup         ? 'bg-slate-50/80' : 'hover:bg-slate-50'
                       }`}
                     >
+                      {/* Checkbox — selects ALL variants in the group */}
                       <td className="px-4 py-3">
                         <input
                           type="checkbox"
-                          checked={selected.has(product.id)}
-                          onChange={() => toggleSelect(product.id)}
+                          checked={allSelected}
+                          onChange={() => isGroup ? toggleSelectGroup(variants) : toggleSelect(rep.id)}
                           className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                         />
                       </td>
+
                       <td className="px-4 py-3 font-mono text-slate-400 text-xs">{rowNum}</td>
+
+                      {/* Name + thumbnail + variant badge */}
                       <td className="px-4 py-3">
-                        <div className="font-medium text-slate-900 max-w-xs truncate" title={product.name}>
-                          {product.name}
+                        <div className="flex items-center gap-3">
+                          {/* Thumbnail */}
+                          <div className="w-10 h-10 rounded-lg border border-slate-200 overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center">
+                            {rep.thumbnail_url ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img src={rep.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <Package className="w-4 h-4 text-slate-300" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-slate-900 truncate max-w-50" title={rep.name}>
+                                {rep.name}
+                              </span>
+                              {isGroup && (
+                                <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-semibold text-teal-700">
+                                  <Layers className="w-3 h-3" />
+                                  {variants.length} variants
+                                </span>
+                              )}
+                            </div>
+                            {rep.sku && (
+                              <div className="text-[11px] font-mono text-slate-400 mt-0.5">{rep.sku}</div>
+                            )}
+                          </div>
                         </div>
-                        {product.brand && (
-                          <div className="text-xs text-slate-400">{product.brand}</div>
-                        )}
                       </td>
-                      <td className="px-4 py-3 text-slate-600 capitalize">
-                        {product.category.replace(/_/g, ' ')}
+
+                      <td className="px-4 py-3 text-slate-600 text-xs capitalize">
+                        {rep.category.replace(/_/g, ' ')}
                       </td>
+
                       <td className="px-4 py-3 text-slate-500 text-xs">
-                        {product.subcategory_slug?.replace(/_/g, ' ') ?? '—'}
+                        {isGroup
+                          ? <span className="italic text-slate-400">see variants ↓</span>
+                          : (rep.size_variant ?? rep.brand ?? '—')
+                        }
                       </td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">
-                        {product.size_variant ?? product.brand ?? '—'}
-                      </td>
-                      <td className="px-4 py-3 text-slate-500 text-xs uppercase">
-                        {product.unit_of_measure}
-                      </td>
+
+                      {/* Price: range for groups, editable cell for standalone */}
                       <td className="px-4 py-3 text-right">
-                        <PriceCell product={product} onSave={handlePriceSave} />
+                        {isGroup
+                          ? priceRange(variants)
+                          : <PriceCell product={rep} onSave={handlePriceSave} />
+                        }
                       </td>
+
+                      {/* Stock: summary for groups, toggle for standalone */}
                       <td className="px-4 py-3 text-center">
-                        <StockToggle product={product} onToggle={handleStockToggle} />
+                        {isGroup
+                          ? stockSummary(variants)
+                          : <StockToggle product={rep} onToggle={handleStockToggle} />
+                        }
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
+
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
                           <Link
-                            href={`/admin/products/${product.id}/edit`}
+                            href={`/admin/products/${rep.id}/edit`}
                             className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded transition-colors"
                             title="Edit"
                           >
@@ -623,60 +682,180 @@ export default function AdminProductsPage() {
                           </Link>
                           <button
                             type="button"
-                            onClick={() => void handleDelete(product.id, product.name)}
+                            onClick={() =>
+                              isGroup
+                                ? void handleDeleteGroup(variants)
+                                : void handleDelete(rep.id, rep.name)
+                            }
                             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
+                          {isGroup && (
+                            <button
+                              type="button"
+                              onClick={() => toggleGroupExpand(key)}
+                              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
+                              title={expanded ? 'Collapse variants' : 'Expand variants'}
+                            >
+                              {expanded
+                                ? <ChevronUp className="w-4 h-4" />
+                                : <ChevronDown className="w-4 h-4" />
+                              }
+                            </button>
+                          )}
                         </div>
                       </td>
-                    </tr>
-                  );
+                    </tr>,
+
+                    // ── Expanded variant sub-rows ──
+                    ...(isGroup && expanded
+                      ? variants.map((variant) => (
+                          <tr
+                            key={variant.id}
+                            className={`border-b border-slate-100 transition-colors ${
+                              selected.has(variant.id) ? 'bg-teal-50/60' : 'bg-white hover:bg-slate-50/50'
+                            }`}
+                          >
+                            <td className="px-4 py-2.5">
+                              <input
+                                type="checkbox"
+                                checked={selected.has(variant.id)}
+                                onChange={() => toggleSelect(variant.id)}
+                                className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                              />
+                            </td>
+                            <td />
+                            {/* Variant label — indented */}
+                            <td className="px-4 py-2.5">
+                              <div className="flex items-center gap-2 pl-14">
+                                <span className="text-slate-300 text-xs">└</span>
+                                <span className="text-sm text-slate-700 font-medium">
+                                  {variant.size_variant || variant.short_description || variant.name}
+                                </span>
+                              </div>
+                            </td>
+                            <td />
+                            <td className="px-4 py-2.5 text-xs text-slate-500">
+                              {variant.size_variant ?? '—'}
+                            </td>
+                            <td className="px-4 py-2.5 text-right">
+                              <PriceCell product={variant} onSave={handlePriceSave} />
+                            </td>
+                            <td className="px-4 py-2.5 text-center">
+                              <StockToggle product={variant} onToggle={handleStockToggle} />
+                            </td>
+                            <td className="px-4 py-2.5 text-center">
+                              <Link
+                                href={`/admin/products/${variant.id}/edit`}
+                                className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded transition-colors inline-flex"
+                                title="Edit this variant"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Link>
+                            </td>
+                          </tr>
+                        ))
+                      : []
+                    ),
+                  ];
                 })}
               </tbody>
             </table>
           </div>
 
-          {/* Cards — mobile */}
+          {/* Mobile cards */}
           <div className="sm:hidden space-y-3">
-            {products.map((product) => {
-              const needsPrice = product.base_price === 0;
+            {groupedProducts.map((group) => {
+              const { key, representative: rep, variants, isGroup } = group;
+              const expanded = expandedGroups.has(key);
               return (
                 <div
-                  key={product.id}
+                  key={key}
                   className={`rounded-xl border p-4 space-y-2 ${
-                    needsPrice ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'
+                    variants.every((v) => v.base_price === 0)
+                      ? 'border-amber-300 bg-amber-50'
+                      : 'border-slate-200 bg-white'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-slate-900 text-sm">{product.name}</p>
-                      {product.brand && (
-                        <p className="text-xs text-slate-400">{product.brand}</p>
-                      )}
+                    <div className="flex items-start gap-2">
+                      <div className="w-10 h-10 rounded-lg border border-slate-200 overflow-hidden shrink-0 bg-slate-100 flex items-center justify-center">
+                        {rep.thumbnail_url ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img src={rep.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Package className="w-4 h-4 text-slate-300" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900 text-sm">{rep.name}</p>
+                        {isGroup && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-semibold text-teal-700">
+                            <Layers className="w-3 h-3" />{variants.length} variants
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <StockToggle product={product} onToggle={handleStockToggle} />
+                    {!isGroup && <StockToggle product={rep} onToggle={handleStockToggle} />}
                   </div>
+
                   <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>{product.category.replace(/_/g, ' ')}</span>
-                    <PriceCell product={product} onSave={handlePriceSave} />
+                    <span>{rep.category.replace(/_/g, ' ')}</span>
+                    {isGroup ? priceRange(variants) : <PriceCell product={rep} onSave={handlePriceSave} />}
                   </div>
-                  <div className="flex gap-2 pt-1">
-                    <Link
-                      href={`/admin/products/${product.id}/edit`}
-                      className="flex-1 text-center text-xs border border-slate-300 py-1.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
-                    >
-                      Edit
-                    </Link>
+
+                  {isGroup && (
                     <button
                       type="button"
-                      onClick={() => void handleDelete(product.id, product.name)}
-                      className="flex-1 text-center text-xs border border-rose-200 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
+                      onClick={() => toggleGroupExpand(key)}
+                      className="w-full text-xs text-teal-600 font-medium py-1 border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors flex items-center justify-center gap-1"
                     >
-                      Delete
+                      {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      {expanded ? 'Hide variants' : 'Show variants'}
                     </button>
-                  </div>
+                  )}
+
+                  {isGroup && expanded && (
+                    <div className="space-y-2 pt-1 border-t border-slate-100">
+                      {variants.map((v) => (
+                        <div key={v.id} className="flex items-center justify-between">
+                          <span className="text-xs text-slate-700 font-medium">
+                            {v.size_variant || v.name}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <PriceCell product={v} onSave={handlePriceSave} />
+                            <StockToggle product={v} onToggle={handleStockToggle} />
+                            <Link
+                              href={`/admin/products/${v.id}/edit`}
+                              className="p-1 text-slate-400 hover:text-teal-600 rounded transition-colors"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {!isGroup && (
+                    <div className="flex gap-2 pt-1">
+                      <Link
+                        href={`/admin/products/${rep.id}/edit`}
+                        className="flex-1 text-center text-xs border border-slate-300 py-1.5 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete(rep.id, rep.name)}
+                        className="flex-1 text-center text-xs border border-rose-200 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -686,7 +865,7 @@ export default function AdminProductsPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-sm text-slate-500">
-                Page {page} of {totalPages} · {data!.total.toLocaleString('en-IN')} products
+                Page {page} of {totalPages} · {data!.total.toLocaleString('en-IN')} SKUs
               </p>
               <div className="flex items-center gap-2">
                 <button

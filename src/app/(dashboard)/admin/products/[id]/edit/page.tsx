@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ExternalLink, Unlink, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Unlink, RefreshCw, Images } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ProductForm, { type ProductFormValues } from '@/components/admin/ProductForm';
 import { formatINR } from '@/lib/utils/formatting';
@@ -22,9 +22,10 @@ function VariantGroupPanel({
   currentProductId: string;
   groupSlug:        string | null;
 }) {
-  const [siblings,    setSiblings]    = useState<Product[]>([]);
-  const [loadingList, setLoadingList] = useState(false);
-  const [removing,    setRemoving]    = useState<string | null>(null);
+  const [siblings,      setSiblings]      = useState<Product[]>([]);
+  const [loadingList,   setLoadingList]   = useState(false);
+  const [removing,      setRemoving]      = useState<string | null>(null);
+  const [applyingImage, setApplyingImage] = useState(false);
 
   const fetchSiblings = useCallback(async (slug: string) => {
     setLoadingList(true);
@@ -59,6 +60,37 @@ function VariantGroupPanel({
     }
   };
 
+  // Fetch fresh data for this product and copy its image to all siblings
+  const applyImageToAll = async () => {
+    if (!groupSlug) return;
+    setApplyingImage(true);
+    try {
+      const res  = await fetch(`/api/admin/products?group_slug=${encodeURIComponent(groupSlug)}&per_page=50`);
+      const json = (await res.json()) as { data: { products: Product[] } | null; error: string | null };
+      const all  = json.data?.products ?? [];
+      const source = all.find((p) => p.id === currentProductId);
+      if (!source?.thumbnail_url) {
+        toast.error('Upload an image for this product first, then apply to all variants.');
+        return;
+      }
+      const targets = all.filter((p) => p.id !== currentProductId);
+      await Promise.all(
+        targets.map((t) =>
+          fetch(`/api/admin/products/${t.id}`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ thumbnail_url: source.thumbnail_url, images: source.images }),
+          })
+        )
+      );
+      toast.success(`Image applied to all ${targets.length} other variant${targets.length !== 1 ? 's' : ''}`);
+    } catch {
+      toast.error('Failed to apply image');
+    } finally {
+      setApplyingImage(false);
+    }
+  };
+
   if (!groupSlug) return null;
   if (loadingList) {
     return (
@@ -72,9 +104,24 @@ function VariantGroupPanel({
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-      <div>
-        <h2 className="text-base font-semibold text-slate-800">Variant Group Members</h2>
-        <p className="mt-0.5 font-mono text-[11px] text-slate-400 break-all">{groupSlug}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-semibold text-slate-800">Variant Group Members</h2>
+          <p className="mt-0.5 font-mono text-[11px] text-slate-400 break-all">{groupSlug}</p>
+        </div>
+        <button
+          type="button"
+          disabled={applyingImage}
+          onClick={() => void applyImageToAll()}
+          className="shrink-0 flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 hover:bg-teal-100 transition-colors disabled:opacity-50"
+          title="Copy this product's image to every other variant in the group"
+        >
+          {applyingImage
+            ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            : <Images className="w-3.5 h-3.5" />
+          }
+          Apply image to all variants
+        </button>
       </div>
 
       <p className="text-xs text-slate-500">
@@ -82,6 +129,8 @@ function VariantGroupPanel({
         Use <strong>Remove</strong> to unlink a product that doesn&apos;t belong here —
         it will become a standalone listing.
         To fix a wrong label or price, click <strong>Edit</strong>.
+        Upload an image on this product first, then click <strong>Apply image to all variants</strong>
+        to copy it to every variant automatically.
       </p>
 
       <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
