@@ -1,23 +1,152 @@
-/**
- * Admin — Edit Product
- *
- * Loads the existing product from GET /api/admin/products (filtered by id),
- * pre-fills the ProductForm, then calls PUT /api/admin/products/:id on save.
- *
- * States handled: loading, error, success (redirect to catalog)
- */
-
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Unlink, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ProductForm, { type ProductFormValues } from '@/components/admin/ProductForm';
+import { formatINR } from '@/lib/utils/formatting';
 import type { Tables } from '@/types/database';
 
 type Product = Tables<'products'>;
+
+// ---------------------------------------------------------------------------
+// Variant Group Panel — shows all siblings and lets admin fix groupings
+// ---------------------------------------------------------------------------
+
+function VariantGroupPanel({
+  currentProductId,
+  groupSlug,
+}: {
+  currentProductId: string;
+  groupSlug:        string | null;
+}) {
+  const [siblings,    setSiblings]    = useState<Product[]>([]);
+  const [loadingList, setLoadingList] = useState(false);
+  const [removing,    setRemoving]    = useState<string | null>(null);
+
+  const fetchSiblings = useCallback(async (slug: string) => {
+    setLoadingList(true);
+    try {
+      const res  = await fetch(`/api/admin/products?group_slug=${encodeURIComponent(slug)}&per_page=50`);
+      const json = (await res.json()) as { data: { products: Product[] } | null; error: string | null };
+      setSiblings(json.data?.products ?? []);
+    } finally {
+      setLoadingList(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (groupSlug) void fetchSiblings(groupSlug);
+    else setSiblings([]);
+  }, [groupSlug, fetchSiblings]);
+
+  const removeFromGroup = async (productId: string) => {
+    setRemoving(productId);
+    try {
+      const res  = await fetch(`/api/admin/products/${productId}`, {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ group_slug: null, size_variant: null }),
+      });
+      const json = (await res.json()) as { error: string | null };
+      if (!res.ok || json.error) { toast.error(json.error ?? 'Failed to remove'); return; }
+      toast.success('Removed from variant group');
+      setSiblings((prev) => prev.filter((p) => p.id !== productId));
+    } finally {
+      setRemoving(null);
+    }
+  };
+
+  if (!groupSlug) return null;
+  if (loadingList) {
+    return (
+      <div className="bg-white rounded-xl border border-slate-200 p-6 flex items-center gap-3 text-slate-400">
+        <RefreshCw className="w-4 h-4 animate-spin" />
+        <span className="text-sm">Loading variant group…</span>
+      </div>
+    );
+  }
+  if (siblings.length <= 1) return null;
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+      <div>
+        <h2 className="text-base font-semibold text-slate-800">Variant Group Members</h2>
+        <p className="mt-0.5 font-mono text-[11px] text-slate-400 break-all">{groupSlug}</p>
+      </div>
+
+      <p className="text-xs text-slate-500">
+        All products below share this Group ID and appear together as one marketplace card.
+        Use <strong>Remove</strong> to unlink a product that doesn&apos;t belong here —
+        it will become a standalone listing.
+        To fix a wrong label or price, click <strong>Edit</strong>.
+      </p>
+
+      <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+        {siblings
+          .sort((a, b) => Number(a.base_price) - Number(b.base_price))
+          .map((sibling) => {
+            const isCurrent = sibling.id === currentProductId;
+            return (
+              <div
+                key={sibling.id}
+                className={`flex items-center gap-3 px-4 py-3 ${isCurrent ? 'bg-teal-50' : 'bg-white'}`}
+              >
+                {/* Variant label */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 truncate">
+                    {sibling.size_variant || sibling.short_description || sibling.name}
+                    {isCurrent && (
+                      <span className="ml-2 inline-block rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-semibold text-teal-700">
+                        editing now
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs text-slate-400 truncate">{sibling.name}</p>
+                </div>
+
+                {/* Price */}
+                <span className="font-mono text-sm font-bold text-slate-700 shrink-0">
+                  {formatINR(Number(sibling.base_price))}
+                </span>
+
+                {/* Actions */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <Link
+                    href={`/admin/products/${sibling.id}/edit`}
+                    className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                  >
+                    Edit <ExternalLink className="w-3 h-3" />
+                  </Link>
+                  {!isCurrent && (
+                    <button
+                      type="button"
+                      disabled={removing === sibling.id}
+                      onClick={() => void removeFromGroup(sibling.id)}
+                      className="flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2.5 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-50"
+                    >
+                      {removing === sibling.id ? (
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Unlink className="w-3 h-3" />
+                      )}
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main edit page
+// ---------------------------------------------------------------------------
 
 export default function EditProductPage({
   params,
@@ -25,11 +154,12 @@ export default function EditProductPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-  const [product,   setProduct]   = useState<Product | null>(null);
-  const [loading,   setLoading]   = useState(true);
-  const [saving,    setSaving]    = useState(false);
+  const [product,    setProduct]    = useState<Product | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [saving,     setSaving]     = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [productId, setProductId] = useState<string | null>(null);
+  const [productId,  setProductId]  = useState<string | null>(null);
+  const [liveGroupSlug, setLiveGroupSlug] = useState<string | null>(null);
 
   // Resolve params
   useEffect(() => {
@@ -41,17 +171,7 @@ export default function EditProductPage({
     if (!productId) return;
     void (async () => {
       try {
-        const res  = await fetch(`/api/admin/products?per_page=1&page=1`);
-        // We fetch the specific product via the GET list filtered approach —
-        // since there's no single-product GET endpoint, we use the search param.
-        // Fall back: fetch all and find.
-        const json = (await res.json()) as {
-          data: { products: Product[]; total: number } | null;
-          error: string | null;
-        };
-        // Try to find by iterating pages until we find this ID.
-        // A simpler approach: call the API with a large page and find.
-        // For now, we fetch all and find — product count is ~400 max.
+        // Fetch all products across pages to find by ID (≤400 products total)
         const allRes  = await fetch(`/api/admin/products?per_page=100&page=1`);
         const allJson = (await allRes.json()) as {
           data: { products: Product[]; total: number } | null;
@@ -61,23 +181,18 @@ export default function EditProductPage({
           setFetchError(allJson.error ?? 'Failed to load product');
           return;
         }
-        // Search all pages
         let found: Product | null = allJson.data.products.find((p) => p.id === productId) ?? null;
         if (!found) {
-          const total   = allJson.data.total;
-          const pages   = Math.ceil(total / 100);
+          const pages = Math.ceil(allJson.data.total / 100);
           for (let pg = 2; pg <= pages && !found; pg++) {
             const pgRes  = await fetch(`/api/admin/products?per_page=100&page=${pg}`);
-            const pgJson = (await pgRes.json()) as {
-              data: { products: Product[] } | null;
-              error: string | null;
-            };
+            const pgJson = (await pgRes.json()) as { data: { products: Product[] } | null; error: string | null };
             found = pgJson.data?.products.find((p) => p.id === productId) ?? null;
           }
         }
-        void json; // initial fetch unused
         if (!found) { setFetchError('Product not found'); return; }
         setProduct(found);
+        setLiveGroupSlug(found.group_slug ?? null);
       } catch {
         setFetchError('Network error loading product');
       } finally {
@@ -90,6 +205,7 @@ export default function EditProductPage({
     if (!productId) return;
     setSaving(true);
     try {
+      const newGroupSlug = values.group_slug.trim() || null;
       const body = {
         name:              values.name,
         description:       values.description || null,
@@ -98,6 +214,7 @@ export default function EditProductPage({
         subcategory_slug:  values.subcategory_slug || null,
         brand:             values.brand || null,
         size_variant:      values.size_variant || null,
+        group_slug:        newGroupSlug,
         sku:               values.sku || null,
         base_price:        parseFloat(values.base_price) || 0,
         moq:               parseInt(values.moq, 10) || 1,
@@ -110,9 +227,9 @@ export default function EditProductPage({
         pricing_tiers: values.pricing_tiers
           .filter((t) => t.min_qty && t.price)
           .map((t) => ({
-            min_qty:  parseInt(t.min_qty, 10),
-            max_qty:  t.max_qty ? parseInt(t.max_qty, 10) : null,
-            price:    parseFloat(t.price),
+            min_qty: parseInt(t.min_qty, 10),
+            max_qty: t.max_qty ? parseInt(t.max_qty, 10) : null,
+            price:   parseFloat(t.price),
           })),
       };
 
@@ -124,6 +241,7 @@ export default function EditProductPage({
       const json = (await res.json()) as { data: Product | null; error: string | null };
       if (!res.ok || json.error) throw new Error(json.error ?? 'Update failed');
       toast.success('Product updated');
+      setLiveGroupSlug(newGroupSlug);
       router.push('/admin/products');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to update product');
@@ -148,17 +266,13 @@ export default function EditProductPage({
     return (
       <div className="max-w-3xl mx-auto px-4 py-12 text-center space-y-4">
         <p className="text-rose-600 font-medium">{fetchError ?? 'Product not found'}</p>
-        <Link
-          href="/admin/products"
-          className="text-sm text-teal-600 hover:underline"
-        >
+        <Link href="/admin/products" className="text-sm text-teal-600 hover:underline">
           Back to catalog
         </Link>
       </div>
     );
   }
 
-  // Map product row → form values
   const initial: Partial<ProductFormValues> = {
     name:              product.name,
     description:       product.description ?? '',
@@ -167,6 +281,7 @@ export default function EditProductPage({
     subcategory_slug:  product.subcategory_slug ?? '',
     brand:             product.brand ?? '',
     size_variant:      product.size_variant ?? '',
+    group_slug:        product.group_slug ?? '',
     sku:               product.sku ?? '',
     base_price:        String(product.base_price),
     moq:               String(product.moq),
@@ -208,6 +323,12 @@ export default function EditProductPage({
         onSubmit={(values) => void handleSubmit(values)}
         isLoading={saving}
         submitLabel="Save Changes"
+      />
+
+      {/* Variant group members panel — shown below the form when in a group */}
+      <VariantGroupPanel
+        currentProductId={productId!}
+        groupSlug={liveGroupSlug}
       />
     </div>
   );

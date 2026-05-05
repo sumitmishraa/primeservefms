@@ -41,6 +41,7 @@ export interface ProductFormValues {
   subcategory_slug:  string;
   brand:             string;
   size_variant:      string;
+  group_slug:        string;
   sku:               string;
   base_price:        string;
   moq:               string;
@@ -94,6 +95,7 @@ const EMPTY_FORM: ProductFormValues = {
   subcategory_slug:  '',
   brand:             '',
   size_variant:      '',
+  group_slug:        '',
   sku:               '',
   base_price:        '',
   moq:               '1',
@@ -450,13 +452,28 @@ export default function ProductForm({
           <Field label="Brand" hint="e.g. Scotch-Brite, 3M">
             <input type="text" value={values.brand} onChange={(e) => set('brand', e.target.value)} placeholder="Brand name" className={inputCls} />
           </Field>
-          <Field label="Size / Variant" hint="e.g. 24×30 inches, 500 ml">
-            <input type="text" value={values.size_variant} onChange={(e) => set('size_variant', e.target.value)} placeholder="Size or variant" className={inputCls} />
+          <Field label="Size / Variant" hint="Label shown in dropdown — e.g. Small, 500 ml, Blue">
+            <input type="text" value={values.size_variant} onChange={(e) => set('size_variant', e.target.value)} placeholder="e.g. Small, 500 ml" className={inputCls} />
           </Field>
           <Field label="SKU" hint="Optional internal code">
             <input type="text" value={values.sku} onChange={(e) => set('sku', e.target.value)} placeholder="e.g. HK-GB-001" className={inputCls} />
           </Field>
         </div>
+
+        <Field
+          label="Variant Group ID"
+          hint="Products with the same Group ID appear as one card with a dropdown. Leave blank for standalone products."
+        >
+          <input
+            type="text"
+            value={values.group_slug}
+            onChange={(e) =>
+              set('group_slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-{2,}/g, '-'))
+            }
+            placeholder="e.g. crescent-checked-cloth-brooms-cloth"
+            className={`${inputCls} font-mono text-xs`}
+          />
+        </Field>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Unit of Measure">

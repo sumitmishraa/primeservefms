@@ -68,6 +68,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const subcategory     = searchParams.get('subcategory') ?? '';
     const search          = searchParams.get('search') ?? '';
     const stockFilter     = searchParams.get('stock') ?? '';
+    const groupSlug       = searchParams.get('group_slug') ?? '';
     // By default, hide soft-deleted (is_active=false) rows from the admin
     // catalog so the trash-icon button visibly removes them. Pass
     // ?include_inactive=true to see deactivated rows too (e.g. to restore them).
@@ -99,6 +100,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       query = query.eq('stock_status', 'in_stock');
     } else if (stockFilter === 'out_of_stock') {
       query = query.eq('stock_status', 'out_of_stock');
+    }
+    if (groupSlug) {
+      query = query.eq('group_slug', groupSlug);
     }
 
     const { data, count, error } = await query
