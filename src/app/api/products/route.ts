@@ -24,12 +24,22 @@ import type { Enums } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
+const PUBLIC_PRODUCT_CACHE_HEADERS = {
+  'Cache-Control': 'public, max-age=30, s-maxage=300, stale-while-revalidate=1800',
+};
+
+const NO_STORE_HEADERS = {
+  'Cache-Control': 'no-store',
+};
+
+const PUBLIC_CARD_COLUMNS =
+  'id, slug, name, brand, size_variant, group_slug, base_price, unit_of_measure, moq, thumbnail_url, category, subcategory_slug, stock_status, gst_rate, pricing_tiers, created_at, total_orders' as const;
+
 /** Slim product shape returned for the marketplace grid */
 export interface MarketplaceProduct {
   id: string;
   slug: string;
   name: string;
-  description: string | null;
   brand: string | null;
   size_variant: string | null;
   /** Non-null when this product belongs to a variant group */
@@ -40,12 +50,10 @@ export interface MarketplaceProduct {
   unit_of_measure: string;
   moq: number;
   thumbnail_url: string | null;
-  images: string[];
   category: string;
   subcategory_slug: string | null;
   stock_status: string;
   gst_rate: number;
-  specifications: Record<string, string>;
   pricing_tiers: Array<{ min_qty: number; max_qty: number | null; price: number }>;
 }
 
@@ -79,9 +87,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     let query = supabase
       .from('products')
-      .select(
-        'id, slug, name, description, brand, size_variant, group_slug, base_price, unit_of_measure, moq, thumbnail_url, images, category, subcategory_slug, stock_status, gst_rate, specifications, pricing_tiers, created_at, total_orders'
-      );
+      .select(PUBLIC_CARD_COLUMNS);
 
     // Always filter to approved + active + priced for the public marketplace
     if (isApproved) query = query.eq('is_approved', true);
@@ -125,11 +131,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       console.error('[api/products GET] Supabase error:', error.message);
       return NextResponse.json(
         { data: null, error: 'Failed to fetch products' },
-        { status: 500 }
+        { status: 500, headers: NO_STORE_HEADERS }
       );
     }
 
-    const rows = (products ?? []) as Array<MarketplaceProduct & {
+    const rows = (products ?? []) as unknown as Array<MarketplaceProduct & {
       created_at?: string;
       total_orders?: number;
     }>;
@@ -161,12 +167,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         per_page: perPage,
       } as ProductsApiResponse,
       error: null,
-    });
+    }, { headers: PUBLIC_PRODUCT_CACHE_HEADERS });
   } catch (error) {
     console.error('[api/products GET]', error);
     return NextResponse.json(
       { data: null, error: 'Internal server error' },
-      { status: 500 }
+      { status: 500, headers: NO_STORE_HEADERS }
     );
   }
 }

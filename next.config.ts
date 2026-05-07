@@ -1,6 +1,27 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lpjvevrxpjgdhoogdvgu.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
+    ],
+    deviceSizes: [360, 480, 640, 768, 1024, 1280, 1536],
+    imageSizes: [48, 64, 96, 128, 256, 384],
+  },
   // xlsx (SheetJS) uses Node.js built-ins that can't be bundled by webpack.
   // Marking it as server-external tells Next.js to require() it at runtime
   // instead of trying to bundle it.

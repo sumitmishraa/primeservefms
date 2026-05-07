@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Plus, Trash2, Upload, X, Star, ImageOff } from 'lucide-react';
 import {
   PRODUCT_CATEGORIES,
@@ -339,16 +339,21 @@ export default function ProductForm({
     thumbnail_url: initialValues.thumbnail_url ?? '',
   });
 
-  // Reset subcategory fields when category changes
-  useEffect(() => {
-    setValues((v) => ({ ...v, subcategory_id: '', subcategory_slug: '' }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values.category]);
-
   const set = (
     field: keyof ProductFormValues,
     val: string | Enums<'stock_status'> | Enums<'unit_of_measure'> | PricingTierRow[] | string[],
-  ) => setValues((v) => ({ ...v, [field]: val }));
+  ) => {
+    if (field === 'category') {
+      setValues((v) => ({
+        ...v,
+        category: val as ProductFormValues['category'],
+        subcategory_id: '',
+        subcategory_slug: '',
+      }));
+      return;
+    }
+    setValues((v) => ({ ...v, [field]: val }));
+  };
 
   const subcats = values.category ? getSubcategoriesByCategory(values.category) : [];
 

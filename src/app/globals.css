@@ -22,6 +22,12 @@ body {
   background: #f8fafc;
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+* {
+  min-width: 0;
 }
 
 /* Hide the reCAPTCHA badge and error widget injected by Google */

@@ -18,6 +18,7 @@ import { ShoppingBag, ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react
 import ProductCard from '@/components/marketplace/ProductCard';
 import ProductSidebar from '@/components/marketplace/ProductSidebar';
 import { PublicHeader, PublicFooter } from '@/components/layout';
+import CustomSelect from '@/components/ui/CustomSelect';
 import {
   getCategoryLabel,
   getSubcategoryLabel,
@@ -34,12 +35,20 @@ interface ProductsApiResponse {
 }
 
 const PER_PAGE = 24;
+const PRODUCTS_CACHE_TTL_MS = 5 * 60 * 1000;
 const SORT_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'relevance', label: 'Relevance' },
   { value: 'price_asc', label: 'Price — Low to High' },
   { value: 'price_desc', label: 'Price — High to Low' },
   { value: 'newest', label: 'Newest First' },
 ];
+
+interface ProductsCacheEntry {
+  data: ProductsApiResponse;
+  timestamp: number;
+}
+
+const productsCache = new Map<string, ProductsCacheEntry>();
 
 function SkeletonCard() {
   return (
@@ -70,8 +79,10 @@ function MarketplaceContent() {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchDraft, setSearchDraft] = useState(urlSearch);
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const productsAbortRef = useRef<AbortController | null>(null);
 
   const totalPages = Math.ceil(total / PER_PAGE);
 
@@ -105,47 +116,83 @@ function MarketplaceContent() {
     pushParams({ subcategory: sub });
   const handleSortChange = (s: string) => pushParams({ sort: s });
   const handleSearchChange = (q: string) => {
+    setSearchDraft(q);
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     searchDebounceRef.current = setTimeout(() => pushParams({ search: q }), 400);
   };
 
-  const fetchProducts = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        is_approved: 'true',
-        is_active: 'true',
-        page: String(urlPage),
-        per_page: String(PER_PAGE),
-      });
-      if (urlCategory) params.set('category', urlCategory);
-      if (urlSubcategory) params.set('subcategory', urlSubcategory);
-      if (urlSearch) params.set('search', urlSearch);
-      if (urlSort && urlSort !== 'relevance') params.set('sort', urlSort);
+  useEffect(() => {
+    setSearchDraft(urlSearch);
+  }, [urlSearch]);
 
-      const res = await fetch(`/api/products?${params.toString()}`);
+  const fetchProducts = useCallback(async (force = false) => {
+    const params = new URLSearchParams({
+      is_approved: 'true',
+      is_active: 'true',
+      page: String(urlPage),
+      per_page: String(PER_PAGE),
+    });
+    if (urlCategory) params.set('category', urlCategory);
+    if (urlSubcategory) params.set('subcategory', urlSubcategory);
+    if (urlSearch) params.set('search', urlSearch);
+    if (urlSort && urlSort !== 'relevance') params.set('sort', urlSort);
+
+    const cacheKey = params.toString();
+    const cached = force ? null : productsCache.get(cacheKey);
+    const cachedIsFresh =
+      !!cached && Date.now() - cached.timestamp < PRODUCTS_CACHE_TTL_MS;
+
+    if (cachedIsFresh) {
+      setProducts(cached.data.products);
+      setTotal(cached.data.total);
+      setIsLoading(false);
+      setError(null);
+    } else {
+      setIsLoading(true);
+    }
+
+    productsAbortRef.current?.abort();
+    const controller = new AbortController();
+    productsAbortRef.current = controller;
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/products?${cacheKey}`, {
+        signal: controller.signal,
+        cache: 'force-cache',
+      });
       const json = (await res.json()) as {
         data: ProductsApiResponse | null;
         error: string | null;
       };
 
+      if (controller.signal.aborted) return;
+
       if (!res.ok || json.error || !json.data) {
-        setError(json.error ?? 'Failed to load products');
+        if (!cachedIsFresh) setError(json.error ?? 'Failed to load products');
         return;
       }
 
+      productsCache.set(cacheKey, {
+        data: json.data,
+        timestamp: Date.now(),
+      });
       setProducts(json.data.products);
       setTotal(json.data.total);
     } catch {
-      setError('Something went wrong. Please try again.');
+      if (!controller.signal.aborted && !cachedIsFresh) {
+        setError('Something went wrong. Please try again.');
+      }
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted && productsAbortRef.current === controller) {
+        setIsLoading(false);
+      }
     }
   }, [urlPage, urlCategory, urlSubcategory, urlSearch, urlSort]);
 
   useEffect(() => {
     void fetchProducts();
+    return () => productsAbortRef.current?.abort();
   }, [fetchProducts]);
 
   useEffect(() => {
@@ -222,7 +269,7 @@ function MarketplaceContent() {
             <ProductSidebar
               selectedCategory={urlCategory}
               selectedSubcategory={urlSubcategory}
-              searchQuery={urlSearch}
+              searchQuery={searchDraft}
               onCategoryChange={handleCategoryChange}
               onSubcategoryChange={handleSubcategoryChange}
               onSearchChange={handleSearchChange}
@@ -251,20 +298,17 @@ function MarketplaceContent() {
                 )}
               </p>
 
-              <label className="flex items-center gap-2 text-sm text-slate-600">
+              <div className="flex w-full items-center gap-2 text-sm text-slate-600 sm:w-auto">
                 <span className="whitespace-nowrap">Sort:</span>
-                <select
+                <CustomSelect
                   value={urlSort}
-                  onChange={(e) => handleSortChange(e.target.value)}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-                >
-                  {SORT_OPTIONS.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onChange={handleSortChange}
+                  options={SORT_OPTIONS}
+                  ariaLabel="Sort products"
+                  className="min-w-0 flex-1 sm:w-52 sm:flex-none"
+                  buttonClassName="min-h-10 py-2"
+                />
+              </div>
             </div>
 
             {/* Loading */}
@@ -284,7 +328,7 @@ function MarketplaceContent() {
               <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-rose-200 bg-rose-50 py-20 text-center">
                 <p className="text-sm font-medium text-rose-700">{error}</p>
                 <button
-                  onClick={() => void fetchProducts()}
+                  onClick={() => void fetchProducts(true)}
                   className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
                 >
                   Try Again
@@ -323,8 +367,12 @@ function MarketplaceContent() {
             {!isLoading && !error && products.length > 0 && (
               <>
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                  {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                  {products.map((product, index) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      priority={index < 4 && urlPage === 1}
+                    />
                   ))}
                 </div>
 

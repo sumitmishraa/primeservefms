@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -344,12 +345,12 @@ export default function HomePage() {
                 className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg"
               >
                 <div className="relative aspect-[2/1] w-full overflow-hidden bg-white">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={CATEGORY_IMAGES[cat.value]}
                     alt={cat.label}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                     className="h-full w-full object-contain"
-                    loading="lazy"
                   />
                 </div>
                 <div className="flex flex-1 flex-col p-6">
@@ -415,12 +416,12 @@ export default function HomePage() {
                     href="/marketplace"
                     className="relative block aspect-[4/3] w-full overflow-hidden bg-slate-100"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
+                      fill
+                      sizes="300px"
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
                     />
                     <span className="absolute left-3 top-3 rounded-full bg-teal-100 px-2.5 py-0.5 text-[11px] font-semibold text-teal-700">
                       In Stock

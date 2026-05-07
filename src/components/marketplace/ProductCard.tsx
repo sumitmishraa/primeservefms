@@ -13,6 +13,7 @@
 
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Package, Heart } from 'lucide-react';
@@ -22,6 +23,7 @@ import type { CartableProduct } from './AddToCartButton';
 
 interface ProductCardProps {
   product: CartableProduct;
+  priority?: boolean;
 }
 
 function productImageAlt(product: CartableProduct): string {
@@ -29,7 +31,7 @@ function productImageAlt(product: CartableProduct): string {
   return `Buy ${product.name}${size} online for B2B housekeeping procurement`;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const router = useRouter();
   const isOutOfStock = product.stock_status === 'out_of_stock';
   const isLowStock = product.stock_status === 'low_stock';
@@ -63,10 +65,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         className="relative block aspect-square w-full overflow-hidden bg-slate-50"
       >
         {product.thumbnail_url ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
+          <Image
             src={product.thumbnail_url}
             alt={productImageAlt(product)}
+            fill
+            sizes="(min-width: 1536px) 20vw, (min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+            priority={priority}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
