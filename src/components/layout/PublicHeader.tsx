@@ -100,6 +100,16 @@ export default function PublicHeader() {
     setOpenStripCategory(null);
   }, [pathname]);
 
+  // Prevent the page behind the mobile drawer from scrolling.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileOpen]);
+
   // Close the strip dropdown on outside click
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -289,7 +299,7 @@ export default function PublicHeader() {
             // auth state resolves.
             <div
               aria-hidden="true"
-              className="flex h-[38px] w-[112px] items-center justify-center rounded-lg border border-slate-200 sm:w-[124px]"
+              className="flex h-[38px] w-10 items-center justify-center rounded-lg border border-slate-200 sm:w-[124px]"
             >
               <Loader2 className="h-4 w-4 animate-spin text-slate-300" />
             </div>

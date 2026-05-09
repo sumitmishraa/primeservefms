@@ -1,10 +1,10 @@
-/**
- * ProductForm — shared form for "new product" and "edit product" pages.
+﻿/**
+ * ProductForm â€” shared form for "new product" and "edit product" pages.
  *
- * Sections: Basic Info · Product Details · Pricing · Images · Tags
+ * Sections: Basic Info Â· Product Details Â· Pricing Â· Images Â· Tags
  *
  * Image upload flow (edit mode only):
- *   1. Admin picks a file → POST /api/admin/products/[id]/images
+ *   1. Admin picks a file â†’ POST /api/admin/products/[id]/images
  *   2. File is stored in Supabase Storage and URL appended to product.images
  *   3. First image becomes thumbnail automatically
  *   4. Admin can remove any image (DELETE /api/admin/products/[id]/images)
@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Plus, Trash2, Upload, X, Star, ImageOff } from 'lucide-react';
 import {
   PRODUCT_CATEGORIES,
@@ -56,7 +56,7 @@ export interface ProductFormValues {
 }
 
 interface ProductFormProps {
-  /** Product ID — required to enable image upload (edit mode) */
+  /** Product ID â€” required to enable image upload (edit mode) */
   productId?:     string;
   initialValues?: Partial<ProductFormValues>;
   onSubmit:       (values: ProductFormValues) => void;
@@ -173,7 +173,7 @@ function ImageUploader({
       onChange(json.data.images, json.data.thumbnail);
       toast.success('Image uploaded');
     } catch {
-      toast.error('Upload failed — check your connection');
+      toast.error('Upload failed â€” check your connection');
     } finally {
       setUploading(false);
     }
@@ -251,7 +251,7 @@ function ImageUploader({
         {uploading ? (
           <div className="flex flex-col items-center gap-2 text-teal-600">
             <span className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
-            <p className="text-sm font-medium">Uploading…</p>
+            <p className="text-sm font-medium">Uploadingâ€¦</p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 text-slate-400">
@@ -259,7 +259,7 @@ function ImageUploader({
             <p className="text-sm font-medium text-slate-600">
               Drop images here or <span className="text-teal-600 underline">click to browse</span>
             </p>
-            <p className="text-xs">JPEG · PNG · WebP · GIF · max 5 MB each</p>
+            <p className="text-xs">JPEG Â· PNG Â· WebP Â· GIF Â· max 5 MB each</p>
           </div>
         )}
       </div>
@@ -314,7 +314,7 @@ function ImageUploader({
       ) : (
         <div className="flex items-center gap-3 text-slate-400 bg-slate-50 rounded-xl p-4">
           <ImageOff className="w-5 h-5 shrink-0" />
-          <p className="text-sm">No images yet — upload one above</p>
+          <p className="text-sm">No images yet â€” upload one above</p>
         </div>
       )}
     </div>
@@ -340,16 +340,21 @@ export default function ProductForm({
     thumbnail_url: initialValues.thumbnail_url ?? '',
   });
 
-  // Reset subcategory fields when category changes
-  useEffect(() => {
-    setValues((v) => ({ ...v, subcategory_id: '', subcategory_slug: '' }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values.category]);
-
   const set = (
     field: keyof ProductFormValues,
     val: string | Enums<'stock_status'> | Enums<'unit_of_measure'> | PricingTierRow[] | string[],
-  ) => setValues((v) => ({ ...v, [field]: val }));
+  ) => {
+    if (field === 'category') {
+      setValues((v) => ({
+        ...v,
+        category: val as ProductFormValues['category'],
+        subcategory_id: '',
+        subcategory_slug: '',
+      }));
+      return;
+    }
+    setValues((v) => ({ ...v, [field]: val }));
+  };
 
   const subcats = values.category ? getSubcategoriesByCategory(values.category) : [];
 
@@ -376,7 +381,7 @@ export default function ProductForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
 
-      {/* ── Basic Information ── */}
+      {/* â”€â”€ Basic Information â”€â”€ */}
       <section className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
         <h2 className="text-base font-semibold text-slate-800">Basic Information</h2>
 
@@ -386,7 +391,7 @@ export default function ProductForm({
             value={values.name}
             onChange={(e) => set('name', e.target.value)}
             required
-            placeholder="e.g. Heavy Duty Garbage Bag 24×30"
+            placeholder="e.g. Heavy Duty Garbage Bag 24Ã—30"
             className={inputCls}
           />
         </Field>
@@ -395,8 +400,7 @@ export default function ProductForm({
           <Field label="Category" required>
             <CustomSelect
               value={values.category}
-              onValueChange={(nextValue) => set('category', nextValue as Enums<'product_category'>)}
-              required
+              onChange={(nextValue) => set('category', nextValue as Enums<'product_category'>)}
               className={inputCls}
               options={[
                 { value: '', label: 'Select category' },
@@ -408,7 +412,7 @@ export default function ProductForm({
           <Field label="Subcategory">
             <CustomSelect
               value={values.subcategory_slug}
-              onValueChange={(nextValue) => {
+              onChange={(nextValue) => {
                 setValues((v) => ({ ...v, subcategory_slug: nextValue, subcategory_id: '' }));
               }}
               disabled={subcats.length === 0}
@@ -436,13 +440,13 @@ export default function ProductForm({
             value={values.description}
             onChange={(e) => set('description', e.target.value)}
             rows={3}
-            placeholder="Detailed product description…"
+            placeholder="Detailed product descriptionâ€¦"
             className={inputCls}
           />
         </Field>
       </section>
 
-      {/* ── Product Details ── */}
+      {/* â”€â”€ Product Details â”€â”€ */}
       <section className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
         <h2 className="text-base font-semibold text-slate-800">Product Details</h2>
 
@@ -450,7 +454,7 @@ export default function ProductForm({
           <Field label="Brand" hint="e.g. Scotch-Brite, 3M">
             <input type="text" value={values.brand} onChange={(e) => set('brand', e.target.value)} placeholder="Brand name" className={inputCls} />
           </Field>
-          <Field label="Size / Variant" hint="Label shown in dropdown — e.g. Small, 500 ml, Blue">
+          <Field label="Size / Variant" hint="Label shown in dropdown â€” e.g. Small, 500 ml, Blue">
             <input type="text" value={values.size_variant} onChange={(e) => set('size_variant', e.target.value)} placeholder="e.g. Small, 500 ml" className={inputCls} />
           </Field>
           <Field label="SKU" hint="Optional internal code">
@@ -477,7 +481,7 @@ export default function ProductForm({
           <Field label="Unit of Measure">
             <CustomSelect
               value={values.unit_of_measure}
-              onValueChange={(nextValue) => set('unit_of_measure', nextValue as Enums<'unit_of_measure'>)}
+              onChange={(nextValue) => set('unit_of_measure', nextValue as Enums<'unit_of_measure'>)}
               className={inputCls}
               options={UNIT_OPTIONS.map((u) => ({ value: u.value, label: u.label }))}
             />
@@ -485,7 +489,7 @@ export default function ProductForm({
           <Field label="Stock Status">
             <CustomSelect
               value={values.stock_status}
-              onValueChange={(nextValue) => set('stock_status', nextValue as Enums<'stock_status'>)}
+              onChange={(nextValue) => set('stock_status', nextValue as Enums<'stock_status'>)}
               className={inputCls}
               options={[
                 { value: 'in_stock', label: 'In Stock' },
@@ -497,14 +501,14 @@ export default function ProductForm({
         </div>
       </section>
 
-      {/* ── Pricing ── */}
+      {/* â”€â”€ Pricing â”€â”€ */}
       <section className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
         <h2 className="text-base font-semibold text-slate-800">Pricing</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Field label="Base Price (₹)" required>
+          <Field label="Base Price (â‚¹)" required>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₹</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">â‚¹</span>
               <input type="number" min="0" step="0.01" value={values.base_price} onChange={(e) => set('base_price', e.target.value)} required placeholder="0.00" className={`${inputCls} pl-7`} />
             </div>
           </Field>
@@ -514,7 +518,7 @@ export default function ProductForm({
           <Field label="GST Rate">
             <CustomSelect
               value={values.gst_rate}
-              onValueChange={(nextValue) => set('gst_rate', nextValue)}
+              onChange={(nextValue) => set('gst_rate', nextValue)}
               className={inputCls}
               options={GST_RATES.map((r) => ({ value: String(r), label: `${r}%` }))}
             />
@@ -535,10 +539,10 @@ export default function ProductForm({
           {values.pricing_tiers.map((tier, idx) => (
             <div key={idx} className="flex items-center gap-2">
               <input type="number" placeholder="Min Qty" value={tier.min_qty} onChange={(e) => updateTier(idx, 'min_qty', e.target.value)} className="w-24 border border-slate-300 rounded-lg px-2 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500" />
-              <span className="text-slate-400 text-xs">—</span>
+              <span className="text-slate-400 text-xs">â€”</span>
               <input type="number" placeholder="Max Qty" value={tier.max_qty} onChange={(e) => updateTier(idx, 'max_qty', e.target.value)} className="w-24 border border-slate-300 rounded-lg px-2 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500" />
               <div className="relative w-32">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">₹</span>
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">â‚¹</span>
                 <input type="number" placeholder="Price" value={tier.price} onChange={(e) => updateTier(idx, 'price', e.target.value)} className="w-full pl-6 border border-slate-300 rounded-lg px-2 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-teal-500" />
               </div>
               <span className="text-xs text-slate-400">per unit</span>
@@ -550,12 +554,12 @@ export default function ProductForm({
         </div>
       </section>
 
-      {/* ── Product Images ── */}
+      {/* â”€â”€ Product Images â”€â”€ */}
       <section className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-800">Product Images</h2>
           {values.images.length > 0 && (
-            <span className="text-xs text-slate-400">{values.images.length} image{values.images.length !== 1 ? 's' : ''} · hover to manage</span>
+            <span className="text-xs text-slate-400">{values.images.length} image{values.images.length !== 1 ? 's' : ''} Â· hover to manage</span>
           )}
         </div>
 
@@ -575,9 +579,9 @@ export default function ProductForm({
         )}
       </section>
 
-      {/* ── Tags ── */}
+      {/* â”€â”€ Tags â”€â”€ */}
       <section className="bg-white rounded-xl border border-slate-200 p-6">
-        <Field label="Tags" hint="Comma-separated — e.g. cleaning, floor, mop">
+        <Field label="Tags" hint="Comma-separated â€” e.g. cleaning, floor, mop">
           <input type="text" value={values.tags} onChange={(e) => set('tags', e.target.value)} placeholder="tag1, tag2, tag3" className={inputCls} />
         </Field>
       </section>

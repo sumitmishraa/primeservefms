@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
@@ -176,7 +176,7 @@ export default function AdminProductsPage() {
     return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
   }, [search]);
 
-  // Fetch products — always fetch a full-ish page so grouping looks right
+  // Fetch products â€” always fetch a full-ish page so grouping looks right
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -314,7 +314,7 @@ export default function AdminProductsPage() {
       const json = (await res.json()) as { error: string | null };
       if (res.ok && !json.error) removed++; else if (res.status === 409) blocked++;
     }));
-    if (blocked > 0) toast.error(`${blocked} product(s) skipped — they appear in past orders`);
+    if (blocked > 0) toast.error(`${blocked} product(s) skipped â€” they appear in past orders`);
     toast.success(`Permanently deleted ${removed} products`);
     setSelected(new Set());
     void fetchProducts();
@@ -374,7 +374,7 @@ export default function AdminProductsPage() {
     const max = Math.max(...prices);
     return (
       <span className="font-mono text-sm text-slate-800">
-        {min === max ? formatINR(min) : `${formatINR(min)} – ${formatINR(max)}`}
+        {min === max ? formatINR(min) : `${formatINR(min)} â€“ ${formatINR(max)}`}
       </span>
     );
   };
@@ -400,7 +400,7 @@ export default function AdminProductsPage() {
           <h1 className="text-2xl font-heading font-bold text-slate-900">Product Catalog</h1>
           {data && (
             <span className="bg-teal-100 text-teal-700 text-xs font-semibold px-2.5 py-1 rounded-full">
-              {groupedProducts.length} listings · {data.total} SKUs
+              {groupedProducts.length} listings Â· {data.total} SKUs
             </span>
           )}
         </div>
@@ -437,7 +437,7 @@ export default function AdminProductsPage() {
 
         <CustomSelect
           value={category}
-          onValueChange={setCategory}
+          onChange={setCategory}
           className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-700"
           options={[
             { value: '', label: 'All Categories' },
@@ -448,7 +448,7 @@ export default function AdminProductsPage() {
         {subcats.length > 0 && (
           <CustomSelect
             value={subcategory}
-            onValueChange={setSubcategory}
+            onChange={setSubcategory}
             className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-700"
             options={[
               { value: '', label: 'All Subcategories' },
@@ -575,7 +575,7 @@ export default function AdminProductsPage() {
                   <th className="text-left px-4 py-3 font-semibold text-slate-600">Product</th>
                   <th className="text-left px-4 py-3 font-semibold text-slate-600">Category</th>
                   <th className="text-left px-4 py-3 font-semibold text-slate-600">Size / Brand</th>
-                  <th className="text-right px-4 py-3 font-semibold text-slate-600">Price (₹)</th>
+                  <th className="text-right px-4 py-3 font-semibold text-slate-600">Price (â‚¹)</th>
                   <th className="text-center px-4 py-3 font-semibold text-slate-600">Stock</th>
                   <th className="text-center px-4 py-3 font-semibold text-slate-600">Actions</th>
                 </tr>
@@ -589,7 +589,7 @@ export default function AdminProductsPage() {
                   const allSelected = variants.every((v) => selected.has(v.id));
 
                   return [
-                    // ── Group / standalone header row ──
+                    // â”€â”€ Group / standalone header row â”€â”€
                     <tr
                       key={key}
                       className={`border-b border-slate-100 transition-colors ${
@@ -598,7 +598,7 @@ export default function AdminProductsPage() {
                         isGroup         ? 'bg-slate-50/80' : 'hover:bg-slate-50'
                       }`}
                     >
-                      {/* Checkbox — selects ALL variants in the group */}
+                      {/* Checkbox â€” selects ALL variants in the group */}
                       <td className="px-4 py-3">
                         <input
                           type="checkbox"
@@ -648,8 +648,8 @@ export default function AdminProductsPage() {
 
                       <td className="px-4 py-3 text-slate-500 text-xs">
                         {isGroup
-                          ? <span className="italic text-slate-400">see variants ↓</span>
-                          : (rep.size_variant ?? rep.brand ?? '—')
+                          ? <span className="italic text-slate-400">see variants â†“</span>
+                          : (rep.size_variant ?? rep.brand ?? 'â€”')
                         }
                       </td>
 
@@ -708,7 +708,7 @@ export default function AdminProductsPage() {
                       </td>
                     </tr>,
 
-                    // ── Expanded variant sub-rows ──
+                    // â”€â”€ Expanded variant sub-rows â”€â”€
                     ...(isGroup && expanded
                       ? variants.map((variant) => (
                           <tr
@@ -726,10 +726,10 @@ export default function AdminProductsPage() {
                               />
                             </td>
                             <td />
-                            {/* Variant label — indented */}
+                            {/* Variant label â€” indented */}
                             <td className="px-4 py-2.5">
                               <div className="flex items-center gap-2 pl-14">
-                                <span className="text-slate-300 text-xs">└</span>
+                                <span className="text-slate-300 text-xs">â””</span>
                                 <span className="text-sm text-slate-700 font-medium">
                                   {variant.size_variant || variant.short_description || variant.name}
                                 </span>
@@ -737,7 +737,7 @@ export default function AdminProductsPage() {
                             </td>
                             <td />
                             <td className="px-4 py-2.5 text-xs text-slate-500">
-                              {variant.size_variant ?? '—'}
+                              {variant.size_variant ?? 'â€”'}
                             </td>
                             <td className="px-4 py-2.5 text-right">
                               <PriceCell product={variant} onSave={handlePriceSave} />
@@ -864,7 +864,7 @@ export default function AdminProductsPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-sm text-slate-500">
-                Page {page} of {totalPages} · {data!.total.toLocaleString('en-IN')} SKUs
+                Page {page} of {totalPages} Â· {data!.total.toLocaleString('en-IN')} SKUs
               </p>
               <div className="flex items-center gap-2">
                 <button

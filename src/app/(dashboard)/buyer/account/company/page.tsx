@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -20,11 +20,11 @@ const INDIAN_STATES = [
 ];
 
 const SPEND_BANDS = [
-  'Up to ₹50,000',
-  '₹50,000 - ₹2,00,000',
-  '₹2,00,000 - ₹5,00,000',
-  '₹5,00,000 - ₹10,00,000',
-  'Above ₹10,00,000',
+  'Up to â‚¹50,000',
+  'â‚¹50,000 - â‚¹2,00,000',
+  'â‚¹2,00,000 - â‚¹5,00,000',
+  'â‚¹5,00,000 - â‚¹10,00,000',
+  'Above â‚¹10,00,000',
 ];
 
 const REQUIRED_DOCS: { value: BusinessDocument['doc_type']; label: string }[] = [
@@ -35,7 +35,7 @@ const REQUIRED_DOCS: { value: BusinessDocument['doc_type']; label: string }[] = 
 const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function AccountCompanyPage() {
   const [data, setData] = useState<CompanyDetails | null>(null);
@@ -46,7 +46,7 @@ export default function AccountCompanyPage() {
   const gstFileRef = useRef<HTMLInputElement>(null);
   const panFileRef = useRef<HTMLInputElement>(null);
 
-  // ── Form state ──────────────────────────────────────────────────────────────
+  // â”€â”€ Form state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [legalCompanyName, setLegalCompanyName] = useState('');
   const [tradeName, setTradeName] = useState('');
   const [website, setWebsite] = useState('');
@@ -106,7 +106,7 @@ export default function AccountCompanyPage() {
     setGstNumber(upper);
     setGstError('');
     if (GST_REGEX.test(upper)) {
-      // PAN is embedded in GST chars 2–11 (0-indexed)
+      // PAN is embedded in GST chars 2â€“11 (0-indexed)
       const pan = upper.slice(2, 12);
       setPanNumber(pan);
       setPanError('');
@@ -125,11 +125,11 @@ export default function AccountCompanyPage() {
 
     if (!gstNumber.trim()) { toast.error('GST number is required'); return false; }
     if (!GST_REGEX.test(gstNumber.trim().toUpperCase())) {
-      setGstError('Invalid GST format — expected: 22AAAAA0000A1Z5'); return false;
+      setGstError('Invalid GST format â€” expected: 22AAAAA0000A1Z5'); return false;
     }
     if (!panNumber.trim()) { toast.error('PAN number is required'); return false; }
     if (!PAN_REGEX.test(panNumber.trim().toUpperCase())) {
-      setPanError('Invalid PAN format — expected: ABCDE1234F'); return false;
+      setPanError('Invalid PAN format â€” expected: ABCDE1234F'); return false;
     }
     if (!cinNumber.trim()) { toast.error('CIN / Company registration number is required'); return false; }
 
@@ -239,7 +239,7 @@ export default function AccountCompanyPage() {
         <p className="text-sm text-slate-500 mt-1">Business identity, KYC, and shipping information</p>
       </div>
 
-      {/* ── Page header card — teal-navy glass ────────────────────────── */}
+      {/* â”€â”€ Page header card â€” teal-navy glass â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-slate-900 via-slate-800 to-teal-950 p-6 text-white shadow-xl">
         <div className="pointer-events-none absolute -right-12 -top-12 w-48 h-48 rounded-full bg-teal-500/20 blur-3xl" />
         <div className="pointer-events-none absolute -left-8 -bottom-8 w-32 h-32 rounded-full bg-white/5 blur-xl" />
@@ -263,7 +263,7 @@ export default function AccountCompanyPage() {
         </div>
       </div>
 
-      {/* ── Business Identity ──────────────────────────────────────────── */}
+      {/* â”€â”€ Business Identity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-2 mb-5">
           <Building2 className="w-4 h-4 text-teal-600" />
@@ -277,7 +277,7 @@ export default function AccountCompanyPage() {
               </label>
               <input
                 type="text"
-                value={[data.client_name, data.branch_name].filter(Boolean).join(' — ')}
+                value={[data.client_name, data.branch_name].filter(Boolean).join(' â€” ')}
                 readOnly
                 className={readonlyCls}
               />
@@ -335,7 +335,7 @@ export default function AccountCompanyPage() {
             <label className="block text-xs font-medium text-slate-600 mb-1.5">Expected Monthly Spend</label>
             <CustomSelect
               value={monthlySpend}
-              onValueChange={setMonthlySpend}
+              onChange={setMonthlySpend}
               placeholder="Select spend range..."
               className="px-3 py-2.5 text-sm text-slate-700"
               options={SPEND_BANDS.map((b) => ({ value: b, label: b }))}
@@ -344,7 +344,7 @@ export default function AccountCompanyPage() {
         </div>
       </div>
 
-      {/* ── Tax & Compliance ───────────────────────────────────────────── */}
+      {/* â”€â”€ Tax & Compliance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-2 mb-1">
           <ShieldCheck className="w-4 h-4 text-teal-600" />
@@ -410,7 +410,7 @@ export default function AccountCompanyPage() {
         </div>
       </div>
 
-      {/* ── Shipping Address ───────────────────────────────────────────── */}
+      {/* â”€â”€ Shipping Address â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-2 mb-5">
           <MapPin className="w-4 h-4 text-teal-600" />
@@ -453,7 +453,7 @@ export default function AccountCompanyPage() {
             <label className="block text-xs font-medium text-slate-600 mb-1.5">State</label>
             <CustomSelect
               value={state}
-              onValueChange={setState}
+              onChange={setState}
               placeholder="Select state..."
               className="px-3 py-2.5 text-sm text-slate-700"
               options={INDIAN_STATES.map((s) => ({ value: s, label: s }))}
@@ -494,7 +494,7 @@ export default function AccountCompanyPage() {
         </div>
       </div>
 
-      {/* ── Business Documents ─────────────────────────────────────────── */}
+      {/* â”€â”€ Business Documents â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-2 mb-1">
           <FileText className="w-4 h-4 text-teal-600" />
@@ -580,7 +580,7 @@ export default function AccountCompanyPage() {
                     } disabled:opacity-60`}
                   >
                     {isUploading
-                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />{uploaded ? 'Replacing…' : 'Uploading…'}</>
+                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />{uploaded ? 'Replacingâ€¦' : 'Uploadingâ€¦'}</>
                       : <><Upload className="w-3.5 h-3.5" />{uploaded ? 'Replace' : 'Upload'}</>
                     }
                   </button>
@@ -594,7 +594,7 @@ export default function AccountCompanyPage() {
       {/* Save */}
       <div className="flex items-center justify-between pt-1">
         <p className="text-xs text-slate-400">
-          <span className="text-rose-500">*</span> Required fields — upload both documents before saving
+          <span className="text-rose-500">*</span> Required fields â€” upload both documents before saving
         </p>
         <button
           onClick={handleSave}
@@ -602,7 +602,7 @@ export default function AccountCompanyPage() {
           className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-          {saving ? 'Saving…' : 'Save Company Details'}
+          {saving ? 'Savingâ€¦' : 'Save Company Details'}
         </button>
       </div>
     </div>

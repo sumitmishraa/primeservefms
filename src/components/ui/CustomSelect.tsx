@@ -1,136 +1,199 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 
 export interface CustomSelectOption {
   value: string;
-  label: ReactNode;
+  label: string;
+  description?: string;
+  rightLabel?: string;
+  badge?: string;
   disabled?: boolean;
 }
 
 interface CustomSelectProps {
-  id?: string;
-  name?: string;
   value: string;
   options: CustomSelectOption[];
-  onValueChange: (value: string) => void;
+  onChange: (value: string) => void;
   placeholder?: string;
-  disabled?: boolean;
-  required?: boolean;
-  className?: string;
-  menuClassName?: string;
   ariaLabel?: string;
+  className?: string;
+  buttonClassName?: string;
+  menuClassName?: string;
+  disabled?: boolean;
+}
+
+function joinClasses(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(' ');
+}
+
+function nextEnabledIndex(
+  options: CustomSelectOption[],
+  from: number,
+  direction: 1 | -1,
+) {
+  if (options.length === 0) return -1;
+
+  for (let step = 1; step <= options.length; step += 1) {
+    const idx = (from + step * direction + options.length) % options.length;
+    if (!options[idx]?.disabled) return idx;
+  }
+  return -1;
 }
 
 export default function CustomSelect({
-  id,
-  name,
   value,
   options,
-  onValueChange,
-  placeholder = 'Select an option',
-  disabled = false,
-  required = false,
-  className = '',
-  menuClassName = '',
+  onChange,
+  placeholder = 'Select',
   ariaLabel,
+  className,
+  buttonClassName,
+  menuClassName,
+  disabled = false,
 }: CustomSelectProps) {
   const generatedId = useId();
-  const buttonId = id ?? generatedId;
-  const listboxId = `${buttonId}-listbox`;
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const listboxId = `${generatedId}-listbox`;
+  const rootRef = useRef<HTMLDivElement>(null);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [open, setOpen] = useState(false);
+
   const selectedIndex = useMemo(
     () => options.findIndex((option) => option.value === value),
     [options, value],
   );
-  const [activeIndex, setActiveIndex] = useState(selectedIndex >= 0 ? selectedIndex : 0);
-  const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : null;
+  const selected = selectedIndex >= 0 ? options[selectedIndex] : null;
+
+  const firstEnabledIndex = useMemo(
+    () => options.findIndex((option) => !option.disabled),
+    [options],
+  );
+
+  const [activeIndex, setActiveIndex] = useState(
+    selectedIndex >= 0 ? selectedIndex : firstEnabledIndex,
+  );
 
   useEffect(() => {
     if (!open) return;
 
-    const onPointerDown = (event: PointerEvent) => {
-      if (!wrapperRef.current?.contains(event.target as Node)) {
+    const onPointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
         setOpen(false);
       }
     };
 
-    document.addEventListener('pointerdown', onPointerDown);
-    return () => document.removeEventListener('pointerdown', onPointerDown);
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
   }, [open]);
 
-  const enabledOptions = options
-    .map((option, index) => ({ option, index }))
-    .filter(({ option }) => !option.disabled);
+  useEffect(() => {
+    if (!open || activeIndex < 0) return;
+    optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' });
+  }, [activeIndex, open]);
 
-  const openMenu = () => {
-    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
-    setOpen(true);
-  };
-
-  const moveActive = (direction: 1 | -1) => {
-    if (enabledOptions.length === 0) return;
-    const currentEnabledIndex = enabledOptions.findIndex(({ index }) => index === activeIndex);
-    const nextEnabledIndex =
-      currentEnabledIndex === -1
-        ? 0
-        : (currentEnabledIndex + direction + enabledOptions.length) % enabledOptions.length;
-    setActiveIndex(enabledOptions[nextEnabledIndex].index);
-  };
+  const selectedOrFirstIndex = selectedIndex >= 0 ? selectedIndex : firstEnabledIndex;
 
   const choose = (option: CustomSelectOption) => {
     if (option.disabled) return;
-    onValueChange(option.value);
+    onChange(option.value);
     setOpen(false);
   };
 
+  const onTriggerKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (disabled) return;
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      setOpen(true);
+      setActiveIndex((curr) => {
+        const start = curr >= 0 ? curr : selectedIndex >= 0 ? selectedIndex : firstEnabledIndex;
+        const next = nextEnabledIndex(options, start, event.key === 'ArrowDown' ? 1 : -1);
+        return next >= 0 ? next : start;
+      });
+      return;
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setOpen((curr) => !curr);
+    }
+  };
+
+  const onOptionKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    option: CustomSelectOption,
+  ) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setOpen(false);
+      return;
+    }
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveIndex((curr) => {
+        const next = nextEnabledIndex(options, curr, event.key === 'ArrowDown' ? 1 : -1);
+        return next >= 0 ? next : curr;
+      });
+      return;
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      choose(option);
+    }
+  };
+
   return (
-    <div ref={wrapperRef} className="relative">
-      {name && <input type="hidden" name={name} value={value} required={required} />}
+    <div ref={rootRef} className={joinClasses('relative', className)}>
       <button
-        id={buttonId}
         type="button"
+        disabled={disabled}
         aria-label={ariaLabel}
         aria-haspopup="listbox"
-        aria-expanded={open}
         aria-controls={listboxId}
-        disabled={disabled}
+        aria-expanded={open}
         onClick={() => {
-          if (open) setOpen(false);
-          else openMenu();
+          setActiveIndex(selectedOrFirstIndex);
+          setOpen((curr) => !curr);
         }}
-        onKeyDown={(event) => {
-          if (event.key === 'ArrowDown') {
-            event.preventDefault();
-            if (!open) openMenu();
-            else moveActive(1);
-          } else if (event.key === 'ArrowUp') {
-            event.preventDefault();
-            if (!open) openMenu();
-            else moveActive(-1);
-          } else if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            if (open && options[activeIndex]) choose(options[activeIndex]);
-            else openMenu();
-          } else if (event.key === 'Escape') {
-            setOpen(false);
-          }
-        }}
-        className={[
-          'flex min-h-10 w-full items-center justify-between gap-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm font-medium text-brand-navy shadow-sm transition-colors',
-          'hover:border-[#14B8A6] focus:border-[#14B8A6] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/20',
-          'disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 disabled:opacity-70',
-          className,
-        ].join(' ')}
+        onKeyDown={onTriggerKeyDown}
+        className={joinClasses(
+          'flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-left text-sm font-semibold text-slate-800 shadow-sm transition',
+          'hover:border-teal-300 hover:bg-teal-50/30 focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/15',
+          'disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none',
+          open && 'border-teal-500 ring-4 ring-teal-500/15',
+          buttonClassName,
+        )}
       >
-        <span className={`min-w-0 flex-1 truncate ${selectedOption ? '' : 'text-slate-400'}`}>
-          {selectedOption?.label ?? placeholder}
+        <span className="min-w-0 flex-1">
+          <span className={joinClasses('block truncate', !selected && 'text-slate-400')}>
+            {selected?.label ?? placeholder}
+          </span>
+          {selected?.description && (
+            <span className="mt-0.5 block truncate text-xs font-medium text-slate-500">
+              {selected.description}
+            </span>
+          )}
         </span>
+        {selected?.rightLabel && (
+          <span className="shrink-0 font-heading text-sm font-bold text-teal-700">
+            {selected.rightLabel}
+          </span>
+        )}
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={joinClasses(
+            'h-4 w-4 shrink-0 text-slate-400 transition-transform',
+            open && 'rotate-180 text-teal-600',
+          )}
           aria-hidden="true"
         />
       </button>
@@ -139,36 +202,71 @@ export default function CustomSelect({
         <div
           id={listboxId}
           role="listbox"
-          aria-labelledby={buttonId}
-          className={[
-            'absolute left-0 right-0 z-50 mt-2 max-h-64 overflow-auto rounded-xl border border-teal-100 bg-white p-1 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5',
+          aria-label={ariaLabel}
+          className={joinClasses(
+            'absolute left-0 right-0 z-[70] mt-2 max-h-[min(20rem,calc(100vh-9rem))] overflow-y-auto rounded-xl border border-teal-200 bg-white p-1.5 shadow-2xl shadow-slate-900/15 ring-1 ring-teal-500/10',
             menuClassName,
-          ].join(' ')}
+          )}
         >
-          {options.map((option, index) => {
-            const selected = option.value === value;
-            const active = index === activeIndex;
+          {options.map((option, idx) => {
+            const isSelected = option.value === value;
+            const isActive = idx === activeIndex;
+
             return (
               <button
-                key={`${option.value}-${index}`}
+                key={option.value}
+                ref={(node) => {
+                  optionRefs.current[idx] = node;
+                }}
                 type="button"
                 role="option"
-                aria-selected={selected}
+                aria-selected={isSelected}
                 disabled={option.disabled}
-                onMouseEnter={() => setActiveIndex(index)}
+                tabIndex={isActive ? 0 : -1}
+                onMouseEnter={() => {
+                  if (!option.disabled) setActiveIndex(idx);
+                }}
                 onClick={() => choose(option)}
-                className={[
-                  'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-brand-navy transition-colors',
-                  selected
-                    ? 'bg-brand-navy text-white shadow-sm'
-                    : active
-                      ? 'bg-teal-100 text-brand-navy'
-                      : 'hover:bg-teal-100 hover:text-brand-navy',
-                  option.disabled ? 'cursor-not-allowed bg-transparent text-slate-400 hover:bg-transparent hover:text-slate-400' : '',
-                ].join(' ')}
+                onKeyDown={(event) => onOptionKeyDown(event, option)}
+                className={joinClasses(
+                  'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition',
+                  isSelected
+                    ? 'bg-teal-50 text-teal-800'
+                    : isActive
+                      ? 'bg-slate-100 text-slate-900'
+                      : 'text-slate-700 hover:bg-slate-50',
+                  option.disabled && 'cursor-not-allowed bg-slate-50 text-slate-400 opacity-70',
+                )}
               >
-                <span className="min-w-0 flex-1 truncate">{option.label}</span>
-                {selected && <Check className="h-4 w-4 shrink-0" aria-hidden="true" />}
+                <span
+                  className={joinClasses(
+                    'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
+                    isSelected
+                      ? 'border-teal-500 bg-teal-500 text-white'
+                      : 'border-slate-200 bg-white text-transparent',
+                  )}
+                  aria-hidden="true"
+                >
+                  <Check className="h-3 w-3" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold">{option.label}</span>
+                  {option.description && (
+                    <span className="mt-0.5 block truncate text-xs font-medium text-slate-500">
+                      {option.description}
+                    </span>
+                  )}
+                </span>
+                {option.badge && (
+                  <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                    {option.badge}
+                  </span>
+                )}
+                {option.rightLabel && (
+                  <span className="shrink-0 font-heading text-sm font-bold text-teal-700">
+                    {option.rightLabel}
+                  </span>
+                )}
               </button>
             );
           })}

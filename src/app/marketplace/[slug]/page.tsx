@@ -24,6 +24,7 @@
 
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { use } from 'react';
@@ -36,14 +37,13 @@ import {
   Truck,
   Sparkles,
   Phone,
-  Info,
   PackageCheck,
 } from 'lucide-react';
 import { PublicHeader, PublicFooter } from '@/components/layout';
 import { formatINR } from '@/lib/utils/formatting';
 import { getCategoryLabel } from '@/lib/constants/categories';
 import AddToCartButton from '@/components/marketplace/AddToCartButton';
-import { CustomSelect } from '@/components/ui';
+import CustomSelect from '@/components/ui/CustomSelect';
 import type { Tables } from '@/types/database';
 import type { PricingTier } from '@/types/index';
 
@@ -201,7 +201,7 @@ interface VariantCardProps {
  * format label, price, MOQ, savings %, optional badge.  Selected variant
  * gets a teal halo + checkmark.  Out-of-stock variants are striped.
  */
-function VariantCard({ variant, isSelected, badge, onSelect }: VariantCardProps) {
+function _VariantCard({ variant, isSelected, badge, onSelect }: VariantCardProps) {
   const isUnavailable = variant.stock_status === 'out_of_stock';
   const label         = formatVariantLabel(variant.size_variant, variant.unit_of_measure);
   const tiers         = (variant.pricing_tiers ?? []) as PricingTierRow[];
@@ -470,10 +470,40 @@ export default function ProductDetailPage({
     .filter((x): x is { variant: Product; color: string } => x.color !== null);
   const distinctColours = new Set(colourEntries.map((x) => x.color.toLowerCase()));
   const showSizeCards   = showVariants && hasDiverseSizes;
-  const showColourPicker = showVariants && !hasDiverseSizes && distinctColours.size > 1;
+  const _showColourPicker = showVariants && !hasDiverseSizes && distinctColours.size > 1;
 
   // Variant badges: cheapest per-unit = "best value", most-ordered = "most popular"
   const variantBadges = computeVariantBadges(variants, showSizeCards);
+  const variantOptions = variants.map((v) => {
+    const badge = variantBadges.get(v.id);
+    const tiers = (v.pricing_tiers ?? []) as PricingTierRow[];
+    const bestPrice = lowestPrice(tiers, v.base_price);
+    const label = v.size_variant || v.short_description || v.name;
+    const status =
+      v.stock_status === 'out_of_stock'
+        ? 'Out of stock'
+        : v.stock_status === 'low_stock'
+          ? 'Low stock'
+          : 'In stock';
+    const description = [
+      `MOQ ${v.moq} ${uomLabel(v.unit_of_measure)}`,
+      tiers.length > 0 && bestPrice < v.base_price ? `From ${formatINR(bestPrice)}` : null,
+      status,
+    ].filter(Boolean).join(' | ');
+
+    return {
+      value: v.id,
+      label,
+      description,
+      rightLabel: formatINR(v.base_price),
+      badge: badge === 'best-value'
+        ? 'Best value'
+        : badge === 'most-popular'
+          ? 'Popular'
+          : undefined,
+      disabled: v.stock_status === 'out_of_stock',
+    };
+  });
 
   // CartableProduct built from selected variant
   const cartProduct = {
@@ -588,31 +618,26 @@ export default function ProductDetailPage({
                     {variants.length} option{variants.length !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <CustomSelect
-                  value={product.id}
-                  onValueChange={(nextId) => {
-                    const v = variants.find((x) => x.id === nextId);
-                    if (v) handleVariantSelect(v);
-                  }}
-                  options={variants.map((v) => {
-                    const label = v.size_variant || v.short_description || v.name;
-                    const price = formatINR(v.base_price);
-                    const oos   = v.stock_status === 'out_of_stock';
-                    return {
-                      value: v.id,
-                      label: `${label} - ${price}${oos ? ' (Out of stock)' : ''}`,
-                      disabled: oos,
-                    };
-                  })}
-                  className="rounded-xl border-2 border-slate-200 py-3 pl-4 pr-3 text-sm font-semibold text-slate-800 shadow-sm hover:border-[#14B8A6]"
-                />
+                <div className="relative z-20">
+                  <CustomSelect
+                    value={product.id}
+                    onChange={(value) => {
+                      const v = variants.find((x) => x.id === value);
+                      if (v) handleVariantSelect(v);
+                    }}
+                    options={variantOptions}
+                    ariaLabel={isChemical ? 'Choose product format' : 'Choose product variant'}
+                    buttonClassName="min-h-[3.4rem] border-2 px-4"
+                    menuClassName="max-h-[min(22rem,calc(100vh-10rem))]"
+                  />
+                </div>
                 {/* Selected variant price highlight */}
                 <div className="flex items-center gap-3 rounded-xl border border-teal-100 bg-teal-50 px-4 py-2.5">
-                  <span className="text-xs font-semibold text-teal-700 uppercase tracking-wide">Selected</span>
-                  <span className="text-sm font-bold text-teal-800">
+                  <span className="shrink-0 text-xs font-semibold text-teal-700 uppercase tracking-wide">Selected</span>
+                  <span className="min-w-0 truncate text-sm font-bold text-teal-800">
                     {product.size_variant || product.short_description || product.name}
                   </span>
-                  <span className="ml-auto font-heading text-base font-bold text-teal-700">
+                  <span className="ml-auto shrink-0 font-heading text-base font-bold text-teal-700">
                     {formatINR(product.base_price)}
                   </span>
                 </div>
@@ -773,9 +798,9 @@ export default function ProductDetailPage({
       </div>
 
       {/* ════════ MOBILE STICKY FOOTER ═══════════════════════════════════ */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-4px_16px_-8px_rgba(0,0,0,0.08)] backdrop-blur lg:hidden">
-        <div className="mx-auto flex max-w-7xl items-center gap-3">
-          <div className="min-w-0 flex-1">
+      <div className="fixed bottom-0 left-0 z-30 w-screen max-w-[100vw] overflow-hidden border-t border-slate-200 bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_16px_-8px_rgba(0,0,0,0.08)] backdrop-blur lg:hidden">
+        <div className="mx-auto flex w-full max-w-full items-center gap-2">
+          <div className="min-w-0 flex-1 overflow-hidden pr-2">
             <p className="font-heading text-lg font-extrabold text-teal-700">
               {formatINR(product.base_price)}
               <span className="ml-1 text-[10px] font-normal text-slate-500">
@@ -794,13 +819,13 @@ export default function ProductDetailPage({
             onClick={scrollToCart}
             disabled={isOutOfStock}
             className={[
-              'shrink-0 rounded-xl px-5 py-3 text-sm font-bold shadow-sm transition-colors',
+              'w-24 shrink-0 rounded-xl px-3 py-3 text-sm font-bold shadow-sm transition-colors',
               isOutOfStock
                 ? 'cursor-not-allowed bg-slate-200 text-slate-400'
                 : 'bg-teal-600 text-white hover:bg-teal-700 active:scale-95',
             ].join(' ')}
           >
-            {isOutOfStock ? 'Out of Stock' : 'Choose & Buy'}
+            {isOutOfStock ? 'Out' : 'Choose'}
           </button>
         </div>
       </div>
@@ -840,11 +865,13 @@ function ProductGallery({
     <>
       <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         {activeImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={activeImage}
             alt={imageAlt}
-            className="h-full w-full object-contain"
+            fill
+            priority
+            sizes="(min-width: 1280px) 52vw, (min-width: 1024px) 50vw, 100vw"
+            className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-3">
@@ -906,7 +933,7 @@ function ProductGallery({
               type="button"
               onClick={() => onSelect(idx)}
               className={[
-                'h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-150',
+                'relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-150',
                 activeIdx === idx
                   ? 'border-teal-500 shadow-sm ring-1 ring-teal-500/20'
                   : 'border-transparent opacity-70 hover:border-slate-300 hover:opacity-100',
@@ -914,10 +941,11 @@ function ProductGallery({
               aria-label={`View image ${idx + 1}`}
               aria-current={activeIdx === idx}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={img}
                 alt={`${imageAlt} - image ${idx + 1}`}
+                fill
+                sizes="64px"
                 className="h-full w-full object-contain bg-white"
               />
             </button>
@@ -1191,10 +1219,11 @@ function RelatedProductCard({ product }: { product: Product }) {
     >
       <div className="relative aspect-square w-full overflow-hidden bg-teal-50/30">
         {product.thumbnail_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={product.thumbnail_url}
             alt={product.name}
+            fill
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
         ) : (

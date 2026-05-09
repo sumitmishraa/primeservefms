@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -10,7 +10,7 @@ import { formatINR, formatDate } from '@/lib/utils/formatting';
 import { CustomSelect } from '@/components/ui';
 import type { QuoteRequest, QuoteItem } from '@/app/api/buyer/quotes/route';
 
-// ─── Status config ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Status config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const STATUS_STYLES: Record<string, string> = {
   submitted: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -27,7 +27,7 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: 'Rejected',
 };
 
-// ─── Unit options ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Unit options â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const UNITS = [
   { value: 'piece', label: 'Piece' },
@@ -58,7 +58,7 @@ function emptyItem(): QuoteItem {
   };
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function AccountQuotesPage() {
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
@@ -283,7 +283,7 @@ export default function AccountQuotesPage() {
                             <label className="block text-xs text-slate-500 mb-1">Unit</label>
                             <CustomSelect
                               value={item.unit}
-                              onValueChange={(nextValue) => updateItem(idx, 'unit', nextValue)}
+                              onChange={(nextValue) => updateItem(idx, 'unit', nextValue)}
                               className={inputCls}
                               options={UNITS.map((u) => ({ value: u.value, label: u.label }))}
                             />
@@ -309,7 +309,7 @@ export default function AccountQuotesPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs text-slate-500 mb-1">Target Price (₹)</label>
+                            <label className="block text-xs text-slate-500 mb-1">Target Price (â‚¹)</label>
                             <input
                               type="number"
                               min={0}
@@ -355,7 +355,7 @@ export default function AccountQuotesPage() {
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
                     className={inputCls}
-                    placeholder="Delivery preferences, special requirements…"
+                    placeholder="Delivery preferences, special requirementsâ€¦"
                   />
                 </div>
 
@@ -366,7 +366,7 @@ export default function AccountQuotesPage() {
                     className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                   >
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    {submitting ? 'Submitting…' : 'Submit Request'}
+                    {submitting ? 'Submittingâ€¦' : 'Submit Request'}
                   </button>
                   <button onClick={resetForm} className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors">
                     Cancel
@@ -456,7 +456,7 @@ export default function AccountQuotesPage() {
                     className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                   >
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                    {submitting ? 'Uploading…' : 'Upload & Submit'}
+                    {submitting ? 'Uploadingâ€¦' : 'Upload & Submit'}
                   </button>
                   <button onClick={resetForm} className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors">
                     Cancel
@@ -509,7 +509,7 @@ export default function AccountQuotesPage() {
                     )}
                   </div>
                   <p className="text-xs text-slate-400 mt-1">
-                    {(quote.items as QuoteItem[]).length} item{(quote.items as QuoteItem[]).length !== 1 ? 's' : ''} · {formatDate(quote.created_at)}
+                    {(quote.items as QuoteItem[]).length} item{(quote.items as QuoteItem[]).length !== 1 ? 's' : ''} Â· {formatDate(quote.created_at)}
                   </p>
                 </div>
                 {expandedId === quote.id
@@ -542,19 +542,19 @@ export default function AccountQuotesPage() {
                               <th className="px-3 py-2 text-right">Qty</th>
                               <th className="px-3 py-2 text-left">Unit</th>
                               <th className="px-3 py-2 text-left hidden md:table-cell">Brand</th>
-                              <th className="px-3 py-2 text-right hidden md:table-cell">Target ₹</th>
+                              <th className="px-3 py-2 text-right hidden md:table-cell">Target â‚¹</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
                             {(quote.items as QuoteItem[]).map((item, i) => (
                               <tr key={i} className="text-slate-700">
                                 <td className="px-3 py-2.5 font-medium">{item.product_name}</td>
-                                <td className="px-3 py-2.5 text-slate-500 hidden sm:table-cell">{item.description || '—'}</td>
+                                <td className="px-3 py-2.5 text-slate-500 hidden sm:table-cell">{item.description || 'â€”'}</td>
                                 <td className="px-3 py-2.5 text-right font-mono">{item.quantity}</td>
                                 <td className="px-3 py-2.5 text-slate-500">{item.unit}</td>
-                                <td className="px-3 py-2.5 text-slate-500 hidden md:table-cell">{item.preferred_brand || '—'}</td>
+                                <td className="px-3 py-2.5 text-slate-500 hidden md:table-cell">{item.preferred_brand || 'â€”'}</td>
                                 <td className="px-3 py-2.5 text-right font-mono hidden md:table-cell">
-                                  {item.target_price ? formatINR(item.target_price) : '—'}
+                                  {item.target_price ? formatINR(item.target_price) : 'â€”'}
                                 </td>
                               </tr>
                             ))}

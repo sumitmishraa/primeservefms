@@ -14,6 +14,17 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
+const PUBLIC_PRODUCT_DETAIL_CACHE_HEADERS = {
+  'Cache-Control': 'public, max-age=30, s-maxage=300, stale-while-revalidate=1800',
+};
+
+const NO_STORE_HEADERS = {
+  'Cache-Control': 'no-store',
+};
+
+const RELATED_PRODUCT_COLUMNS =
+  'id, slug, name, brand, size_variant, group_slug, base_price, unit_of_measure, thumbnail_url, category, stock_status, pricing_tiers, total_orders' as const;
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
@@ -34,7 +45,7 @@ export async function GET(
     if (productErr || !product) {
       return NextResponse.json(
         { data: null, error: 'Product not found' },
-        { status: 404 },
+        { status: 404, headers: NO_STORE_HEADERS },
       );
     }
 
@@ -54,7 +65,7 @@ export async function GET(
     // 3. Fetch related products (same category, different product/group)
     const relatedQuery = supabase
       .from('products')
-      .select('*')
+      .select(RELATED_PRODUCT_COLUMNS)
       .eq('category', product.category)
       .eq('is_approved', true)
       .eq('is_active', true)
@@ -63,19 +74,19 @@ export async function GET(
       .limit(8);
 
     const { data: relatedRaw } = await relatedQuery;
-    const related = (relatedRaw ?? [])
+    const related = ((relatedRaw ?? []) as Array<{ group_slug: string | null }>)
       .filter((r) => !product.group_slug || r.group_slug !== product.group_slug)
       .slice(0, 4);
 
     return NextResponse.json({
       data: { product, variants, related },
       error: null,
-    });
+    }, { headers: PUBLIC_PRODUCT_DETAIL_CACHE_HEADERS });
   } catch (error) {
     console.error('[api/products/[slug] GET]', error);
     return NextResponse.json(
       { data: null, error: 'Internal server error' },
-      { status: 500 },
+      { status: 500, headers: NO_STORE_HEADERS },
     );
   }
 }

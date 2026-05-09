@@ -1,12 +1,12 @@
-/**
- * Admin — Orders Command Center
+﻿/**
+ * Admin â€” Orders Command Center
  *
  * Features:
  *   - Status filter tabs with live counts (Pending badge is amber if count > 0)
  *   - Search by order number or buyer company name
  *   - Date range quick filter (Last 7 days / Last 30 days / This Month / All Time)
  *   - Orders table with status badges; pending rows highlighted amber
- *   - Click row or "View" button → order detail page
+ *   - Click row or "View" button â†’ order detail page
  *   - Pagination (20 per page)
  *
  * Data: GET /api/admin/orders
@@ -217,7 +217,7 @@ export default function AdminOrdersPage() {
           </button>
           <button
             type="button"
-            onClick={() => toast('Export coming soon! CSV download will be available in the next update.', { icon: '📥' })}
+            onClick={() => toast('Export coming soon! CSV download will be available in the next update.', { icon: 'ðŸ“¥' })}
             className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             <Download className="h-4 w-4" />
@@ -273,7 +273,7 @@ export default function AdminOrdersPage() {
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search by order number or company name…"
+                placeholder="Search by order number or company nameâ€¦"
                 className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
               />
             </div>
@@ -299,7 +299,7 @@ export default function AdminOrdersPage() {
             <Calendar className="h-4 w-4 text-slate-400" />
             <CustomSelect
               value={dateRange}
-              onValueChange={(nextValue) => setDateRange(nextValue as DateRange)}
+              onChange={(nextValue) => setDateRange(nextValue as DateRange)}
               className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-700"
               options={DATE_RANGE_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
             />
@@ -315,7 +315,7 @@ export default function AdminOrdersPage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                Loading orders…
+                Loading ordersâ€¦
               </div>
             </div>
           ) : error ? (
@@ -353,7 +353,7 @@ export default function AdminOrdersPage() {
                         Items
                       </th>
                       <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        Total (₹)
+                        Total (â‚¹)
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                         Status
@@ -385,14 +385,14 @@ export default function AdminOrdersPage() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="font-medium text-slate-900">
-                              {order.buyer?.company_name ?? '—'}
+                              {order.buyer?.company_name ?? 'â€”'}
                             </div>
                             <div className="text-xs text-slate-500">
                               {order.buyer?.full_name ?? ''}
                             </div>
                           </td>
                           <td className="px-4 py-3 text-right font-mono text-slate-700">
-                            —
+                            â€”
                           </td>
                           <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900">
                             {formatINR(order.total_amount)}

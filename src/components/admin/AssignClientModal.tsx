@@ -1,5 +1,5 @@
-/**
- * AssignClientModal — modal for assigning a buyer to a client + branch.
+﻿/**
+ * AssignClientModal â€” modal for assigning a buyer to a client + branch.
  *
  * Fetches clients from GET /api/admin/clients.
  * When a client is selected, fetches its branches from GET /api/admin/clients/[id]/branches.
@@ -15,7 +15,7 @@ import type { ClientListItem } from '@/app/api/admin/clients/route';
 import { CustomSelect } from '@/components/ui';
 
 // ---------------------------------------------------------------------------
-// Branch shape (slim — from branches API)
+// Branch shape (slim â€” from branches API)
 // ---------------------------------------------------------------------------
 
 interface BranchOption {
@@ -32,7 +32,7 @@ interface BranchOption {
 interface AssignClientModalProps {
   /** The buyer's user id */
   userId: string;
-  /** The buyer's display name — shown in the modal heading */
+  /** The buyer's display name â€” shown in the modal heading */
   buyerName: string;
   /** Currently assigned client id (or null) */
   currentClientId: string | null;
@@ -197,9 +197,8 @@ export default function AssignClientModal({
               <div className="h-10 animate-pulse rounded-lg bg-slate-100" />
             ) : (
               <CustomSelect
-                id="client-select"
                 value={selectedClient}
-                onValueChange={setSelectedClient}
+                onChange={setSelectedClient}
                 className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
                 options={[
                   { value: '', label: '- Unassigned -' },
@@ -219,9 +218,8 @@ export default function AssignClientModal({
               <div className="h-10 animate-pulse rounded-lg bg-slate-100" />
             ) : (
               <CustomSelect
-                id="branch-select"
                 value={selectedBranch}
-                onValueChange={setSelectedBranch}
+                onChange={setSelectedBranch}
                 disabled={!selectedClient || branches.length === 0}
                 className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
                 options={[
@@ -262,7 +260,7 @@ export default function AssignClientModal({
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                Saving…
+                Savingâ€¦
               </>
             ) : 'Assign'}
           </button>

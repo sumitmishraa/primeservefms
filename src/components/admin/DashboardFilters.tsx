@@ -1,5 +1,5 @@
-/**
- * DashboardFilters — filter bar for the admin dashboard.
+﻿/**
+ * DashboardFilters â€” filter bar for the admin dashboard.
  *
  * Renders:
  *   - Client dropdown (fetched from /api/admin/clients)
@@ -144,7 +144,7 @@ export default function DashboardFilters({ filters, onChange }: DashboardFilters
       .then((json: { data: ClientListItem[] | null }) => {
         if (json.data) setClients(json.data);
       })
-      .catch(() => { /* silent — filters still work without client list */ })
+      .catch(() => { /* silent â€” filters still work without client list */ })
       .finally(() => setLoadingClients(false));
   }, []);
 
@@ -187,7 +187,7 @@ export default function DashboardFilters({ filters, onChange }: DashboardFilters
         <label className="block text-xs font-medium text-slate-500 mb-1">Client</label>
         <CustomSelect
           value={filters.client_id}
-          onValueChange={(nextValue) => set({ client_id: nextValue, branch_id: '' })}
+          onChange={(nextValue) => set({ client_id: nextValue, branch_id: '' })}
           disabled={loadingClients}
           className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
           options={[
@@ -202,7 +202,7 @@ export default function DashboardFilters({ filters, onChange }: DashboardFilters
         <label className="block text-xs font-medium text-slate-500 mb-1">Branch</label>
         <CustomSelect
           value={filters.branch_id}
-          onValueChange={(nextValue) => set({ branch_id: nextValue })}
+          onChange={(nextValue) => set({ branch_id: nextValue })}
           disabled={!filters.client_id}
           className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
           options={[
@@ -217,7 +217,7 @@ export default function DashboardFilters({ filters, onChange }: DashboardFilters
         <label className="block text-xs font-medium text-slate-500 mb-1">Date Range</label>
         <CustomSelect
           value={filters.date_range}
-          onValueChange={(nextValue) => set({ date_range: nextValue as DateRangePreset })}
+          onChange={(nextValue) => set({ date_range: nextValue as DateRangePreset })}
           className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
           options={DATE_RANGE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
         />
@@ -252,7 +252,7 @@ export default function DashboardFilters({ filters, onChange }: DashboardFilters
         <label className="block text-xs font-medium text-slate-500 mb-1">Order Status</label>
         <CustomSelect
           value={filters.status}
-          onValueChange={(nextValue) => set({ status: nextValue })}
+          onChange={(nextValue) => set({ status: nextValue })}
           className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
           options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
         />
@@ -291,7 +291,7 @@ export default function DashboardFilters({ filters, onChange }: DashboardFilters
         <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* Filter content — always visible on desktop, toggle on mobile */}
+      {/* Filter content â€” always visible on desktop, toggle on mobile */}
       <div className={`px-5 py-4 ${expanded ? 'block' : 'hidden sm:block'}`}>
         {filterContent}
       </div>

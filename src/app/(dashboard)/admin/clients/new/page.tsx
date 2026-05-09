@@ -1,5 +1,5 @@
-/**
- * Admin — Add New Client
+﻿/**
+ * Admin â€” Add New Client
  *
  * Form for creating a new client company.
  * POSTs to /api/admin/clients.
@@ -151,7 +151,7 @@ export default function NewClientPage() {
       toast.success(`Client "${form.display_name}" created`);
       router.push(`/admin/clients/${json.data.id}`);
     } catch {
-      toast.error('Network error — please try again');
+      toast.error('Network error â€” please try again');
     } finally {
       setIsSaving(false);
     }
@@ -238,10 +238,8 @@ export default function NewClientPage() {
                   Industry
                 </label>
                 <CustomSelect
-                  id="industry"
-                  name="industry"
                   value={form.industry}
-                  onValueChange={(nextValue) => {
+                  onChange={(nextValue) => {
                     setForm((prev) => ({ ...prev, industry: nextValue }));
                   }}
                   className="mt-1.5 rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
