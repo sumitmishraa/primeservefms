@@ -22,6 +22,7 @@ import {
   PRODUCT_CATEGORIES,
   getSubcategoriesByCategory,
 } from '@/lib/constants/categories';
+import { CustomSelect } from '@/components/ui';
 import type { Tables, Enums } from '@/types/database';
 
 // ---------------------------------------------------------------------------
@@ -434,28 +435,26 @@ export default function AdminProductsPage() {
           />
         </div>
 
-        <select
+        <CustomSelect
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
-        >
-          <option value="">All Categories</option>
-          {PRODUCT_CATEGORIES.map((c) => (
-            <option key={c.value} value={c.value}>{c.label}</option>
-          ))}
-        </select>
+          onValueChange={setCategory}
+          className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-700"
+          options={[
+            { value: '', label: 'All Categories' },
+            ...PRODUCT_CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
+          ]}
+        />
 
         {subcats.length > 0 && (
-          <select
+          <CustomSelect
             value={subcategory}
-            onChange={(e) => setSubcategory(e.target.value)}
-            className="border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
-          >
-            <option value="">All Subcategories</option>
-            {subcats.map((s) => (
-              <option key={s.slug} value={s.slug}>{s.label}</option>
-            ))}
-          </select>
+            onValueChange={setSubcategory}
+            className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-700"
+            options={[
+              { value: '', label: 'All Subcategories' },
+              ...subcats.map((s) => ({ value: s.slug, label: s.label })),
+            ]}
+          />
         )}
 
         <div className="flex items-center gap-1 border border-slate-200 rounded-lg p-1 bg-slate-50 text-sm">

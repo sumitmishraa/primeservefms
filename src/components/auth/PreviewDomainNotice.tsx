@@ -17,7 +17,11 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
-const PRODUCTION_HOSTNAME = 'primeservefms.vercel.app';
+const PRODUCTION_HOSTNAMES = new Set([
+  'app.primeservefs.com',
+  'app.primeserve.com',
+  'primeservefms.vercel.app',
+]);
 
 export default function PreviewDomainNotice() {
   const [showBanner, setShowBanner] = useState(false);
@@ -25,10 +29,11 @@ export default function PreviewDomainNotice() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const host = window.location.hostname;
-    // Hide on production and on local dev (Firebase test phones still work
-    // on localhost because localhost is auto-authorised by Firebase).
-    if (host === PRODUCTION_HOSTNAME) return;
+    // Hide on production/custom domains and on local dev (Firebase test phones
+    // still work on localhost because localhost is auto-authorised).
+    if (PRODUCTION_HOSTNAMES.has(host)) return;
     if (host === 'localhost' || host === '127.0.0.1') return;
+    if (!host.endsWith('.vercel.app')) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowBanner(true);
   }, []);
@@ -44,7 +49,7 @@ export default function PreviewDomainNotice() {
           <p className="mt-0.5 text-amber-800">
             Phone OTP sign-in only works on the production URL{' '}
             <code className="rounded bg-amber-100 px-1 py-0.5 font-mono text-[11px]">
-              {PRODUCTION_HOSTNAME}
+              app.primeservefs.com
             </code>
             . On this preview, please use <strong>Email &amp; Password</strong> instead.
           </p>

@@ -43,6 +43,7 @@ import { PublicHeader, PublicFooter } from '@/components/layout';
 import { formatINR } from '@/lib/utils/formatting';
 import { getCategoryLabel } from '@/lib/constants/categories';
 import AddToCartButton from '@/components/marketplace/AddToCartButton';
+import { CustomSelect } from '@/components/ui';
 import type { Tables } from '@/types/database';
 import type { PricingTier } from '@/types/index';
 
@@ -587,33 +588,24 @@ export default function ProductDetailPage({
                     {variants.length} option{variants.length !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <div className="relative">
-                  <select
-                    value={product.id}
-                    onChange={(e) => {
-                      const v = variants.find((x) => x.id === e.target.value);
-                      if (v) handleVariantSelect(v);
-                    }}
-                    className="w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-3 pl-4 pr-10 text-sm font-semibold text-slate-800 shadow-sm transition-colors focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 hover:border-slate-300"
-                  >
-                    {variants.map((v) => {
-                      const label = v.size_variant || v.short_description || v.name;
-                      const price = formatINR(v.base_price);
-                      const oos   = v.stock_status === 'out_of_stock';
-                      return (
-                        <option key={v.id} value={v.id} disabled={oos}>
-                          {label} — {price}{oos ? ' (Out of stock)' : ''}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  {/* Custom chevron */}
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </span>
-                </div>
+                <CustomSelect
+                  value={product.id}
+                  onValueChange={(nextId) => {
+                    const v = variants.find((x) => x.id === nextId);
+                    if (v) handleVariantSelect(v);
+                  }}
+                  options={variants.map((v) => {
+                    const label = v.size_variant || v.short_description || v.name;
+                    const price = formatINR(v.base_price);
+                    const oos   = v.stock_status === 'out_of_stock';
+                    return {
+                      value: v.id,
+                      label: `${label} - ${price}${oos ? ' (Out of stock)' : ''}`,
+                      disabled: oos,
+                    };
+                  })}
+                  className="rounded-xl border-2 border-slate-200 py-3 pl-4 pr-3 text-sm font-semibold text-slate-800 shadow-sm hover:border-[#14B8A6]"
+                />
                 {/* Selected variant price highlight */}
                 <div className="flex items-center gap-3 rounded-xl border border-teal-100 bg-teal-50 px-4 py-2.5">
                   <span className="text-xs font-semibold text-teal-700 uppercase tracking-wide">Selected</span>
@@ -846,13 +838,13 @@ function ProductGallery({
 
   return (
     <>
-      <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-teal-50/50 to-slate-50 shadow-sm">
+      <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         {activeImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={activeImage}
             alt={imageAlt}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            className="h-full w-full object-contain"
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-3">
@@ -926,7 +918,7 @@ function ProductGallery({
               <img
                 src={img}
                 alt={`${imageAlt} - image ${idx + 1}`}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain bg-white"
               />
             </button>
           ))}

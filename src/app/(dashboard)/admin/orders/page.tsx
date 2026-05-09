@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatINR, formatDate } from '@/lib/utils/formatting';
+import { CustomSelect } from '@/components/ui';
 import type { OrderWithBuyer, OrdersListResponse } from '@/app/api/admin/orders/route';
 
 // ---------------------------------------------------------------------------
@@ -296,15 +297,12 @@ export default function AdminOrdersPage() {
           {/* Date range */}
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-slate-400" />
-            <select
+            <CustomSelect
               value={dateRange}
-              onChange={(e) => setDateRange(e.target.value as DateRange)}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-            >
-              {DATE_RANGE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+              onValueChange={(nextValue) => setDateRange(nextValue as DateRange)}
+              className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-700"
+              options={DATE_RANGE_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
+            />
           </div>
         </div>
 

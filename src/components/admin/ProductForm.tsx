@@ -19,6 +19,7 @@ import {
   PRODUCT_CATEGORIES,
   getSubcategoriesByCategory,
 } from '@/lib/constants/categories';
+import { CustomSelect } from '@/components/ui';
 import type { Enums } from '@/types/database';
 import toast from 'react-hot-toast';
 
@@ -392,34 +393,31 @@ export default function ProductForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Category" required>
-            <select
+            <CustomSelect
               value={values.category}
-              onChange={(e) => set('category', e.target.value as Enums<'product_category'>)}
+              onValueChange={(nextValue) => set('category', nextValue as Enums<'product_category'>)}
               required
               className={inputCls}
-            >
-              <option value="">Select category</option>
-              {PRODUCT_CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: 'Select category' },
+                ...PRODUCT_CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
+              ]}
+            />
           </Field>
 
           <Field label="Subcategory">
-            <select
+            <CustomSelect
               value={values.subcategory_slug}
-              onChange={(e) => {
-                const slug = e.target.value;
-                setValues((v) => ({ ...v, subcategory_slug: slug, subcategory_id: '' }));
+              onValueChange={(nextValue) => {
+                setValues((v) => ({ ...v, subcategory_slug: nextValue, subcategory_id: '' }));
               }}
               disabled={subcats.length === 0}
               className={inputCls}
-            >
-              <option value="">Select subcategory</option>
-              {subcats.map((s) => (
-                <option key={s.slug} value={s.slug}>{s.label}</option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: 'Select subcategory' },
+                ...subcats.map((s) => ({ value: s.slug, label: s.label })),
+              ]}
+            />
           </Field>
         </div>
 
@@ -477,16 +475,24 @@ export default function ProductForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Unit of Measure">
-            <select value={values.unit_of_measure} onChange={(e) => set('unit_of_measure', e.target.value as Enums<'unit_of_measure'>)} className={inputCls}>
-              {UNIT_OPTIONS.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
-            </select>
+            <CustomSelect
+              value={values.unit_of_measure}
+              onValueChange={(nextValue) => set('unit_of_measure', nextValue as Enums<'unit_of_measure'>)}
+              className={inputCls}
+              options={UNIT_OPTIONS.map((u) => ({ value: u.value, label: u.label }))}
+            />
           </Field>
           <Field label="Stock Status">
-            <select value={values.stock_status} onChange={(e) => set('stock_status', e.target.value as Enums<'stock_status'>)} className={inputCls}>
-              <option value="in_stock">In Stock</option>
-              <option value="out_of_stock">Out of Stock</option>
-              <option value="low_stock">Low Stock</option>
-            </select>
+            <CustomSelect
+              value={values.stock_status}
+              onValueChange={(nextValue) => set('stock_status', nextValue as Enums<'stock_status'>)}
+              className={inputCls}
+              options={[
+                { value: 'in_stock', label: 'In Stock' },
+                { value: 'out_of_stock', label: 'Out of Stock' },
+                { value: 'low_stock', label: 'Low Stock' },
+              ]}
+            />
           </Field>
         </div>
       </section>
@@ -506,9 +512,12 @@ export default function ProductForm({
             <input type="number" min="1" step="1" value={values.moq} onChange={(e) => set('moq', e.target.value)} className={inputCls} />
           </Field>
           <Field label="GST Rate">
-            <select value={values.gst_rate} onChange={(e) => set('gst_rate', e.target.value)} className={inputCls}>
-              {GST_RATES.map((r) => <option key={r} value={r}>{r}%</option>)}
-            </select>
+            <CustomSelect
+              value={values.gst_rate}
+              onValueChange={(nextValue) => set('gst_rate', nextValue)}
+              className={inputCls}
+              options={GST_RATES.map((r) => ({ value: String(r), label: `${r}%` }))}
+            />
           </Field>
         </div>
 

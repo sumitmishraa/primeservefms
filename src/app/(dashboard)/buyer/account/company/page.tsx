@@ -3,13 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Building2, Loader2, Check, AlertCircle, ShieldCheck, Upload,
-  Trash2, FileText, ChevronDown, MapPin,
+  Trash2, FileText, MapPin,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { CustomSelect } from '@/components/ui';
 import type { CompanyDetails } from '@/app/api/buyer/company/route';
 import type { BusinessDocument } from '@/types';
-
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -22,9 +21,9 @@ const INDIAN_STATES = [
 
 const SPEND_BANDS = [
   'Up to ₹50,000',
-  '₹50,000 – ₹2,00,000',
-  '₹2,00,000 – ₹5,00,000',
-  '₹5,00,000 – ₹10,00,000',
+  '₹50,000 - ₹2,00,000',
+  '₹2,00,000 - ₹5,00,000',
+  '₹5,00,000 - ₹10,00,000',
   'Above ₹10,00,000',
 ];
 
@@ -35,34 +34,6 @@ const REQUIRED_DOCS: { value: BusinessDocument['doc_type']; label: string }[] = 
 
 const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-
-// ─── Styled Select ───────────────────────────────────────────────────────────
-
-function SelectField({
-  value,
-  onChange,
-  placeholder,
-  children,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white transition-colors text-slate-700"
-      >
-        <option value="">{placeholder}</option>
-        {children}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-    </div>
-  );
-}
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -362,13 +333,13 @@ export default function AccountCompanyPage() {
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1.5">Expected Monthly Spend</label>
-            <SelectField
+            <CustomSelect
               value={monthlySpend}
-              onChange={setMonthlySpend}
-              placeholder="Select spend range…"
-            >
-              {SPEND_BANDS.map((b) => <option key={b} value={b}>{b}</option>)}
-            </SelectField>
+              onValueChange={setMonthlySpend}
+              placeholder="Select spend range..."
+              className="px-3 py-2.5 text-sm text-slate-700"
+              options={SPEND_BANDS.map((b) => ({ value: b, label: b }))}
+            />
           </div>
         </div>
       </div>
@@ -480,9 +451,13 @@ export default function AccountCompanyPage() {
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1.5">State</label>
-            <SelectField value={state} onChange={setState} placeholder="Select state…">
-              {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </SelectField>
+            <CustomSelect
+              value={state}
+              onValueChange={setState}
+              placeholder="Select state..."
+              className="px-3 py-2.5 text-sm text-slate-700"
+              options={INDIAN_STATES.map((s) => ({ value: s, label: s }))}
+            />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1.5">Pincode</label>

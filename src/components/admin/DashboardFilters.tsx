@@ -16,6 +16,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Filter, ChevronDown, X } from 'lucide-react';
 import type { ClientListItem } from '@/app/api/admin/clients/route';
+import { CustomSelect } from '@/components/ui';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -184,47 +185,42 @@ export default function DashboardFilters({ filters, onChange }: DashboardFilters
       {/* Client */}
       <div className="min-w-[160px]">
         <label className="block text-xs font-medium text-slate-500 mb-1">Client</label>
-        <select
+        <CustomSelect
           value={filters.client_id}
-          onChange={(e) => set({ client_id: e.target.value, branch_id: '' })}
+          onValueChange={(nextValue) => set({ client_id: nextValue, branch_id: '' })}
           disabled={loadingClients}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:opacity-60"
-        >
-          <option value="">All Clients</option>
-          {clients.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
+          options={[
+            { value: '', label: 'All Clients' },
+            ...clients.map((c) => ({ value: c.id, label: c.name })),
+          ]}
+        />
       </div>
 
       {/* Branch */}
       <div className="min-w-[160px]">
         <label className="block text-xs font-medium text-slate-500 mb-1">Branch</label>
-        <select
+        <CustomSelect
           value={filters.branch_id}
-          onChange={(e) => set({ branch_id: e.target.value })}
+          onValueChange={(nextValue) => set({ branch_id: nextValue })}
           disabled={!filters.client_id}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <option value="">All Branches</option>
-          {branches.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}{b.area ? ` (${b.area})` : ''}</option>
-          ))}
-        </select>
+          className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
+          options={[
+            { value: '', label: 'All Branches' },
+            ...branches.map((b) => ({ value: b.id, label: `${b.name}${b.area ? ` (${b.area})` : ''}` })),
+          ]}
+        />
       </div>
 
       {/* Date range */}
       <div className="min-w-[160px]">
         <label className="block text-xs font-medium text-slate-500 mb-1">Date Range</label>
-        <select
+        <CustomSelect
           value={filters.date_range}
-          onChange={(e) => set({ date_range: e.target.value as DateRangePreset })}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-        >
-          {DATE_RANGE_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
+          onValueChange={(nextValue) => set({ date_range: nextValue as DateRangePreset })}
+          className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
+          options={DATE_RANGE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+        />
       </div>
 
       {/* Custom date pickers */}
@@ -254,15 +250,12 @@ export default function DashboardFilters({ filters, onChange }: DashboardFilters
       {/* Status */}
       <div className="min-w-[160px]">
         <label className="block text-xs font-medium text-slate-500 mb-1">Order Status</label>
-        <select
+        <CustomSelect
           value={filters.status}
-          onChange={(e) => set({ status: e.target.value })}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-        >
-          {STATUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
+          onValueChange={(nextValue) => set({ status: nextValue })}
+          className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
+          options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+        />
       </div>
 
       {/* Clear */}

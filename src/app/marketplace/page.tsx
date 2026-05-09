@@ -18,6 +18,7 @@ import { ShoppingBag, ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react
 import ProductCard from '@/components/marketplace/ProductCard';
 import ProductSidebar from '@/components/marketplace/ProductSidebar';
 import { PublicHeader, PublicFooter } from '@/components/layout';
+import { CustomSelect } from '@/components/ui';
 import {
   getCategoryLabel,
   getSubcategoryLabel,
@@ -253,17 +254,12 @@ function MarketplaceContent() {
 
               <label className="flex items-center gap-2 text-sm text-slate-600">
                 <span className="whitespace-nowrap">Sort:</span>
-                <select
+                <CustomSelect
                   value={urlSort}
-                  onChange={(e) => handleSortChange(e.target.value)}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-                >
-                  {SORT_OPTIONS.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={handleSortChange}
+                  className="min-h-9 rounded-lg border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-800"
+                  options={SORT_OPTIONS.map((s) => ({ value: s.value, label: s.label }))}
+                />
               </label>
             </div>
 

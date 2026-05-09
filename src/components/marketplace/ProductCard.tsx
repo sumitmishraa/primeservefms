@@ -60,14 +60,14 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Image area */}
       <Link
         href={detailHref}
-        className="relative block aspect-square w-full overflow-hidden bg-slate-50"
+        className="relative block aspect-square w-full overflow-hidden bg-white p-4"
       >
         {product.thumbnail_url ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={product.thumbnail_url}
             alt={productImageAlt(product)}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatINR, formatDate } from '@/lib/utils/formatting';
+import { CustomSelect } from '@/components/ui';
 import type { QuoteRequest, QuoteItem } from '@/app/api/buyer/quotes/route';
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -280,15 +281,12 @@ export default function AccountQuotesPage() {
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
                           <div>
                             <label className="block text-xs text-slate-500 mb-1">Unit</label>
-                            <select
+                            <CustomSelect
                               value={item.unit}
-                              onChange={(e) => updateItem(idx, 'unit', e.target.value)}
-                              className={`${inputCls} appearance-none`}
-                            >
-                              {UNITS.map((u) => (
-                                <option key={u.value} value={u.value}>{u.label}</option>
-                              ))}
-                            </select>
+                              onValueChange={(nextValue) => updateItem(idx, 'unit', nextValue)}
+                              className={inputCls}
+                              options={UNITS.map((u) => ({ value: u.value, label: u.label }))}
+                            />
                           </div>
                           <div>
                             <label className="block text-xs text-slate-500 mb-1">Quantity <span className="text-rose-400">*</span></label>

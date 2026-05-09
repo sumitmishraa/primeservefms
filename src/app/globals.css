@@ -40,6 +40,81 @@ body {
   scrollbar-width: none;
 }
 
+.featured-marquee {
+  position: relative;
+}
+.featured-marquee::before,
+.featured-marquee::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 1.5rem;
+  width: 72px;
+  pointer-events: none;
+  z-index: 5;
+}
+.featured-marquee::before {
+  left: 0;
+  background: linear-gradient(90deg, #f8fafc 0%, rgb(248 250 252 / 0) 100%);
+}
+.featured-marquee::after {
+  right: 0;
+  background: linear-gradient(270deg, #f8fafc 0%, rgb(248 250 252 / 0) 100%);
+}
+.featured-scroll-rail {
+  cursor: grab;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+.featured-scroll-rail::-webkit-scrollbar {
+  display: none;
+}
+.featured-scroll-rail:active {
+  cursor: grabbing;
+}
+.featured-product-card {
+  scroll-snap-align: start;
+  opacity: 0;
+}
+
+@keyframes featuredCardEnter {
+  0%   { opacity: 0; transform: translateY(18px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.featured-section-visible .featured-product-card {
+  animation: featuredCardEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.featured-section-visible .featured-product-card:nth-child(1)  { animation-delay:   0ms; }
+.featured-section-visible .featured-product-card:nth-child(2)  { animation-delay:  55ms; }
+.featured-section-visible .featured-product-card:nth-child(3)  { animation-delay: 110ms; }
+.featured-section-visible .featured-product-card:nth-child(4)  { animation-delay: 165ms; }
+.featured-section-visible .featured-product-card:nth-child(5)  { animation-delay: 220ms; }
+.featured-section-visible .featured-product-card:nth-child(6)  { animation-delay: 275ms; }
+.featured-section-visible .featured-product-card:nth-child(7)  { animation-delay: 330ms; }
+.featured-section-visible .featured-product-card:nth-child(8)  { animation-delay: 385ms; }
+.featured-section-visible .featured-product-card:nth-child(9)  { animation-delay: 440ms; }
+.featured-section-visible .featured-product-card:nth-child(10) { animation-delay: 495ms; }
+.featured-section-visible .featured-product-card:nth-child(11) { animation-delay: 550ms; }
+
+@keyframes seeMorePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0); }
+  50%       { box-shadow: 0 0 0 8px rgba(20, 184, 166, 0.18); }
+}
+.featured-see-more-pulse {
+  animation: seeMorePulse 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featured-product-card {
+    opacity: 1;
+    animation: none !important;
+  }
+  .featured-see-more-pulse {
+    animation: none;
+  }
+}
+
 /* Product detail page — variant change microinteractions */
 @keyframes pdpFadeUp {
   0%   { opacity: 0; transform: translateY(6px); }

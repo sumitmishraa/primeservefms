@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { CustomSelect } from '@/components/ui';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -236,18 +237,19 @@ export default function NewClientPage() {
                 <label className="block text-sm font-medium text-slate-700" htmlFor="industry">
                   Industry
                 </label>
-                <select
+                <CustomSelect
                   id="industry"
                   name="industry"
                   value={form.industry}
-                  onChange={handleChange}
-                  className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                >
-                  <option value="">Select industry...</option>
-                  {INDUSTRY_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
+                  onValueChange={(nextValue) => {
+                    setForm((prev) => ({ ...prev, industry: nextValue }));
+                  }}
+                  className="mt-1.5 rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
+                  options={[
+                    { value: '', label: 'Select industry...' },
+                    ...INDUSTRY_OPTIONS.map((opt) => ({ value: opt, label: opt })),
+                  ]}
+                />
               </div>
 
               {/* City */}

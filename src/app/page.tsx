@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
+  ChevronLeft,
   ChevronRight,
   Sparkles,
   Package,
@@ -14,11 +16,11 @@ import {
   Truck,
   ShieldCheck,
   Quote,
-  Star,
-  ShoppingCart,
 } from 'lucide-react';
 import { PublicHeader, PublicFooter } from '@/components/layout';
 import { PRODUCT_CATEGORIES } from '@/lib/constants/categories';
+import ProductCard from '@/components/marketplace/ProductCard';
+import type { CartableProduct } from '@/components/marketplace/AddToCartButton';
 
 // Category cover images — keyed by the product_category enum value.
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -30,68 +32,12 @@ const CATEGORY_IMAGES: Record<string, string> = {
   printing_solution: '/images/categories/printing-solution.png',
 };
 
-const FEATURED_PRODUCTS = [
-  {
-    name: 'Professional Floor Cleaner (5L)',
-    category: 'Cleaning Chemicals',
-    price: '₹485',
-    unit: 'can',
-    rating: 4.8,
-    reviews: 243,
-    image:
-      'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=900&auto=format&fit=crop&q=80',
-  },
-  {
-    name: 'Premium Liquid Hand Soap (5L)',
-    category: 'Cleaning Chemicals',
-    price: '₹395',
-    unit: 'can',
-    rating: 4.7,
-    reviews: 189,
-    image:
-      'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=900&auto=format&fit=crop&q=80',
-  },
-  {
-    name: 'A4 Copier Paper (500 sheets)',
-    category: 'Office Stationeries',
-    price: '₹245',
-    unit: 'ream',
-    rating: 4.9,
-    reviews: 412,
-    image:
-      'https://images.unsplash.com/photo-1568871391080-9acfa1ffb7ab?w=900&auto=format&fit=crop&q=80',
-  },
-  {
-    name: 'Microfiber Cleaning Cloths (12-pack)',
-    category: 'Housekeeping Materials',
-    price: '₹289',
-    unit: 'pack',
-    rating: 4.6,
-    reviews: 156,
-    image:
-      'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=900&auto=format&fit=crop&q=80',
-  },
-  {
-    name: 'Disposable Paper Cups (100 ct)',
-    category: 'Pantry Items',
-    price: '₹135',
-    unit: 'pack',
-    rating: 4.5,
-    reviews: 98,
-    image:
-      'https://images.unsplash.com/photo-1538474705339-e87de81450e8?w=900&auto=format&fit=crop&q=80',
-  },
-  {
-    name: 'Heavy-Duty Garbage Bags (30 ct)',
-    category: 'Housekeeping Materials',
-    price: '₹175',
-    unit: 'roll',
-    rating: 4.7,
-    reviews: 267,
-    image:
-      'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=900&auto=format&fit=crop&q=80',
-  },
-] as const;
+interface ProductsApiResponse {
+  products: CartableProduct[];
+  total: number;
+  page: number;
+  per_page: number;
+}
 
 const TRUST_PILLS = [
   { Icon: CreditCard, label: '45-Day Credit' },
@@ -154,35 +100,199 @@ const TESTIMONIALS = [
 ] as const;
 
 export default function HomePage() {
+  const [featuredProducts, setFeaturedProducts] = useState<CartableProduct[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [featuredScrollDone, setFeaturedScrollDone] = useState(false);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [sectionVisible, setSectionVisible] = useState(false);
   const featuredRailRef = useRef<HTMLDivElement>(null);
   const featuredPausedRef = useRef(false);
-  const [featuredAtEnd, setFeaturedAtEnd] = useState(false);
+  const featuredResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const featuredDragRef = useRef({
+    active: false,
+    didDrag: false,
+    scrollLeft: 0,
+    startX: 0,
+  });
+  const featuredScrollDoneRef = useRef(false);
+  const featuredSectionRef = useRef<HTMLDivElement>(null);
 
-  const updateFeaturedArrow = useCallback(() => {
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFeaturedProducts() {
+      setFeaturedLoading(true);
+      try {
+        const queryFor = (category: string) => {
+          const params = new URLSearchParams({
+            is_approved: 'true',
+            is_active: 'true',
+            page: '1',
+            per_page: '12',
+            category,
+          });
+          return fetch(`/api/products?${params.toString()}`);
+        };
+
+        const responses = await Promise.all([
+          queryFor('housekeeping_materials'),
+          queryFor('office_stationeries'),
+        ]);
+        const payloads = await Promise.all(
+          responses.map((res) => res.json() as Promise<{ data: ProductsApiResponse | null; error: string | null }>),
+        );
+
+        const [housekeeping = [], stationery = []] = payloads.map((payload) =>
+          (payload.data?.products ?? []).filter((product) => product.thumbnail_url),
+        );
+        const preferredProducts = [
+          ...housekeeping.slice(0, 5),
+          ...stationery.slice(0, 5),
+          ...housekeeping.slice(5),
+          ...stationery.slice(5),
+        ];
+        const uniqueProducts = Array.from(
+          new Map(preferredProducts.map((product) => [product.id, product])).values(),
+        );
+
+        if (!cancelled) setFeaturedProducts(uniqueProducts.slice(0, 10));
+      } catch {
+        if (!cancelled) setFeaturedProducts([]);
+      } finally {
+        if (!cancelled) setFeaturedLoading(false);
+      }
+    }
+
+    void loadFeaturedProducts();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+
+  const pauseFeaturedAutoScroll = useCallback((resumeAfterMs?: number) => {
+    featuredPausedRef.current = true;
+    if (featuredResumeTimerRef.current) {
+      clearTimeout(featuredResumeTimerRef.current);
+      featuredResumeTimerRef.current = null;
+    }
+    if (resumeAfterMs) {
+      featuredResumeTimerRef.current = setTimeout(() => {
+        featuredPausedRef.current = false;
+        featuredResumeTimerRef.current = null;
+      }, resumeAfterMs);
+    }
+  }, []);
+
+  const resumeFeaturedAutoScroll = useCallback(() => {
+    if (featuredResumeTimerRef.current) {
+      clearTimeout(featuredResumeTimerRef.current);
+      featuredResumeTimerRef.current = null;
+    }
+    featuredPausedRef.current = false;
+  }, []);
+
+  const scrollFeaturedBy = useCallback((direction: 1 | -1) => {
     const rail = featuredRailRef.current;
     if (!rail) return;
-    setFeaturedAtEnd(rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 12);
+    pauseFeaturedAutoScroll(2400);
+    rail.scrollBy({
+      left: direction * Math.min(rail.clientWidth * 0.85, 620),
+      behavior: 'smooth',
+    });
+  }, [pauseFeaturedAutoScroll]);
+
+  const beginFeaturedDrag = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    const rail = featuredRailRef.current;
+    if (!rail) return;
+
+    pauseFeaturedAutoScroll();
+    featuredDragRef.current = {
+      active: true,
+      didDrag: false,
+      scrollLeft: rail.scrollLeft,
+      startX: event.clientX,
+    };
+    rail.setPointerCapture(event.pointerId);
+  }, [pauseFeaturedAutoScroll]);
+
+  const moveFeaturedDrag = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const rail = featuredRailRef.current;
+    const drag = featuredDragRef.current;
+    if (!rail || !drag.active) return;
+
+    const deltaX = event.clientX - drag.startX;
+    if (Math.abs(deltaX) > 4) drag.didDrag = true;
+    rail.scrollLeft = drag.scrollLeft - deltaX;
+  }, []);
+
+  const endFeaturedDrag = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const rail = featuredRailRef.current;
+    const drag = featuredDragRef.current;
+    if (!rail || !drag.active) return;
+
+    drag.active = false;
+    if (rail.hasPointerCapture(event.pointerId)) rail.releasePointerCapture(event.pointerId);
+    pauseFeaturedAutoScroll(1600);
+  }, [pauseFeaturedAutoScroll]);
+
+  const stopFeaturedClickAfterDrag = useCallback((event: ReactMouseEvent<HTMLDivElement>) => {
+    if (!featuredDragRef.current.didDrag) return;
+    event.preventDefault();
+    event.stopPropagation();
+    featuredDragRef.current.didDrag = false;
   }, []);
 
   useEffect(() => {
-    updateFeaturedArrow();
-    const timer = setInterval(() => {
-      const rail = featuredRailRef.current;
-      if (!rail || featuredPausedRef.current) return;
-      const nearEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 8;
-      if (nearEnd) {
-        setFeaturedAtEnd(true);
-        return;
-      }
-      rail.scrollBy({ left: 300, behavior: 'smooth' });
-    }, 2200);
-    return () => clearInterval(timer);
-  }, [updateFeaturedArrow]);
+    const section = featuredSectionRef.current;
+    if (!section) return undefined;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry?.isIntersecting) setSectionVisible(true); },
+      { threshold: 0.1 },
+    );
+    obs.observe(section);
+    return () => obs.disconnect();
+  }, []);
 
-  const scrollFeaturedNext = () => {
-    featuredRailRef.current?.scrollBy({ left: 340, behavior: 'smooth' });
-    window.setTimeout(updateFeaturedArrow, 450);
-  };
+  useEffect(() => {
+    if (featuredProducts.length === 0) return undefined;
+
+    featuredScrollDoneRef.current = false;
+    setFeaturedScrollDone(false);
+
+    let frame = 0;
+    let lastTime = performance.now();
+    const pixelsPerSecond = 60;
+
+    const tick = (time: number) => {
+      const rail = featuredRailRef.current;
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (rail && !featuredPausedRef.current && !prefersReducedMotion) {
+        const deltaSeconds = Math.min((time - lastTime) / 1000, 0.05);
+        const maxScroll = rail.scrollWidth - rail.clientWidth;
+
+        rail.scrollLeft = Math.min(rail.scrollLeft + pixelsPerSecond * deltaSeconds, maxScroll);
+
+        if (rail.scrollLeft >= maxScroll - 2) {
+          featuredScrollDoneRef.current = true;
+          setFeaturedScrollDone(true);
+          window.cancelAnimationFrame(frame);
+          return;
+        }
+      }
+
+      lastTime = time;
+      frame = window.requestAnimationFrame(tick);
+    };
+
+    frame = window.requestAnimationFrame(tick);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      if (featuredResumeTimerRef.current) clearTimeout(featuredResumeTimerRef.current);
+    };
+  }, [featuredProducts.length]);
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -376,7 +486,7 @@ export default function HomePage() {
       </section>
 
       {/* ───── Featured Products ─────────────────────────────────── */}
-      <section className="bg-slate-50/60 py-16 sm:py-20">
+      <section ref={featuredSectionRef} className="bg-slate-50/60 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-10 flex flex-col items-center text-center">
             <span className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-teal-600">
@@ -390,116 +500,129 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Horizontal snap scroller. Negative margins + matching padding
-              let cards bleed to the viewport edge so the last/first card
-              hints there's more to scroll. Custom scrollbar utilities are
-              inlined as arbitrary variants so we don't depend on a plugin. */}
           <div
-            className="relative -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
-            onMouseEnter={() => { featuredPausedRef.current = true; }}
-            onMouseLeave={() => { featuredPausedRef.current = false; }}
-            onFocus={() => { featuredPausedRef.current = true; }}
-            onBlur={() => { featuredPausedRef.current = false; }}
+            className={`featured-marquee group relative -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8${sectionVisible ? ' featured-section-visible' : ''}`}
+            onMouseEnter={() => pauseFeaturedAutoScroll()}
+            onMouseLeave={resumeFeaturedAutoScroll}
+            onFocus={() => pauseFeaturedAutoScroll()}
+            onBlur={resumeFeaturedAutoScroll}
+            onWheel={() => pauseFeaturedAutoScroll(1800)}
           >
-            <div
-              ref={featuredRailRef}
-              onScroll={updateFeaturedArrow}
-              className="flex snap-x snap-mandatory scroll-smooth gap-6 overflow-x-auto pb-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            >
-              {FEATURED_PRODUCTS.map((product) => (
-                <div
-                  key={product.name}
-                  className="group flex w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-teal-300 hover:shadow-lg sm:w-[300px]"
-                >
-                  <Link
-                    href="/marketplace"
-                    className="relative block aspect-[4/3] w-full overflow-hidden bg-slate-100"
+            {featuredLoading ? (
+              <div className="flex gap-6 overflow-hidden pb-6">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-[430px] w-[280px] shrink-0 animate-pulse rounded-xl border border-slate-200 bg-white sm:w-[300px]"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    <span className="absolute left-3 top-3 rounded-full bg-teal-100 px-2.5 py-0.5 text-[11px] font-semibold text-teal-700">
-                      In Stock
-                    </span>
-                  </Link>
-
-                  <div className="flex flex-1 flex-col gap-1.5 p-5">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                      {product.category}
-                    </p>
-                    <Link
-                      href="/marketplace"
-                      className="line-clamp-2 font-heading text-sm font-bold leading-snug text-slate-900 transition-colors hover:text-teal-700"
-                    >
-                      {product.name}
-                    </Link>
-
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="flex">
-                        {[0, 1, 2, 3, 4].map((i) => (
-                          <Star
-                            key={i}
-                            className={`h-3.5 w-3.5 ${
-                              i < Math.round(product.rating)
-                                ? 'fill-amber-400 text-amber-400'
-                                : 'fill-slate-200 text-slate-200'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-slate-500">
-                        {product.rating} ({product.reviews})
-                      </span>
+                    <div className="aspect-square rounded-t-xl bg-slate-100" />
+                    <div className="space-y-3 p-4">
+                      <div className="h-3 w-1/3 rounded bg-slate-100" />
+                      <div className="h-4 w-5/6 rounded bg-slate-100" />
+                      <div className="h-5 w-1/2 rounded bg-slate-100" />
+                      <div className="h-10 rounded-lg bg-slate-100" />
                     </div>
-
-                    <p className="mt-1 font-heading text-lg font-bold text-teal-700">
-                      {product.price}
-                      <span className="ml-1 text-xs font-normal text-slate-500">
-                        / {product.unit}
-                      </span>
-                    </p>
-
+                  </div>
+                ))}
+              </div>
+            ) : featuredProducts.length > 0 ? (
+              <>
+                <div
+                  ref={featuredRailRef}
+                  className="featured-scroll-rail scrollbar-hide flex gap-6 overflow-x-auto overscroll-x-contain scroll-smooth pb-6"
+                  onPointerDown={beginFeaturedDrag}
+                  onPointerMove={moveFeaturedDrag}
+                  onPointerUp={endFeaturedDrag}
+                  onPointerCancel={endFeaturedDrag}
+                  onClickCapture={stopFeaturedClickAfterDrag}
+                  onScroll={() => {
+                    const rail = featuredRailRef.current;
+                    if (!rail) return;
+                    const first = rail.firstElementChild as HTMLElement | null;
+                    if (!first) return;
+                    const cardStep = first.offsetWidth + 24;
+                    setActiveCardIndex(Math.min(
+                      Math.round(rail.scrollLeft / cardStep),
+                      featuredProducts.length,
+                    ));
+                  }}
+                >
+                  {featuredProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="featured-product-card w-[280px] shrink-0 sm:w-[300px] [&>article]:h-full"
+                    >
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
+                  {/* See more card */}
+                  <div className="featured-product-card w-[280px] shrink-0 sm:w-[300px]">
                     <Link
                       href="/marketplace"
-                      className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700"
+                      className={`flex h-full min-h-[430px] flex-col items-center justify-center gap-5 rounded-xl border border-teal-200 bg-gradient-to-br from-teal-50 to-teal-100/70 p-8 text-center transition-all duration-300 hover:-translate-y-1 hover:border-teal-400 hover:shadow-xl hover:shadow-teal-100${featuredScrollDone ? ' featured-see-more-pulse' : ''}`}
                     >
-                      <ShoppingCart className="h-4 w-4" />
-                      Add to Cart
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-500/15 ring-2 ring-teal-300/40 transition-all duration-300 group-hover:bg-teal-500/25">
+                        <ArrowRight className="h-8 w-8 text-teal-600" />
+                      </div>
+                      <div>
+                        <p className="font-heading text-xl font-bold text-teal-900">Browse All</p>
+                        <p className="font-heading text-xl font-bold text-teal-900">Products</p>
+                      </div>
+                      <p className="text-sm text-teal-700/80">500+ SKUs across 6 categories</p>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-teal-500/30">
+                        Shop Now
+                        <ArrowRight className="h-4 w-4" />
+                      </span>
                     </Link>
                   </div>
                 </div>
-              ))}
 
-              {/* "See more" terminator card — same dimensions as a product
-                  card so it slots cleanly into the scroll rhythm. */}
-              <Link
-                href="/marketplace"
-                className="group flex w-[280px] shrink-0 snap-start flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-teal-300 bg-teal-50/40 p-8 text-center transition-all hover:-translate-y-1 hover:border-teal-500 hover:bg-teal-50 sm:w-[300px]"
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-teal-700 transition-transform group-hover:scale-110">
-                  <ArrowRight className="h-6 w-6" />
+                <button
+                  type="button"
+                  onClick={() => scrollFeaturedBy(-1)}
+                  className="absolute left-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-lg shadow-slate-900/10 transition-all hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 lg:flex"
+                  aria-label="Scroll featured products left"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollFeaturedBy(1)}
+                  className="absolute right-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-lg shadow-slate-900/10 transition-all hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 lg:flex"
+                  aria-label="Scroll featured products right"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+
+                {/* Progress dots */}
+                <div className="relative z-10 mt-2 flex justify-center gap-2">
+                  {Array.from({ length: featuredProducts.length + 1 }).map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        const rail = featuredRailRef.current;
+                        const first = rail?.firstElementChild as HTMLElement | null;
+                        if (!rail || !first) return;
+                        pauseFeaturedAutoScroll(2000);
+                        rail.scrollTo({ left: i * (first.offsetWidth + 24), behavior: 'smooth' });
+                      }}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        i === activeCardIndex
+                          ? 'w-6 bg-teal-500'
+                          : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                      }`}
+                      aria-label={i < featuredProducts.length ? `Go to product ${i + 1}` : 'See all products'}
+                    />
+                  ))}
                 </div>
-                <p className="font-heading text-base font-bold text-teal-700">
-                  See more products
+              </>
+            ) : (
+              <div className="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center">
+                <p className="text-sm font-medium text-slate-600">
+                  Featured products will appear here once housekeeping and stationery products are available.
                 </p>
-                <p className="text-xs text-teal-700/70">
-                  Browse the full catalogue
-                </p>
-              </Link>
-            </div>
-            {!featuredAtEnd && (
-              <button
-                type="button"
-                onClick={scrollFeaturedNext}
-                className="absolute right-0 top-1/2 hidden h-11 w-11 -translate-y-1/2 translate-x-6 items-center justify-center rounded-full border border-teal-100 bg-white text-teal-700 shadow-lg shadow-slate-900/10 transition-all hover:-translate-y-[calc(50%+2px)] hover:border-teal-300 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-500 lg:flex xl:translate-x-10"
-                aria-label="Show more featured products"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
+              </div>
             )}
           </div>
         </div>

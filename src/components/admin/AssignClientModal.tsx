@@ -12,6 +12,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { X, Building2, GitBranch } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ClientListItem } from '@/app/api/admin/clients/route';
+import { CustomSelect } from '@/components/ui';
 
 // ---------------------------------------------------------------------------
 // Branch shape (slim — from branches API)
@@ -195,17 +196,16 @@ export default function AssignClientModal({
             {loadingClients ? (
               <div className="h-10 animate-pulse rounded-lg bg-slate-100" />
             ) : (
-              <select
+              <CustomSelect
                 id="client-select"
                 value={selectedClient}
-                onChange={(e) => setSelectedClient(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-              >
-                <option value="">— Unassigned —</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+                onValueChange={setSelectedClient}
+                className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
+                options={[
+                  { value: '', label: '- Unassigned -' },
+                  ...clients.map((c) => ({ value: c.id, label: c.name })),
+                ]}
+              />
             )}
           </div>
 
@@ -218,26 +218,27 @@ export default function AssignClientModal({
             {loadingBranches ? (
               <div className="h-10 animate-pulse rounded-lg bg-slate-100" />
             ) : (
-              <select
+              <CustomSelect
                 id="branch-select"
                 value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
+                onValueChange={setSelectedBranch}
                 disabled={!selectedClient || branches.length === 0}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="">
-                  {!selectedClient
-                    ? '— Select a client first —'
-                    : branches.length === 0
-                      ? '— No branches —'
-                      : '— All branches —'}
-                </option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}{b.area ? ` (${b.area})` : ''}
-                  </option>
-                ))}
-              </select>
+                className="rounded-lg border-slate-300 px-3 py-2 text-sm text-slate-900"
+                options={[
+                  {
+                    value: '',
+                    label: !selectedClient
+                      ? '- Select a client first -'
+                      : branches.length === 0
+                        ? '- No branches -'
+                        : '- All branches -',
+                  },
+                  ...branches.map((b) => ({
+                    value: b.id,
+                    label: `${b.name}${b.area ? ` (${b.area})` : ''}`,
+                  })),
+                ]}
+              />
             )}
           </div>
         </div>
