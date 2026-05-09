@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   FileText, Plus, Trash2, Loader2, Check, ChevronDown, ChevronUp,
   X, Upload, FileSpreadsheet, Info, CheckCircle2, AlertCircle, ArrowLeft,
+  Search, Sparkles,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatINR, formatDate } from '@/lib/utils/formatting';
@@ -61,6 +62,156 @@ function emptyItem(): QuoteItem {
 
 // â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+// ── Inline catalog search for unmatched items ────────────────────────────────
+
+interface CatalogSearchResult {
+  id: string;
+  name: string;
+  brand: string | null;
+  size_variant: string | null;
+  base_price: number;
+  gst_rate: number;
+}
+
+export interface UnmatchedResolution {
+  product: CatalogSearchResult;
+  qty: number;
+}
+
+interface UnmatchedRowProps {
+  item: PreviewUnmatchedItem;
+  onResolve: (resolution: UnmatchedResolution | null) => void;
+}
+
+function UnmatchedRow({ item, onResolve }: UnmatchedRowProps) {
+  const [query, setQuery]       = useState(item.requested_name);
+  const [results, setResults]   = useState<CatalogSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [open, setOpen]         = useState(false);
+  const [resolved, setResolved] = useState<CatalogSearchResult | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapRef  = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  function handleSearch(q: string) {
+    setQuery(q);
+    setResolved(null);
+    onResolve(null);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (q.trim().length < 2) { setResults([]); setOpen(false); return; }
+    timerRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res  = await fetch(`/api/products?search=${encodeURIComponent(q)}&per_page=6`);
+        const json = await res.json() as { data: { products: CatalogSearchResult[] } | null };
+        const prods = json.data?.products ?? [];
+        setResults(prods);
+        setOpen(prods.length > 0);
+      } finally {
+        setSearching(false);
+      }
+    }, 380);
+  }
+
+  function handleSelect(product: CatalogSearchResult) {
+    setResolved(product);
+    setQuery(product.name);
+    setOpen(false);
+    onResolve({ product, qty: item.requested_qty });
+  }
+
+  function handleClear() {
+    setResolved(null);
+    setQuery(item.requested_name);
+    setResults([]);
+    onResolve(null);
+  }
+
+  const srchInputCls = 'w-full pl-8 pr-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white';
+
+  return (
+    <div className="px-4 py-3 border-b border-amber-100 last:border-b-0">
+      <div className="flex items-center gap-3 mb-2">
+        <span className="font-heading text-sm font-semibold text-slate-800 flex-1 truncate">
+          {item.requested_name}
+        </span>
+        <span className="shrink-0 text-xs text-slate-500 font-mono">
+          {item.requested_qty} {item.requested_unit}
+        </span>
+      </div>
+
+      {resolved ? (
+        <div className="flex items-center gap-2 p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-emerald-800 truncate">{resolved.name}</p>
+            {(resolved.brand || resolved.size_variant) && (
+              <p className="text-xs text-emerald-600">
+                {[resolved.brand, resolved.size_variant].filter(Boolean).join(' · ')}
+              </p>
+            )}
+          </div>
+          <span className="text-xs font-bold text-teal-700 font-mono shrink-0">
+            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(resolved.base_price)}
+          </span>
+          <button onClick={handleClear} className="p-0.5 text-slate-400 hover:text-rose-500 rounded transition-colors shrink-0">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ) : (
+        <div ref={wrapRef} className="relative">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => handleSearch(e.target.value)}
+              onFocus={() => results.length > 0 && setOpen(true)}
+              className={srchInputCls}
+              placeholder="Search our catalog…"
+            />
+            {searching && (
+              <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-slate-400" />
+            )}
+          </div>
+          {open && results.length > 0 && (
+            <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+              {results.map((r) => (
+                <button
+                  key={r.id}
+                  onMouseDown={(e) => { e.preventDefault(); handleSelect(r); }}
+                  className="w-full flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-teal-50 text-left transition-colors border-b border-slate-100 last:border-b-0"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-800 truncate">{r.name}</p>
+                    {(r.brand || r.size_variant) && (
+                      <p className="text-xs text-slate-400">{[r.brand, r.size_variant].filter(Boolean).join(' · ')}</p>
+                    )}
+                  </div>
+                  <span className="text-xs font-bold text-teal-700 font-mono shrink-0">
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(r.base_price)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function AccountQuotesPage() {
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +236,8 @@ export default function AccountQuotesPage() {
     matched: PreviewMatchedItem[];
     unmatched: PreviewUnmatchedItem[];
   } | null>(null);
+  // Tracks which unmatched items the buyer has manually resolved via catalog search
+  const [unmatchedResolutions, setUnmatchedResolutions] = useState<Map<number, UnmatchedResolution | null>>(new Map());
 
   useEffect(() => { loadQuotes(); }, []);
 
@@ -105,6 +258,7 @@ export default function AccountQuotesPage() {
     setTitle(''); setNotes(''); setItems([emptyItem()]);
     setExcelTitle(''); setExcelFile(null);
     setPreviewResult(null); setPreviewing(false);
+    setUnmatchedResolutions(new Map());
     if (fileInputRef.current) fileInputRef.current.value = '';
     setShowForm(false);
   }
@@ -493,7 +647,7 @@ export default function AccountQuotesPage() {
                       className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                     >
                       {previewing ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
-                      {previewing ? 'Checking catalog...' : 'Preview Products'}
+                      {previewing ? 'Matching products with AI…' : 'Preview Products'}
                     </button>
                     <button onClick={resetForm} className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors">
                       Cancel
@@ -503,7 +657,15 @@ export default function AccountQuotesPage() {
 
                 {/* Step 2 — show matched / unmatched and let user confirm */}
                 {previewResult && (() => {
-                  const grandTotal = previewResult.matched.reduce((s, m) => s + m.gross_total, 0);
+                  const resolvedTotal = Array.from(unmatchedResolutions.values())
+                    .filter((r): r is UnmatchedResolution => r !== null)
+                    .reduce((sum, r) => sum + r.product.base_price * (1 + r.product.gst_rate / 100) * r.qty, 0);
+                  const grandTotal = previewResult.matched.reduce((s, m) => s + m.gross_total, 0) + resolvedTotal;
+
+                  const unresolvedCount = previewResult.unmatched.filter(
+                    (_, i) => !unmatchedResolutions.get(i),
+                  ).length;
+
                   return (
                     <div className="space-y-5 pt-2 border-t border-slate-100">
                       {previewResult.matched.length > 0 && (
@@ -531,7 +693,14 @@ export default function AccountQuotesPage() {
                                 {previewResult.matched.map((item, i) => (
                                   <tr key={i} className="hover:bg-slate-50/60 transition-colors">
                                     <td className="px-4 py-3">
-                                      <p className="font-heading text-sm font-semibold text-slate-900 leading-snug">{item.catalog_name}</p>
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <p className="font-heading text-sm font-semibold text-slate-900 leading-snug">{item.catalog_name}</p>
+                                        {item.match_strategy === 'ai' && (
+                                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-semibold">
+                                            <Sparkles className="w-2.5 h-2.5" />AI
+                                          </span>
+                                        )}
+                                      </div>
                                       {item.requested_name.toLowerCase() !== item.catalog_name.toLowerCase() && (
                                         <p className="text-[11px] text-slate-400 mt-0.5">Asked: {item.requested_name}</p>
                                       )}
@@ -554,7 +723,6 @@ export default function AccountQuotesPage() {
                                   </tr>
                                 ))}
                               </tbody>
-                              {/* Grand total row */}
                               <tfoot>
                                 <tr className="bg-teal-50 border-t-2 border-teal-200">
                                   <td colSpan={6} className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-teal-700">
@@ -572,29 +740,38 @@ export default function AccountQuotesPage() {
 
                       {previewResult.unmatched.length > 0 && (
                         <div>
-                          <div className="flex items-center gap-2 mb-3">
-                            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
-                            <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                              Not in our catalog yet — {previewResult.unmatched.length} item{previewResult.unmatched.length !== 1 ? 's' : ''} will be custom-quoted
-                            </p>
-                          </div>
-                          <div className="rounded-xl border border-amber-200 bg-amber-50/60 overflow-hidden">
-                            <div className="divide-y divide-amber-100">
-                              {previewResult.unmatched.map((item, i) => (
-                                <div key={i} className="flex items-center justify-between gap-4 px-4 py-3">
-                                  <span className="font-heading text-sm font-semibold text-slate-800">{item.requested_name}</span>
-                                  <span className="shrink-0">
-                                    <span className="font-heading text-sm font-semibold text-slate-700">{item.requested_qty}</span>
-                                    <span className="text-xs text-slate-400 ml-1">{item.requested_unit}</span>
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="px-4 py-3 bg-amber-100/60 border-t border-amber-200">
-                              <p className="text-xs text-amber-800 font-medium">
-                                Our team will source and quote these items separately when they respond to your request.
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                              <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                                Not auto-matched — {previewResult.unmatched.length} item{previewResult.unmatched.length !== 1 ? 's' : ''}
                               </p>
                             </div>
+                            {unresolvedCount === 0 && (
+                              <span className="text-[11px] font-semibold text-emerald-600">All resolved</span>
+                            )}
+                          </div>
+                          <div className="rounded-xl border border-amber-200 bg-amber-50/40 overflow-hidden">
+                            {previewResult.unmatched.map((item, i) => (
+                              <UnmatchedRow
+                                key={i}
+                                item={item}
+                                onResolve={(resolution) => {
+                                  setUnmatchedResolutions((prev) => {
+                                    const next = new Map(prev);
+                                    next.set(i, resolution);
+                                    return next;
+                                  });
+                                }}
+                              />
+                            ))}
+                            {unresolvedCount > 0 && (
+                              <div className="px-4 py-3 bg-amber-100/60 border-t border-amber-200">
+                                <p className="text-xs text-amber-800 font-medium">
+                                  {unresolvedCount} item{unresolvedCount !== 1 ? 's' : ''} will be custom-quoted by our team. Search above to link them to catalog products.
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -609,7 +786,7 @@ export default function AccountQuotesPage() {
                           {submitting ? 'Submitting...' : 'Confirm & Submit Request'}
                         </button>
                         <button
-                          onClick={() => setPreviewResult(null)}
+                          onClick={() => { setPreviewResult(null); setUnmatchedResolutions(new Map()); }}
                           className="flex items-center gap-1.5 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors"
                         >
                           <ArrowLeft className="w-4 h-4" />Back
