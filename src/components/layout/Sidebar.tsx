@@ -15,6 +15,7 @@ import {
   CreditCard,
   FileText,
   ShoppingCart,
+  ClipboardList,
   type LucideIcon,
 } from 'lucide-react';
 import type { UserProfile } from '@/types';
@@ -41,6 +42,7 @@ const ADMIN_NAV: NavItem[] = [
   { label: 'Product Catalog', href: '/admin/products', icon: Package },
   { label: 'Import Products', href: '/admin/products/import', icon: Upload },
   { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+  { label: 'Quote Requests', href: '/admin/quotes', icon: ClipboardList },
   { label: 'Buyers', href: '/admin/buyers', icon: Users },
   { label: 'Vendor Directory', href: '/admin/vendors', icon: BookUser },
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },

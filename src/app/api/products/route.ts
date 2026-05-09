@@ -72,6 +72,28 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(request.url);
 
+    // Fast path: fetch specific products by IDs (used by quote preview "Order Now" flow)
+    const idsParam = searchParams.get('ids');
+    if (idsParam) {
+      const ids = idsParam.split(',').map((s) => s.trim()).filter(Boolean);
+      if (ids.length > 0) {
+        const supabase = createAdminClient();
+        const { data, error } = await supabase
+          .from('products')
+          .select(PUBLIC_CARD_COLUMNS)
+          .in('id', ids)
+          .eq('is_approved', true)
+          .eq('is_active', true)
+          .gt('base_price', 0);
+        if (error) throw error;
+        const products = (data ?? []) as unknown as MarketplaceProduct[];
+        return NextResponse.json(
+          { data: { products, total: products.length, page: 1, per_page: products.length }, error: null },
+          { headers: NO_STORE_HEADERS },
+        );
+      }
+    }
+
     const category    = searchParams.get('category') ?? '';
     const subcategory = searchParams.get('subcategory') ?? '';
     const search      = searchParams.get('search') ?? '';
