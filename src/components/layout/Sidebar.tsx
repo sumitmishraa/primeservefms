@@ -32,7 +32,7 @@ const BUYER_NAV: NavItem[] = [
   { label: 'Company Details', href: '/buyer/account/company', icon: Building2 },
   { label: 'My Orders', href: '/buyer/orders', icon: Package },
   { label: 'Credit Overview', href: '/buyer/account/credit', icon: CreditCard },
-  { label: 'Request Quote', href: '/buyer/account/quotes', icon: FileText },
+  { label: 'Request Quotation', href: '/buyer/account/quotes', icon: FileText },
 ];
 
 const ADMIN_NAV: NavItem[] = [

@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   FileText, Plus, Trash2, Loader2, Check, ChevronDown, ChevronUp,
-  X, Upload, FileSpreadsheet, Info,
+  X, Upload, FileSpreadsheet, Info, CheckCircle2, AlertCircle, ArrowLeft,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatINR, formatDate } from '@/lib/utils/formatting';
 import { CustomSelect } from '@/components/ui';
 import type { QuoteRequest, QuoteItem } from '@/app/api/buyer/quotes/route';
+import type { PreviewMatchedItem, PreviewUnmatchedItem } from '@/app/api/buyer/quotes/preview/route';
 
 // â”€â”€â”€ Status config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -78,6 +79,13 @@ export default function AccountQuotesPage() {
   const [excelTitle, setExcelTitle] = useState('');
   const [excelFile, setExcelFile] = useState<File | null>(null);
 
+  // Excel preview state
+  const [previewing, setPreviewing] = useState(false);
+  const [previewResult, setPreviewResult] = useState<{
+    matched: PreviewMatchedItem[];
+    unmatched: PreviewUnmatchedItem[];
+  } | null>(null);
+
   useEffect(() => { loadQuotes(); }, []);
 
   async function loadQuotes() {
@@ -96,6 +104,7 @@ export default function AccountQuotesPage() {
   function resetForm() {
     setTitle(''); setNotes(''); setItems([emptyItem()]);
     setExcelTitle(''); setExcelFile(null);
+    setPreviewResult(null); setPreviewing(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
     setShowForm(false);
   }
@@ -131,6 +140,32 @@ export default function AccountQuotesPage() {
       toast.error(err instanceof Error ? err.message : 'Submit failed');
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleExcelPreview() {
+    if (!excelTitle.trim()) { toast.error('Please add a title for this request'); return; }
+    if (!excelFile) { toast.error('Please select an Excel file'); return; }
+    const ext = excelFile.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'xlsx' && ext !== 'xls') {
+      toast.error('Only .xlsx or .xls files are accepted');
+      return;
+    }
+    setPreviewing(true);
+    try {
+      const form = new FormData();
+      form.append('file', excelFile);
+      const res = await fetch('/api/buyer/quotes/preview', { method: 'POST', body: form });
+      const json = await res.json() as {
+        data: { matched: PreviewMatchedItem[]; unmatched: PreviewUnmatchedItem[] } | null;
+        error: string | null;
+      };
+      if (!res.ok || json.error) throw new Error(json.error ?? 'Preview failed');
+      setPreviewResult(json.data);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not preview products');
+    } finally {
+      setPreviewing(false);
     }
   }
 
@@ -173,7 +208,7 @@ export default function AccountQuotesPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Request a Quote</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Request a Quotation</h1>
           <p className="text-sm text-slate-500 mt-1">
             Submit your product requirements and get competitive bulk pricing.
           </p>
@@ -449,19 +484,108 @@ export default function AccountQuotesPage() {
                   />
                 </div>
 
-                <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
-                  <button
-                    onClick={handleExcelSubmit}
-                    disabled={submitting}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                    {submitting ? 'Uploadingâ€¦' : 'Upload & Submit'}
-                  </button>
-                  <button onClick={resetForm} className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors">
-                    Cancel
-                  </button>
-                </div>
+                {/* Step 1 — preview products from Excel */}
+                {!previewResult && (
+                  <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
+                    <button
+                      onClick={handleExcelPreview}
+                      disabled={previewing || !excelFile}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {previewing ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+                      {previewing ? 'Checking catalog...' : 'Preview Products'}
+                    </button>
+                    <button onClick={resetForm} className="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                )}
+
+                {/* Step 2 — show matched / unmatched and let user confirm */}
+                {previewResult && (
+                  <div className="space-y-4 pt-2 border-t border-slate-100">
+                    {previewResult.matched.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                            Available in our catalog ({previewResult.matched.length})
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="bg-slate-50 text-xs text-slate-500 font-medium">
+                                <th className="px-3 py-2 text-left">Product</th>
+                                <th className="px-3 py-2 text-left hidden sm:table-cell">Brand</th>
+                                <th className="px-3 py-2 text-right">Qty</th>
+                                <th className="px-3 py-2 text-right">Rate</th>
+                                <th className="px-3 py-2 text-right">GST%</th>
+                                <th className="px-3 py-2 text-right">Gross</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {previewResult.matched.map((item, i) => (
+                                <tr key={i} className="text-slate-700">
+                                  <td className="px-3 py-2.5">
+                                    <p className="font-medium text-slate-900">{item.catalog_name}</p>
+                                    {item.requested_name.toLowerCase() !== item.catalog_name.toLowerCase() && (
+                                      <p className="text-[11px] text-slate-400 mt-0.5">You asked: {item.requested_name}</p>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-slate-500 hidden sm:table-cell">{item.brand ?? '—'}</td>
+                                  <td className="px-3 py-2.5 text-right font-mono">{item.requested_qty} {item.requested_unit}</td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-medium text-teal-700">{formatINR(item.base_price)}</td>
+                                  <td className="px-3 py-2.5 text-right font-mono text-slate-500">{item.gst_rate}%</td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-semibold text-slate-900">{formatINR(item.gross_total)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {previewResult.unmatched.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                          <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                            Not in catalog yet — will be custom-quoted ({previewResult.unmatched.length})
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-1.5">
+                          {previewResult.unmatched.map((item, i) => (
+                            <div key={i} className="flex items-center justify-between gap-4 text-sm">
+                              <span className="text-slate-800 font-medium">{item.requested_name}</span>
+                              <span className="text-slate-500 font-mono shrink-0">{item.requested_qty} {item.requested_unit}</span>
+                            </div>
+                          ))}
+                          <p className="text-xs text-amber-700 mt-2 pt-2 border-t border-amber-200">
+                            Our team will research and provide pricing for these items when they respond to your request.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleExcelSubmit}
+                        disabled={submitting}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                        {submitting ? 'Submitting...' : 'Confirm & Submit Request'}
+                      </button>
+                      <button
+                        onClick={() => setPreviewResult(null)}
+                        className="flex items-center gap-1.5 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors"
+                      >
+                        <ArrowLeft className="w-4 h-4" />Back
+                      </button>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>

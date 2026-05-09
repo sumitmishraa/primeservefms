@@ -20,11 +20,11 @@ const NEWSLETTER_EMAILS_KEY = 'primeserve.newsletter.subscribed';
 const NEWSLETTER_SESSION_KEY = 'primeserve.newsletter.hasSubscribed';
 
 const QUICK_LINKS = [
-  { href: '/', label: 'Home Page' },
-  { href: '/about', label: 'About Us' },
-  { href: '/marketplace', label: 'Services' },
-  { href: '/contact', label: 'Contact' },
-  { href: '/about', label: 'Careers' },
+  { href: 'https://primeservefs.com/', label: 'Home Page', external: true },
+  { href: '/about', label: 'About Us', external: false },
+  { href: '/marketplace', label: 'Services', external: false },
+  { href: '/contact', label: 'Contact', external: false },
+  { href: '/about', label: 'Careers', external: false },
 ];
 
 const FOOTER_CATEGORIES = [
@@ -141,12 +141,23 @@ export default function PublicFooter() {
             <ul className="space-y-3">
               {QUICK_LINKS.map((l) => (
                 <li key={l.label}>
-                  <Link
-                    href={l.href}
-                    className="text-sm text-slate-400 transition-colors hover:text-teal-400"
-                  >
-                    {l.label}
-                  </Link>
+                  {l.external ? (
+                    <a
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-slate-400 transition-colors hover:text-teal-400"
+                    >
+                      {l.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={l.href}
+                      className="text-sm text-slate-400 transition-colors hover:text-teal-400"
+                    >
+                      {l.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

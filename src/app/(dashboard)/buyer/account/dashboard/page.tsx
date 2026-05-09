@@ -404,7 +404,7 @@ export default function BuyerAccountDashboard() {
               <div className="space-y-1">
                 {[
                   { label: 'Browse Marketplace', href: '/marketplace', icon: ShoppingBag, color: 'text-teal-600' },
-                  { label: 'Request a Quote', href: '/buyer/account/quotes', icon: FileText, color: 'text-purple-600' },
+                  { label: 'Request a Quotation', href: '/buyer/account/quotes', icon: FileText, color: 'text-purple-600' },
                   { label: 'Company Details', href: '/buyer/account/company', icon: Building2, color: 'text-slate-600' },
                   { label: 'View All Orders', href: '/buyer/orders', icon: Package, color: 'text-blue-600' },
                 ].map(({ label, href, icon: Icon, color }) => (

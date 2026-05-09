@@ -625,6 +625,17 @@ export default function HomePage() {
               </div>
             )}
           </div>
+
+          {/* Browse-all CTA — outside the drag rail so it's always clickable */}
+          <div className="mt-8 flex justify-center">
+            <Link
+              href="/marketplace"
+              className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-7 py-3.5 text-sm font-semibold text-white shadow-sm shadow-teal-600/20 transition-all hover:bg-teal-700 hover:shadow-teal-600/30"
+            >
+              Shop Now — Browse All Products
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </section>
 
