@@ -543,7 +543,7 @@ export default function HomePage() {
                     const cardStep = first.offsetWidth + 24;
                     setActiveCardIndex(Math.min(
                       Math.round(rail.scrollLeft / cardStep),
-                      featuredProducts.length,
+                      featuredProducts.length - 1,
                     ));
                   }}
                 >
@@ -555,26 +555,6 @@ export default function HomePage() {
                       <ProductCard product={product} />
                     </div>
                   ))}
-                  {/* See more card */}
-                  <div className="featured-product-card w-[280px] shrink-0 sm:w-[300px]">
-                    <Link
-                      href="/marketplace"
-                      className={`flex h-full min-h-[430px] flex-col items-center justify-center gap-5 rounded-xl border border-teal-200 bg-gradient-to-br from-teal-50 to-teal-100/70 p-8 text-center transition-all duration-300 hover:-translate-y-1 hover:border-teal-400 hover:shadow-xl hover:shadow-teal-100${featuredScrollDone ? ' featured-see-more-pulse' : ''}`}
-                    >
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-500/15 ring-2 ring-teal-300/40 transition-all duration-300 group-hover:bg-teal-500/25">
-                        <ArrowRight className="h-8 w-8 text-teal-600" />
-                      </div>
-                      <div>
-                        <p className="font-heading text-xl font-bold text-teal-900">Browse All</p>
-                        <p className="font-heading text-xl font-bold text-teal-900">Products</p>
-                      </div>
-                      <p className="text-sm text-teal-700/80">500+ SKUs across 6 categories</p>
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-teal-500/30">
-                        Shop Now
-                        <ArrowRight className="h-4 w-4" />
-                      </span>
-                    </Link>
-                  </div>
                 </div>
 
                 <button
@@ -596,7 +576,7 @@ export default function HomePage() {
 
                 {/* Progress dots */}
                 <div className="relative z-10 mt-2 flex justify-center gap-2">
-                  {Array.from({ length: featuredProducts.length + 1 }).map((_, i) => (
+                  {Array.from({ length: featuredProducts.length }).map((_, i) => (
                     <button
                       key={i}
                       type="button"
@@ -612,7 +592,7 @@ export default function HomePage() {
                           ? 'w-6 bg-teal-500'
                           : 'w-1.5 bg-slate-300 hover:bg-slate-400'
                       }`}
-                      aria-label={i < featuredProducts.length ? `Go to product ${i + 1}` : 'See all products'}
+                      aria-label={`Go to product ${i + 1}`}
                     />
                   ))}
                 </div>
@@ -626,15 +606,16 @@ export default function HomePage() {
             )}
           </div>
 
-          {/* Browse-all CTA — outside the drag rail so it's always clickable */}
-          <div className="mt-8 flex justify-center">
+          {/* Primary CTA — lives outside the drag rail, always clickable */}
+          <div className="mt-8 flex flex-col items-center gap-3">
             <Link
               href="/marketplace"
-              className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-7 py-3.5 text-sm font-semibold text-white shadow-sm shadow-teal-600/20 transition-all hover:bg-teal-700 hover:shadow-teal-600/30"
+              className="group inline-flex items-center gap-2.5 rounded-xl bg-teal-600 px-8 py-4 text-base font-bold text-white shadow-lg shadow-teal-600/25 transition-all hover:bg-teal-500 hover:shadow-teal-500/30 hover:-translate-y-0.5"
             >
-              Shop Now — Browse All Products
-              <ArrowRight className="h-4 w-4" />
+              Shop Now
+              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
             </Link>
+            <p className="text-xs text-slate-400">500+ products across 6 categories</p>
           </div>
         </div>
       </section>

@@ -23,14 +23,13 @@ import type { QuoteItem } from '../route';
 const BUCKET = 'quote-documents';
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
-// The exact header columns we expect (trimmed, case-insensitive comparison)
+// Required columns (trimmed, case-insensitive). Target Price is optional.
 const REQUIRED_HEADERS = [
   'product name',
   'size / description',
   'unit',
   'quantity',
   'preferred brand',
-  'target price',
 ];
 
 function normaliseHeader(h: unknown): string {
@@ -111,8 +110,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         }, { status: 400 });
       }
 
-      const tpRaw = row[idx['target price']];
-      const target_price = typeof tpRaw === 'number' ? tpRaw : parseFloat(String(tpRaw)) || 0;
+      // Target Price column is optional — read it if present, default to 0
+      const tpColIdx = headerRow.indexOf('target price');
+      const tpRaw = tpColIdx >= 0 ? row[tpColIdx] : undefined;
+      const target_price = typeof tpRaw === 'number' ? tpRaw : parseFloat(String(tpRaw ?? '')) || 0;
 
       items.push({
         product_name: productName,

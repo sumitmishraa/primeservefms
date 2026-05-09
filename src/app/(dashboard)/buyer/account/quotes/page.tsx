@@ -416,17 +416,17 @@ export default function AccountQuotesPage() {
                   <div>
                     <p className="text-sm font-semibold text-teal-800 mb-2">Expected Excel Format</p>
                     <p className="text-xs text-teal-700 mb-2">
-                      Row 1 must have exactly these column headers:
+                      Row 1 must have these column headers (copy exactly):
                     </p>
                     <div className="flex flex-wrap gap-1.5">
-                      {['Product Name', 'Size / Description', 'Unit', 'Quantity', 'Preferred Brand', 'Target Price'].map((col) => (
+                      {['Product Name', 'Size / Description', 'Unit', 'Quantity', 'Preferred Brand'].map((col) => (
                         <span key={col} className="bg-white border border-teal-200 rounded px-2 py-1 text-xs font-mono text-teal-800">
                           {col}
                         </span>
                       ))}
                     </div>
                     <p className="text-xs text-teal-600 mt-2">
-                      Each row after the header is one product. Save as .xlsx or .xls.
+                      Each row after the header is one product. We will match each item to our catalog and show you the price before you submit. Save as .xlsx or .xls.
                     </p>
                   </div>
                 </div>
@@ -502,90 +502,122 @@ export default function AccountQuotesPage() {
                 )}
 
                 {/* Step 2 — show matched / unmatched and let user confirm */}
-                {previewResult && (
-                  <div className="space-y-4 pt-2 border-t border-slate-100">
-                    {previewResult.matched.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                          <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                            Available in our catalog ({previewResult.matched.length})
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-slate-200 overflow-x-auto">
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="bg-slate-50 text-xs text-slate-500 font-medium">
-                                <th className="px-3 py-2 text-left">Product</th>
-                                <th className="px-3 py-2 text-left hidden sm:table-cell">Brand</th>
-                                <th className="px-3 py-2 text-right">Qty</th>
-                                <th className="px-3 py-2 text-right">Rate</th>
-                                <th className="px-3 py-2 text-right">GST%</th>
-                                <th className="px-3 py-2 text-right">Gross</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                              {previewResult.matched.map((item, i) => (
-                                <tr key={i} className="text-slate-700">
-                                  <td className="px-3 py-2.5">
-                                    <p className="font-medium text-slate-900">{item.catalog_name}</p>
-                                    {item.requested_name.toLowerCase() !== item.catalog_name.toLowerCase() && (
-                                      <p className="text-[11px] text-slate-400 mt-0.5">You asked: {item.requested_name}</p>
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-slate-500 hidden sm:table-cell">{item.brand ?? '—'}</td>
-                                  <td className="px-3 py-2.5 text-right font-mono">{item.requested_qty} {item.requested_unit}</td>
-                                  <td className="px-3 py-2.5 text-right font-mono font-medium text-teal-700">{formatINR(item.base_price)}</td>
-                                  <td className="px-3 py-2.5 text-right font-mono text-slate-500">{item.gst_rate}%</td>
-                                  <td className="px-3 py-2.5 text-right font-mono font-semibold text-slate-900">{formatINR(item.gross_total)}</td>
+                {previewResult && (() => {
+                  const grandTotal = previewResult.matched.reduce((s, m) => s + m.gross_total, 0);
+                  return (
+                    <div className="space-y-5 pt-2 border-t border-slate-100">
+                      {previewResult.matched.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                              Available in our catalog — {previewResult.matched.length} item{previewResult.matched.length !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
+                            <table className="w-full">
+                              <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                  <th className="px-4 py-2.5 text-left">Product</th>
+                                  <th className="px-4 py-2.5 text-left hidden md:table-cell">Brand</th>
+                                  <th className="px-4 py-2.5 text-left hidden lg:table-cell">Size</th>
+                                  <th className="px-4 py-2.5 text-right">Qty</th>
+                                  <th className="px-4 py-2.5 text-right">Rate</th>
+                                  <th className="px-4 py-2.5 text-right hidden sm:table-cell">GST</th>
+                                  <th className="px-4 py-2.5 text-right">Total (incl. GST)</th>
                                 </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {previewResult.matched.map((item, i) => (
+                                  <tr key={i} className="hover:bg-slate-50/60 transition-colors">
+                                    <td className="px-4 py-3">
+                                      <p className="font-heading text-sm font-semibold text-slate-900 leading-snug">{item.catalog_name}</p>
+                                      {item.requested_name.toLowerCase() !== item.catalog_name.toLowerCase() && (
+                                        <p className="text-[11px] text-slate-400 mt-0.5">Asked: {item.requested_name}</p>
+                                      )}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-slate-500 hidden md:table-cell">{item.brand ?? '—'}</td>
+                                    <td className="px-4 py-3 text-sm text-slate-500 hidden lg:table-cell">{item.size_variant ?? '—'}</td>
+                                    <td className="px-4 py-3 text-right">
+                                      <span className="font-heading text-sm font-semibold text-slate-700">{item.requested_qty}</span>
+                                      <span className="text-xs text-slate-400 ml-1">{item.requested_unit}</span>
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                      <span className="font-heading text-sm font-semibold text-teal-700">{formatINR(item.base_price)}</span>
+                                    </td>
+                                    <td className="px-4 py-3 text-right hidden sm:table-cell">
+                                      <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">{item.gst_rate}%</span>
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                      <span className="font-heading text-sm font-bold text-slate-900">{formatINR(item.gross_total)}</span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                              {/* Grand total row */}
+                              <tfoot>
+                                <tr className="bg-teal-50 border-t-2 border-teal-200">
+                                  <td colSpan={6} className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-teal-700">
+                                    Grand Total (incl. GST)
+                                  </td>
+                                  <td className="px-4 py-3 text-right">
+                                    <p className="font-heading text-xl font-extrabold text-teal-800">{formatINR(grandTotal)}</p>
+                                  </td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {previewResult.unmatched.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                            <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                              Not in our catalog yet — {previewResult.unmatched.length} item{previewResult.unmatched.length !== 1 ? 's' : ''} will be custom-quoted
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-amber-200 bg-amber-50/60 overflow-hidden">
+                            <div className="divide-y divide-amber-100">
+                              {previewResult.unmatched.map((item, i) => (
+                                <div key={i} className="flex items-center justify-between gap-4 px-4 py-3">
+                                  <span className="font-heading text-sm font-semibold text-slate-800">{item.requested_name}</span>
+                                  <span className="shrink-0">
+                                    <span className="font-heading text-sm font-semibold text-slate-700">{item.requested_qty}</span>
+                                    <span className="text-xs text-slate-400 ml-1">{item.requested_unit}</span>
+                                  </span>
+                                </div>
                               ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-
-                    {previewResult.unmatched.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
-                          <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                            Not in catalog yet — will be custom-quoted ({previewResult.unmatched.length})
-                          </p>
-                        </div>
-                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-1.5">
-                          {previewResult.unmatched.map((item, i) => (
-                            <div key={i} className="flex items-center justify-between gap-4 text-sm">
-                              <span className="text-slate-800 font-medium">{item.requested_name}</span>
-                              <span className="text-slate-500 font-mono shrink-0">{item.requested_qty} {item.requested_unit}</span>
                             </div>
-                          ))}
-                          <p className="text-xs text-amber-700 mt-2 pt-2 border-t border-amber-200">
-                            Our team will research and provide pricing for these items when they respond to your request.
-                          </p>
+                            <div className="px-4 py-3 bg-amber-100/60 border-t border-amber-200">
+                              <p className="text-xs text-amber-800 font-medium">
+                                Our team will source and quote these items separately when they respond to your request.
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={handleExcelSubmit}
-                        disabled={submitting}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                        {submitting ? 'Submitting...' : 'Confirm & Submit Request'}
-                      </button>
-                      <button
-                        onClick={() => setPreviewResult(null)}
-                        className="flex items-center gap-1.5 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors"
-                      >
-                        <ArrowLeft className="w-4 h-4" />Back
-                      </button>
+                      <div className="flex items-center gap-3 pt-1">
+                        <button
+                          onClick={handleExcelSubmit}
+                          disabled={submitting}
+                          className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
+                        >
+                          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                          {submitting ? 'Submitting...' : 'Confirm & Submit Request'}
+                        </button>
+                        <button
+                          onClick={() => setPreviewResult(null)}
+                          className="flex items-center gap-1.5 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 transition-colors"
+                        >
+                          <ArrowLeft className="w-4 h-4" />Back
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </>
             )}
           </div>
