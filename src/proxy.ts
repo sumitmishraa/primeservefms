@@ -131,6 +131,7 @@ function isPublicPath(pathname: string): boolean {
     "/",
     "/login",
     "/register",
+    "/mobile",
     "/marketplace",
     "/about",
     "/contact",
