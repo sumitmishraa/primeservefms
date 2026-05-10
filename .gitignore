@@ -51,3 +51,7 @@ next-env.d.ts
 # Vendor price-list source workbooks (raw data, not source code)
 TASKI*.xlsx
 *PRICE LIST*.xlsx
+*.xlsx
+
+# Capacitor Android build output
+android/

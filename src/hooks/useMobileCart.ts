@@ -17,22 +17,25 @@ function dispatch() {
   window.dispatchEvent(new Event('cart-updated'));
 }
 
+function readCart(): CartItem[] {
+  try {
+    const raw = localStorage.getItem(CART_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function useMobileCart() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(CART_KEY);
-      if (raw) setItems(JSON.parse(raw));
-    } catch {}
-    setReady(true);
-  }, []);
-
-  const save = useCallback((next: CartItem[]) => {
-    setItems(next);
-    localStorage.setItem(CART_KEY, JSON.stringify(next));
-    dispatch();
+    const frame = window.requestAnimationFrame(() => {
+      setItems(readCart());
+      setReady(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   const addItem = useCallback((item: CartItem) => {

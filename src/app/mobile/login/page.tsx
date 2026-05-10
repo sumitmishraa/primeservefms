@@ -1,45 +1,199 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
-export default function MobileLoginPage() {
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import type { FormEvent, InputHTMLAttributes } from 'react';
+import type { ConfirmationResult } from 'firebase/auth';
+import {
+  BrandMark,
+  LoadingScreen,
+  MobilePage,
+  StatusSpacer,
+  mobileIcons,
+} from '@/components/mobile/PrimeserveMobile';
+import { sendPhoneOTP, clearRecaptchaVerifier } from '@/lib/firebase/config';
+
+type Mode = 'login' | 'register';
+type AuthMethod = 'otp' | 'password';
+
+function MobileLoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/mobile/home';
+
+  const [mode, setMode] = useState<Mode>('login');
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('otp');
+
+  // Shared fields
+  const [fullName, setFullName] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [terms, setTerms] = useState(false);
+
+  // Email + password fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPwd, setShowPwd] = useState(false);
+
+  // OTP state
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [checking, setChecking] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetch('/api/auth/me')
       .then((r) => r.json())
       .then((d) => {
-        if (d.user) router.replace('/mobile/home');
+        if (d.user) router.replace(redirect);
         else setChecking(false);
       })
       .catch(() => setChecking(false));
-  }, [router]);
+  }, [redirect, router]);
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
+  function resetOtp() {
+    setOtpSent(false);
+    setOtp('');
+    setConfirmation(null);
+    clearRecaptchaVerifier();
+  }
+
+  function switchMode(newMode: Mode) {
+    setMode(newMode);
+    resetOtp();
     setError('');
-    const trimmed = email.trim().toLowerCase();
-    if (!trimmed.includes('@')) { setError('Enter a valid email address'); return; }
-    if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
+  }
+
+  function switchMethod(method: AuthMethod) {
+    setAuthMethod(method);
+    resetOtp();
+    setError('');
+  }
+
+  async function sendOTP() {
+    setError('');
+    if (mode === 'register' && fullName.trim().length < 2) {
+      setError('Enter your full name.');
+      return;
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      setError('Enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (mode === 'register' && !terms) {
+      setError('Accept the Terms and Privacy Policy to continue.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await sendPhoneOTP(`+91${phone}`, 'send-otp-btn');
+      setConfirmation(result);
+      setOtpSent(true);
+    } catch {
+      clearRecaptchaVerifier();
+      setError('Failed to send OTP. Check the number and try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function verifyOTP(event: FormEvent) {
+    event.preventDefault();
+    setError('');
+    if (!confirmation) return;
+    if (otp.length !== 6) {
+      setError('Enter the 6-digit OTP.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const credential = await confirmation.confirm(otp);
+      const idToken = await credential.user.getIdToken();
+      const body =
+        mode === 'register'
+          ? {
+              idToken,
+              mode: 'register',
+              full_name: fullName.trim(),
+              company_name: companyName.trim() || undefined,
+            }
+          : { idToken };
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setError(data.error ?? 'Verification failed. Try again.');
+      } else {
+        router.replace(redirect);
+      }
+    } catch {
+      setError('Incorrect OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function submitEmailPassword(event: FormEvent) {
+    event.preventDefault();
+    setError('');
+
+    if (mode === 'register') {
+      if (fullName.trim().length < 2) { setError('Enter your full name.'); return; }
+      if (!email.trim().includes('@')) { setError('Enter a valid email address.'); return; }
+      if (!/^\d{10}$/.test(phone)) { setError('Enter a valid 10-digit mobile number.'); return; }
+      if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+      if (!terms) { setError('Accept the Terms and Privacy Policy to continue.'); return; }
+
+      setLoading(true);
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            full_name: fullName.trim(),
+            company_name: companyName.trim() || undefined,
+            email: email.trim().toLowerCase(),
+            phone: `+91${phone}`,
+            password,
+            terms_accepted: true,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          setError(data.error ?? 'Registration failed.');
+        } else {
+          router.replace(redirect);
+        }
+      } catch {
+        setError('Network error. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail.includes('@')) { setError('Enter a valid email address.'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
 
     setLoading(true);
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmed, password }),
+        body: JSON.stringify({ email: trimmedEmail, password }),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        setError(data.error ?? 'Incorrect email or password');
+        setError(data.error ?? 'Incorrect email or password.');
       } else {
-        router.replace('/mobile/home');
+        router.replace(redirect);
       }
     } catch {
       setError('Network error. Please try again.');
@@ -48,89 +202,270 @@ export default function MobileLoginPage() {
     }
   }
 
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (checking) return <LoadingScreen label="Checking session" />;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
-      <div className="bg-teal-600 px-6 pt-16 pb-10 text-center">
-        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-          <span className="text-teal-600 font-heading font-bold text-2xl">PS</span>
+    <MobilePage withBottomPadding={false} className="min-h-dvh bg-[#0B1220]">
+      <div className="min-h-dvh bg-[radial-gradient(110%_70%_at_90%_0%,rgba(20,184,166,0.22)_0%,rgba(11,18,32,0)_60%),linear-gradient(180deg,#0B1220_0%,#0F1A2E_45%,#F8FAFC_45%,#F8FAFC_100%)]">
+        <StatusSpacer />
+        <div className="px-6 pb-8 pt-7 text-white">
+          <Link href="/mobile/home" className="inline-flex items-center gap-2 text-sm font-bold text-slate-300">
+            <mobileIcons.ArrowRight className="h-4 w-4 rotate-180" />
+            Home
+          </Link>
+          <div className="mt-7">
+            <BrandMark size="md" />
+            <h1 className="mt-5 font-heading text-4xl font-extrabold tracking-normal">
+              Prime<span className="text-[#2DD4BF]">Serve</span>
+            </h1>
+            <p className="mt-3 max-w-xs text-sm font-medium leading-6 text-slate-300">
+              Sign in or create your B2B buyer account to access credits, orders, and account details.
+            </p>
+          </div>
         </div>
-        <h1 className="text-white font-heading font-bold text-2xl">PrimeServe</h1>
-        <p className="text-teal-100 text-sm mt-1">Housekeeping Supplies & Services</p>
-      </div>
 
-      {/* Card */}
-      <div className="flex-1 px-5 -mt-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <h2 className="font-heading font-bold text-xl text-slate-900 mb-1">Sign in</h2>
-          <p className="text-slate-500 text-sm mb-6">Use the credentials set up by your admin</p>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
-                className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-base focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                autoComplete="email"
-                inputMode="email"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
-              <div className="relative">
-                <input
-                  type={showPwd ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full h-12 px-4 pr-12 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-base focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  autoComplete="current-password"
-                />
+        <div className="px-5 pb-8">
+          <div className="ps-slide-up rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_22px_54px_-36px_rgba(15,23,42,0.45)]">
+            {/* Sign In / Sign Up tab */}
+            <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1">
+              {(['login', 'register'] as const).map((m) => (
                 <button
+                  key={m}
                   type="button"
-                  onClick={() => setShowPwd((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg p-1"
+                  onClick={() => switchMode(m)}
+                  className={`ps-press h-11 rounded-xl text-sm font-extrabold ${mode === m ? 'bg-white text-[#0D9488] shadow-sm' : 'text-slate-500'}`}
                 >
-                  {showPwd ? '🙈' : '👁️'}
+                  {m === 'login' ? 'Sign In' : 'Sign Up'}
                 </button>
-              </div>
+              ))}
             </div>
 
-            {error && (
-              <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-rose-700 text-sm font-medium">
-                {error}
+            {/* OTP / Email segmented control */}
+            <div className="mt-3 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1">
+              {(['otp', 'password'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => switchMethod(m)}
+                  className={`ps-press h-10 rounded-xl text-xs font-extrabold ${authMethod === m ? 'bg-white text-[#0D9488] shadow-sm' : 'text-slate-500'}`}
+                >
+                  {m === 'otp' ? 'Phone OTP' : 'Email & Password'}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-5">
+              <h2 className="font-heading text-2xl font-extrabold text-slate-900">
+                {mode === 'login' ? 'Welcome back' : 'Create account'}
+              </h2>
+              <p className="mt-1 text-sm font-medium text-slate-500">
+                {mode === 'login'
+                  ? authMethod === 'otp'
+                    ? 'Verify your phone number to continue.'
+                    : 'Continue to your PrimeServe workspace.'
+                  : authMethod === 'otp'
+                    ? 'Verify your phone to set up your account.'
+                    : 'Set up your buyer login in a minute.'}
+              </p>
+            </div>
+
+            {authMethod === 'otp' ? (
+              <div className="mt-5 space-y-4">
+                {mode === 'register' && (
+                  <>
+                    <Field label="Full Name" value={fullName} onChange={setFullName} placeholder="Your full name" autoComplete="name" />
+                    <Field label="Company Name" value={companyName} onChange={setCompanyName} placeholder="Business or company" autoComplete="organization" />
+                  </>
+                )}
+
+                <Field
+                  label="Mobile Number"
+                  value={phone}
+                  onChange={(v) => setPhone(v.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="10-digit mobile number"
+                  inputMode="numeric"
+                  prefix="+91"
+                  autoComplete="tel"
+                  disabled={otpSent}
+                />
+
+                {mode === 'register' && !otpSent && (
+                  <label className="flex cursor-pointer items-start gap-3 rounded-2xl bg-slate-50 p-3">
+                    <input
+                      type="checkbox"
+                      checked={terms}
+                      onChange={(e) => setTerms(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-[#0D9488]"
+                    />
+                    <span className="text-xs font-semibold leading-5 text-slate-500">
+                      I agree to the Terms and Privacy Policy for PrimeServe buyer accounts.
+                    </span>
+                  </label>
+                )}
+
+                {!otpSent ? (
+                  <>
+                    {error && (
+                      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-700">
+                        {error}
+                      </div>
+                    )}
+                    <button
+                      id="send-otp-btn"
+                      type="button"
+                      disabled={loading}
+                      onClick={sendOTP}
+                      className="ps-press flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#14B8A6] font-heading text-base font-extrabold text-white disabled:opacity-60"
+                    >
+                      {loading ? 'Sending OTP...' : 'Send OTP'}
+                      <mobileIcons.ArrowRight className="h-5 w-5" />
+                    </button>
+                  </>
+                ) : (
+                  <form onSubmit={verifyOTP} className="space-y-4">
+                    <div>
+                      <Field
+                        label="Enter OTP"
+                        value={otp}
+                        onChange={(v) => setOtp(v.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="6-digit OTP"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => { resetOtp(); setError(''); }}
+                        className="mt-2 text-xs font-bold text-[#0D9488]"
+                      >
+                        Change number
+                      </button>
+                    </div>
+                    {error && (
+                      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-700">
+                        {error}
+                      </div>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="ps-press flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#14B8A6] font-heading text-base font-extrabold text-white disabled:opacity-60"
+                    >
+                      {loading ? 'Verifying...' : 'Verify & Continue'}
+                      <mobileIcons.ArrowRight className="h-5 w-5" />
+                    </button>
+                  </form>
+                )}
               </div>
+            ) : (
+              <form onSubmit={submitEmailPassword} className="mt-5 space-y-4">
+                {mode === 'register' && (
+                  <>
+                    <Field label="Full Name" value={fullName} onChange={setFullName} placeholder="Your full name" autoComplete="name" />
+                    <Field label="Company Name" value={companyName} onChange={setCompanyName} placeholder="Business or company" autoComplete="organization" />
+                    <Field
+                      label="Mobile Number"
+                      value={phone}
+                      onChange={(v) => setPhone(v.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="10-digit mobile number"
+                      inputMode="numeric"
+                      prefix="+91"
+                      autoComplete="tel"
+                    />
+                  </>
+                )}
+
+                <Field label="Email Address" value={email} onChange={setEmail} placeholder="you@company.com" type="email" autoComplete="email" />
+                <Field
+                  label={mode === 'login' ? 'Password' : 'Create Password'}
+                  value={password}
+                  onChange={setPassword}
+                  placeholder="At least 6 characters"
+                  type="password"
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                />
+
+                {mode === 'register' && (
+                  <label className="flex cursor-pointer items-start gap-3 rounded-2xl bg-slate-50 p-3">
+                    <input
+                      type="checkbox"
+                      checked={terms}
+                      onChange={(e) => setTerms(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-[#0D9488]"
+                    />
+                    <span className="text-xs font-semibold leading-5 text-slate-500">
+                      I agree to the Terms and Privacy Policy for PrimeServe buyer accounts.
+                    </span>
+                  </label>
+                )}
+
+                {error && (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-700">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="ps-press flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#14B8A6] py-3.5 font-heading text-base font-extrabold text-white disabled:opacity-60"
+                >
+                  {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+                  <mobileIcons.ArrowRight className="h-5 w-5" />
+                </button>
+              </form>
             )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white font-bold rounded-xl text-base transition-colors mt-2"
-            >
-              {loading ? 'Signing in…' : 'Sign In →'}
-            </button>
-          </form>
-
-          <div className="mt-6 bg-slate-50 rounded-xl p-4 text-center">
-            <p className="text-slate-500 text-sm">Don&apos;t have credentials?</p>
-            <p className="text-slate-500 text-sm">Contact your PrimeServe admin</p>
           </div>
         </div>
       </div>
+    </MobilePage>
+  );
+}
 
-      <p className="text-center text-slate-400 text-xs py-6">PrimeServe Facility Solutions · v1.0</p>
-    </div>
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  inputMode,
+  autoComplete,
+  prefix,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  type?: string;
+  inputMode?: InputHTMLAttributes<HTMLInputElement>['inputMode'];
+  autoComplete?: string;
+  prefix?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="text-sm font-extrabold text-slate-700">{label}</span>
+      <div className={`mt-2 flex h-12 items-center rounded-2xl border bg-slate-50 px-3 focus-within:border-[#14B8A6] ${disabled ? 'border-slate-100 opacity-60' : 'border-slate-200'}`}>
+        {prefix && <span className="mr-2 shrink-0 text-sm font-extrabold text-slate-500">{prefix}</span>}
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          type={type}
+          inputMode={inputMode}
+          autoComplete={autoComplete}
+          disabled={disabled}
+          className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed"
+        />
+      </div>
+    </label>
+  );
+}
+
+export default function MobileLoginPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <MobileLoginContent />
+    </Suspense>
   );
 }

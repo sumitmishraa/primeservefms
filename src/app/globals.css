@@ -46,6 +46,79 @@ body {
   scrollbar-width: none;
 }
 
+.ps-screen,
+.ps-screen *,
+.ps-screen *::before,
+.ps-screen *::after {
+  box-sizing: border-box;
+}
+
+.ps-screen {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ps-screen .font-heading,
+.ps-screen h1,
+.ps-screen h2,
+.ps-screen h3 {
+  font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+.ps-press {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 120ms ease, background-color 120ms ease, opacity 120ms ease, border-color 120ms ease;
+}
+
+.ps-press:active {
+  transform: scale(0.97);
+}
+
+@keyframes ps-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ps-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ps-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.82); }
+}
+
+@keyframes ps-marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.ps-fade {
+  animation: ps-fade-in 350ms ease both;
+}
+
+.ps-slide-up {
+  animation: ps-slide-up 450ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.ps-pulse-dot {
+  animation: ps-pulse 1.6s ease-in-out infinite;
+}
+
+.ps-marquee-track {
+  animation: ps-marquee-left 26s linear infinite;
+}
+
+.ps-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+.ps-edge-mask {
+  mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+
 .featured-marquee {
   position: relative;
 }

@@ -1,163 +1,283 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+
+import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import {
+  Badge,
+  BrandHeader,
+  ButtonLink,
+  Card,
+  DarkCard,
+  MobilePage,
+  SearchPill,
+  categoryIconMap,
+  categoryImages,
+  mobileIcons,
+  useAuthStatus,
+} from '@/components/mobile/PrimeserveMobile';
+import { PRODUCT_CATEGORIES } from '@/lib/constants/categories';
 import { formatINR } from '@/lib/utils/formatting';
 
-interface User { id: string; full_name: string; email: string; role: string; company_name: string | null; }
-interface RecentOrder { id: string; order_number: string; status: string; total_amount: number; created_at: string; item_count: number; }
-interface Stats {
-  active_orders: number; total_this_month: number; total_orders: number;
-  recent_orders: RecentOrder[]; top_products: { product_name: string; times_ordered: number }[];
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  base_price: number;
+  unit_of_measure: string;
+  thumbnail_url: string | null;
+  category: string;
+}
+
+interface Order {
+  id: string;
+  order_number: string;
+  status: string;
+  total_amount: number;
+  created_at: string;
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  approved: 'bg-blue-50 text-blue-700 border-blue-200',
-  dispatched: 'bg-purple-50 text-purple-700 border-purple-200',
-  delivered: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  cancelled: 'bg-rose-50 text-rose-700 border-rose-200',
+  pending: 'text-amber-600 bg-amber-50',
+  confirmed: 'text-sky-600 bg-sky-50',
+  processing: 'text-sky-600 bg-sky-50',
+  shipped: 'text-teal-600 bg-[rgba(20,184,166,0.12)]',
+  delivered: 'text-emerald-600 bg-emerald-50',
+  cancelled: 'text-rose-600 bg-rose-50',
 };
 
 export default function MobileHomePage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isAuthed } = useAuthStatus();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    fetch('/api/products?per_page=12&sort=relevance')
       .then((r) => r.json())
-      .then((d) => {
-        if (!d.user) { router.replace('/mobile/login'); return; }
-        setUser(d.user);
-        return fetch('/api/buyer/stats').then((r) => r.json());
-      })
-      .then((d) => {
-        if (d?.data) setStats(d.data);
-        setLoading(false);
-      })
-      .catch(() => router.replace('/mobile/login'));
-  }, [router]);
+      .then((d) => setProducts(d?.data?.products ?? []))
+      .catch(() => setProducts([]));
+  }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="w-8 h-8 border-[3px] border-teal-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!isAuthed) return;
+    fetch('/api/buyer/orders?per_page=2')
+      .then((r) => r.json())
+      .then((d) => setRecentOrders(d?.data?.orders ?? []))
+      .catch(() => setRecentOrders([]));
+  }, [isAuthed]);
 
-  const firstName = user?.full_name.split(' ')[0] ?? '';
+  const firstName = user?.full_name?.split(' ')[0] ?? 'there';
+  const company = user?.company_name ?? null;
+  const marqueeProducts = products.length > 0 ? [...products, ...products] : [];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-teal-600 px-4 pt-12 pb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-teal-100 text-sm">Good day,</p>
-            <h1 className="text-white font-heading font-bold text-xl">{firstName} 👋</h1>
-            {user?.company_name && (
-              <p className="text-teal-200 text-xs mt-0.5">{user.company_name}</p>
-            )}
-          </div>
-          <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center">
-            <span className="text-white font-heading font-bold text-lg">
-              {user?.full_name.charAt(0).toUpperCase()}
-            </span>
-          </div>
-        </div>
-
-        {/* Search shortcut */}
-        <Link
-          href="/mobile/products"
-          className="mt-4 flex items-center gap-2 bg-white rounded-xl px-4 py-3 shadow-sm"
-        >
-          <span className="text-slate-400">🔍</span>
-          <span className="text-slate-400 text-sm">Search products...</span>
-        </Link>
-      </div>
-
-      <div className="px-4 py-4 space-y-5">
-        {/* Stats row */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: 'Active Orders', value: stats?.active_orders ?? 0, emoji: '⏳', color: 'text-amber-600' },
-            { label: 'This Month', value: stats?.total_this_month ? formatINR(stats.total_this_month) : '₹0', emoji: '📈', color: 'text-teal-600' },
-            { label: 'Total Orders', value: stats?.total_orders ?? 0, emoji: '✅', color: 'text-emerald-600' },
-          ].map((s) => (
-            <div key={s.label} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center">
-              <span className="text-xl">{s.emoji}</span>
-              <p className={`font-heading font-bold text-base mt-1 ${s.color}`}>{s.value}</p>
-              <p className="text-slate-400 text-[10px] mt-0.5 leading-tight">{s.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Quick actions */}
-        <div>
-          <h2 className="font-heading font-bold text-slate-900 mb-3">Quick Actions</h2>
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { href: '/mobile/products', emoji: '🛍️', label: 'Browse', bg: 'bg-teal-50' },
-              { href: '/mobile/cart', emoji: '🛒', label: 'Cart', bg: 'bg-blue-50' },
-              { href: '/mobile/orders', emoji: '📦', label: 'Orders', bg: 'bg-amber-50' },
-              { href: '/mobile/account', emoji: '💳', label: 'Account', bg: 'bg-purple-50' },
-            ].map((a) => (
-              <Link
-                key={a.href}
-                href={a.href}
-                className={`${a.bg} rounded-2xl p-3 flex flex-col items-center gap-1`}
-              >
-                <span className="text-2xl">{a.emoji}</span>
-                <span className="text-slate-700 text-[11px] font-semibold">{a.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent orders */}
-        {(stats?.recent_orders?.length ?? 0) > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-heading font-bold text-slate-900">Recent Orders</h2>
-              <Link href="/mobile/orders" className="text-teal-600 text-sm font-semibold">View All →</Link>
-            </div>
-            <div className="space-y-2">
-              {stats!.recent_orders.slice(0, 3).map((o) => (
-                <div key={o.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex justify-between items-center">
-                  <div>
-                    <p className="font-mono font-bold text-teal-700 text-sm">{o.order_number}</p>
-                    <p className="text-slate-400 text-xs mt-0.5">{o.item_count} item{o.item_count !== 1 ? 's' : ''}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_COLORS[o.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>
-                      {o.status.charAt(0).toUpperCase() + o.status.slice(1)}
-                    </span>
-                    <p className="font-mono font-bold text-slate-900 text-sm mt-1">{formatINR(o.total_amount)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Empty onboarding */}
-        {(stats?.total_orders ?? 0) === 0 && (
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 text-center">
-            <span className="text-5xl">🛒</span>
-            <h3 className="font-heading font-bold text-slate-900 text-lg mt-4 mb-2">Welcome to PrimeServe!</h3>
-            <p className="text-slate-500 text-sm mb-5">Browse our housekeeping catalog and place your first order.</p>
+    <MobilePage>
+      <BrandHeader
+        eyebrow="India's B2B facility supplies"
+        title={`Good day, ${firstName} 👋`}
+        subtitle={company ?? 'Source housekeeping, stationery, pantry, tools, and cleaning chemicals from one catalog.'}
+        action={
+          <div className="flex items-center gap-2">
             <Link
-              href="/mobile/products"
-              className="inline-block bg-teal-600 text-white font-bold rounded-xl px-6 py-3 text-sm"
+              href="/mobile/account"
+              className="ps-press flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10"
             >
-              Browse Products →
+              <mobileIcons.Bell className="h-5 w-5 text-white" />
+            </Link>
+            <Link
+              href="/mobile/account"
+              className="ps-press flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10"
+            >
+              <mobileIcons.User className="h-5 w-5 text-white" />
             </Link>
           </div>
-        )}
-      </div>
-    </div>
+        }
+      >
+        <SearchPill href="/mobile/products" placeholder="Search products, categories..." />
+
+        {/* Quick actions */}
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          {[
+            { href: '/mobile/products', label: 'Browse', icon: mobileIcons.ShoppingCart },
+            { href: '/mobile/orders', label: 'Reorder', icon: mobileIcons.Box },
+            { href: '/mobile/orders', label: 'Track', icon: mobileIcons.BadgeCheck },
+            { href: '/mobile/credits', label: 'Credit', icon: mobileIcons.WalletCards },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="ps-press flex flex-col items-center gap-1.5 rounded-2xl border border-white/10 bg-white/10 py-3"
+              >
+                <Icon className="h-5 w-5 text-[#2DD4BF]" />
+                <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-300">
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </BrandHeader>
+
+      {/* Featured products marquee */}
+      <section className="px-5 pt-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <Badge>Featured products</Badge>
+            <h2 className="mt-2 font-heading text-xl font-extrabold text-slate-900">
+              Popular procurement picks
+            </h2>
+          </div>
+          <Link href="/mobile/products" className="text-sm font-extrabold text-[#0D9488]">
+            View all
+          </Link>
+        </div>
+
+        <div className="ps-edge-mask mt-4 overflow-hidden">
+          {marqueeProducts.length > 0 ? (
+            <div className="ps-marquee-track flex w-max gap-3 pb-2">
+              {marqueeProducts.map((product, index) => (
+                <Link
+                  key={`${product.id}-${index}`}
+                  href={`/mobile/products?search=${encodeURIComponent(product.name)}`}
+                  className="ps-press w-40 shrink-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
+                >
+                  <div className="relative h-24 overflow-hidden rounded-xl bg-slate-50">
+                    {product.thumbnail_url ? (
+                      <Image
+                        src={product.thumbnail_url}
+                        alt={product.name}
+                        fill
+                        className="object-contain p-2"
+                        sizes="160px"
+                      />
+                    ) : (
+                      <mobileIcons.Box className="m-auto mt-7 h-9 w-9 text-slate-300" />
+                    )}
+                  </div>
+                  <p className="mt-3 line-clamp-2 min-h-10 text-sm font-bold leading-5 text-slate-900">
+                    {product.name}
+                  </p>
+                  <p className="mt-1 font-mono text-sm font-extrabold text-[#0D9488]">
+                    {formatINR(product.base_price)}
+                    <span className="font-sans text-[11px] font-semibold text-slate-400">
+                      {' '}/ {product.unit_of_measure}
+                    </span>
+                  </p>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <Card className="p-5 text-sm font-semibold text-slate-500">
+              Loading featured products...
+            </Card>
+          )}
+        </div>
+      </section>
+
+      {/* Shop by category */}
+      <section className="px-5 pt-5">
+        <div className="flex items-center justify-between">
+          <h2 className="font-heading text-xl font-extrabold text-slate-900">Shop by category</h2>
+          <Link href="/mobile/categories" className="text-sm font-extrabold text-[#0D9488]">
+            All
+          </Link>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          {PRODUCT_CATEGORIES.slice(0, 4).map((category) => {
+            const Icon = categoryIconMap[category.value] ?? mobileIcons.Box;
+            return (
+              <Link
+                key={category.value}
+                href={`/mobile/products?category=${category.value}`}
+                className="ps-press overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+              >
+                <div className="relative h-24 bg-[#0B1220]">
+                  <Image
+                    src={categoryImages[category.value]}
+                    alt={category.label}
+                    fill
+                    className="object-cover opacity-70"
+                    sizes="50vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B1220] via-[#0B1220]/20 to-transparent" />
+                  <div className="absolute bottom-3 left-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white">
+                    <Icon className="h-5 w-5 text-[#0D9488]" />
+                  </div>
+                </div>
+                <div className="p-3">
+                  <p className="font-heading text-sm font-extrabold leading-5 text-slate-900">
+                    {category.label}
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                    {category.productCount}+ products
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Recent orders — shown only when logged in and have orders */}
+      {isAuthed && recentOrders.length > 0 && (
+        <section className="px-5 pt-5">
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading text-xl font-extrabold text-slate-900">Recent orders</h2>
+            <Link href="/mobile/orders" className="text-sm font-extrabold text-[#0D9488]">
+              View all
+            </Link>
+          </div>
+          <div className="mt-3 space-y-2">
+            {recentOrders.map((order) => {
+              const colorClass = STATUS_COLORS[order.status] ?? 'text-slate-600 bg-slate-50';
+              return (
+                <Link
+                  key={order.id}
+                  href="/mobile/orders"
+                  className="ps-press flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(20,184,166,0.12)]">
+                    <mobileIcons.Box className="h-5 w-5 text-[#0D9488]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-heading text-sm font-extrabold text-slate-900">
+                      {order.order_number}
+                    </p>
+                    <p className="mt-0.5 font-mono text-xs font-bold text-slate-500">
+                      {formatINR(order.total_amount)}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold capitalize ${colorClass}`}>
+                    {order.status}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* 45-day credit promo */}
+      <section className="px-5 pt-5">
+        <DarkCard className="p-5">
+          <div className="flex gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#14B8A6]/20">
+              <mobileIcons.CreditCard className="h-6 w-6 text-[#2DD4BF]" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-heading text-lg font-extrabold text-white">45-day credit terms</p>
+              <p className="mt-1 text-sm leading-6 text-slate-300">
+                Place eligible B2B orders now and settle invoices within 45 days.
+              </p>
+              <ButtonLink href="/mobile/credits" kind="light" className="mt-4 h-11">
+                View credit terms
+              </ButtonLink>
+            </div>
+          </div>
+        </DarkCard>
+      </section>
+    </MobilePage>
   );
 }

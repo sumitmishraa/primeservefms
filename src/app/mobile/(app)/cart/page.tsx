@@ -1,198 +1,215 @@
 'use client';
-import { useEffect, useState } from 'react';
+
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
+import { useState } from 'react';
+import {
+  ButtonLink,
+  Card,
+  EmptyState,
+  LoadingScreen,
+  MobilePage,
+  ProductThumb,
+  ScreenHeader,
+  mobileIcons,
+  protectedHref,
+} from '@/components/mobile/PrimeserveMobile';
 import { formatINR } from '@/lib/utils/formatting';
 import { useMobileCart } from '@/hooks/useMobileCart';
+
+interface AuthResponse {
+  user?: {
+    full_name: string;
+    email: string | null;
+    phone: string | null;
+  } | null;
+}
 
 export default function MobileCartPage() {
   const router = useRouter();
   const { items, ready, updateQty, clearCart, totalAmount } = useMobileCart();
-  const [authed, setAuthed] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [note, setNote] = useState('');
-
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then((r) => r.json())
-      .then((d) => {
-        if (!d.user) router.replace('/mobile/login');
-        else setAuthed(true);
-      })
-      .catch(() => router.replace('/mobile/login'));
-  }, [router]);
+  const [error, setError] = useState('');
 
   async function handleOrder() {
     if (items.length === 0 || placing) return;
+    setError('');
     setPlacing(true);
     try {
+      const auth = (await fetch('/api/auth/me').then((r) => r.json())) as AuthResponse;
+      if (!auth.user) {
+        router.push(protectedHref('/mobile/cart'));
+        return;
+      }
+
+      const profile = await fetch('/api/buyer/profile')
+        .then((r) => r.json())
+        .catch(() => null);
+      const addressText = profile?.data?.billing_address || 'Registered branch address';
+      const phone = auth.user.phone || '+910000000000';
+
       const res = await fetch('/api/orders/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: items.map((i) => ({
-            product_id: i.product_id,
-            quantity: i.quantity,
-            unit_price: i.price,
+          items: items.map((item) => ({
+            product_id: item.product_id,
+            product_name: item.name,
+            quantity: item.quantity,
           })),
+          shipping_address: {
+            name: auth.user.full_name,
+            line1: addressText,
+            city: 'Mumbai',
+            state: 'Maharashtra',
+            pincode: '400000',
+            phone,
+          },
+          billing_address: {
+            name: auth.user.full_name,
+            line1: addressText,
+            city: 'Mumbai',
+            state: 'Maharashtra',
+            pincode: '400000',
+            phone,
+          },
           payment_method: 'credit_45day',
           notes: note || undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        alert(data.error ?? 'Failed to place order. Please try again.');
+        setError(data.error ?? 'Failed to place order. Please try again.');
       } else {
         clearCart();
         router.push('/mobile/orders');
       }
     } catch {
-      alert('Network error. Please try again.');
+      setError('Network error. Please try again.');
     } finally {
       setPlacing(false);
     }
   }
 
-  if (!authed || !ready) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="w-8 h-8 border-[3px] border-teal-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (!ready) return <LoadingScreen label="Loading cart" />;
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col">
-        <div className="bg-white px-4 pt-12 pb-4 border-b border-slate-100">
-          <h1 className="font-heading font-bold text-xl text-slate-900">My Cart</h1>
-        </div>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
-          <span className="text-6xl">🛒</span>
-          <h2 className="font-heading font-bold text-slate-900 text-xl">Your cart is empty</h2>
-          <p className="text-slate-500 text-sm text-center">Add products from the marketplace to get started.</p>
-          <Link
-            href="/mobile/products"
-            className="bg-teal-600 text-white font-bold rounded-2xl px-8 py-3 text-base mt-2"
-          >
-            Browse Products →
-          </Link>
-        </div>
-      </div>
+      <MobilePage>
+        <ScreenHeader title="My Cart" subtitle="Build your PrimeServe order" variant="light" />
+        <EmptyState
+          icon={mobileIcons.ShoppingCart}
+          title="Your cart is empty"
+          body="Browse the catalog and add housekeeping, stationery, pantry, or facility products."
+          action={<ButtonLink href="/mobile/products">Browse products</ButtonLink>}
+        />
+      </MobilePage>
     );
   }
 
   const subtotal = totalAmount;
-  const gst = subtotal * 0.18;
-  const grandTotal = subtotal + gst;
+  const gst = Math.round(subtotal * 0.18 * 100) / 100;
+  const grandTotal = Math.round((subtotal + gst) * 100) / 100;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
-      <div className="bg-white px-4 pt-12 pb-4 border-b border-slate-100 flex items-center justify-between">
-        <h1 className="font-heading font-bold text-xl text-slate-900">My Cart ({items.length})</h1>
-        <button
-          onClick={() => {
-            if (confirm('Clear all items from cart?')) clearCart();
-          }}
-          className="text-rose-500 text-sm font-semibold"
-        >
-          Clear All
-        </button>
-      </div>
+    <MobilePage className="flex flex-col">
+      <ScreenHeader
+        title={`My Cart (${items.length})`}
+        subtitle="Review quantities before checkout"
+        variant="light"
+        action={
+          <button type="button" onClick={clearCart} className="text-sm font-extrabold text-[#F43F5E]">
+            Clear
+          </button>
+        }
+      />
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-        {/* Line items */}
+      <div className="flex-1 space-y-3 px-5 py-4">
         {items.map((item) => (
-          <div key={item.product_id} className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex gap-3">
-            {/* Thumb */}
-            <div className="w-16 h-16 bg-slate-50 rounded-xl flex-shrink-0 relative flex items-center justify-center overflow-hidden">
-              {item.thumbnail_url ? (
-                <Image src={item.thumbnail_url} alt={item.name} fill className="object-contain p-1" sizes="64px" />
-              ) : (
-                <span className="text-2xl">📦</span>
-              )}
-            </div>
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-slate-900 text-sm leading-tight line-clamp-2">{item.name}</p>
-              <p className="text-teal-700 font-bold text-sm mt-1">{formatINR(item.price)} / {item.unit}</p>
-              <div className="flex items-center gap-2 mt-2">
+          <Card key={item.product_id} className="flex gap-3 p-3">
+            <ProductThumb src={item.thumbnail_url} alt={item.name} className="h-20 w-20 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="line-clamp-2 text-sm font-extrabold leading-5 text-slate-900">{item.name}</p>
+              <p className="mt-1 font-mono text-sm font-extrabold text-[#0D9488]">{formatINR(item.price)} / {item.unit}</p>
+              <div className="mt-3 flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={() => updateQty(item.product_id, item.quantity - 1)}
-                  className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-700 font-bold text-base"
+                  className="ps-press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-lg font-extrabold text-slate-600"
                 >
-                  −
+                  -
                 </button>
-                <span className="font-mono font-bold text-slate-900 w-8 text-center text-sm">{item.quantity}</span>
+                <span className="w-9 text-center font-mono text-sm font-extrabold text-slate-900">{item.quantity}</span>
                 <button
+                  type="button"
                   onClick={() => updateQty(item.product_id, item.quantity + 1)}
-                  className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-700 font-bold text-base"
+                  className="ps-press flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-lg font-extrabold text-[#0D9488]"
                 >
                   +
                 </button>
-                <span className="ml-auto font-mono font-bold text-slate-900 text-sm">
-                  {formatINR(item.price * item.quantity)}
-                </span>
+                <span className="ml-auto font-mono text-sm font-extrabold text-slate-900">{formatINR(item.price * item.quantity)}</span>
               </div>
             </div>
-            {/* Remove */}
-            <button
-              onClick={() => updateQty(item.product_id, 0)}
-              className="text-slate-300 hover:text-rose-400 text-lg self-start"
-            >
-              ✕
+            <button type="button" onClick={() => updateQty(item.product_id, 0)} className="self-start text-xl font-light text-slate-300">
+              x
             </button>
-          </div>
+          </Card>
         ))}
 
-        {/* Note */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-          <p className="font-semibold text-slate-700 text-sm mb-2">Add a note (optional)</p>
+        <Card className="p-4">
+          <label className="text-sm font-extrabold text-slate-800" htmlFor="mobile-cart-note">Add a note</label>
           <textarea
+            id="mobile-cart-note"
             value={note}
-            onChange={(e) => setNote(e.target.value)}
+            onChange={(event) => setNote(event.target.value)}
             placeholder="e.g. Deliver to reception, 2nd floor"
-            rows={2}
-            className="w-full text-sm text-slate-900 bg-slate-50 rounded-xl border border-slate-200 p-3 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500"
+            rows={3}
+            className="mt-3 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#14B8A6]"
           />
-        </div>
+        </Card>
 
-        {/* Price summary */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-2">
-          <p className="font-heading font-bold text-slate-900 mb-3">Price Summary</p>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Subtotal</span>
-            <span className="font-mono font-semibold text-slate-900">{formatINR(subtotal)}</span>
+        <Card className="p-4">
+          <h2 className="font-heading text-xl font-extrabold text-slate-900">Price Summary</h2>
+          <div className="mt-4 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="font-semibold text-slate-500">Subtotal</span>
+              <span className="font-mono font-extrabold text-slate-900">{formatINR(subtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-semibold text-slate-500">GST estimate</span>
+              <span className="font-mono font-extrabold text-slate-900">{formatINR(gst)}</span>
+            </div>
+            <div className="flex justify-between border-t border-slate-100 pt-3">
+              <span className="font-heading font-extrabold text-slate-900">Total</span>
+              <span className="font-mono text-lg font-extrabold text-[#0D9488]">{formatINR(grandTotal)}</span>
+            </div>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500">GST (18%)</span>
-            <span className="font-mono font-semibold text-slate-900">{formatINR(gst)}</span>
+        </Card>
+
+        {error && (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">
+            {error}
           </div>
-          <div className="border-t border-slate-100 pt-2 flex justify-between">
-            <span className="font-heading font-bold text-slate-900">Total</span>
-            <span className="font-mono font-bold text-teal-700 text-lg">{formatINR(grandTotal)}</span>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Sticky checkout bar */}
-      <div className="bg-white border-t border-slate-100 px-4 py-3 shadow-lg">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-slate-500 text-xs">{items.length} item{items.length !== 1 ? 's' : ''}</p>
-            <p className="font-mono font-bold text-slate-900 text-lg">{formatINR(grandTotal)}</p>
+      <div className="fixed inset-x-0 bottom-[76px] z-40 border-t border-slate-200 bg-white px-5 py-3 shadow-[0_-14px_28px_-28px_rgba(15,23,42,0.35)]">
+        <div className="flex items-center gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-slate-400">{items.length} items</p>
+            <p className="font-mono text-xl font-extrabold text-slate-900">{formatINR(grandTotal)}</p>
           </div>
           <button
-            onClick={handleOrder}
+            type="button"
             disabled={placing}
-            className="bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white font-bold rounded-2xl px-8 py-3 text-base transition-colors"
+            onClick={handleOrder}
+            className="ps-press flex h-14 min-w-40 items-center justify-center gap-2 rounded-2xl bg-[#14B8A6] px-6 font-heading text-base font-extrabold text-white disabled:opacity-60"
           >
-            {placing ? 'Placing…' : 'Place Order →'}
+            {placing ? 'Placing...' : 'Checkout'}
+            <mobileIcons.ArrowRight className="h-5 w-5" />
           </button>
         </div>
       </div>
-    </div>
+    </MobilePage>
   );
 }
