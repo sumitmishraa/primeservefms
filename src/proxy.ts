@@ -15,6 +15,7 @@
  *   /legal         Legal policy pages
  *   legacy policy URLs (/terms, /privacy, etc.) redirect to /legal/*
  *   /api/auth/*    Auth endpoints (login, register, logout, me)
+ *   /api/location/reverse  Browser geolocation pincode lookup
  *   /api/products  Public product API (read-only catalogue)
  *   /_next/*       Next.js static assets
  *   /favicon.ico
@@ -123,6 +124,7 @@ function isPublicPath(pathname: string): boolean {
   // Public API routes (auth endpoints + read-only product catalogue
   // + public landing-page form submissions)
   if (pathname.startsWith("/api/auth/")) return true;
+  if (pathname === "/api/location/reverse") return true;
   if (pathname.startsWith("/api/products")) return true;
   if (pathname === "/api/contact") return true;
   if (pathname === "/api/newsletter") return true;

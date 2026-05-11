@@ -26,6 +26,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useCartStore } from '@/stores/cartStore';
 import { PrimeServeLogo } from '@/components/brand';
+import HeaderLocationPin from '@/components/location/HeaderLocationPin';
 import { PRODUCT_CATEGORIES, getMarketplaceSubcategoriesByCategory } from '@/lib/constants/categories';
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -185,16 +186,18 @@ export default function PublicHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white">
       {/* Top bar */}
-      <div className="mx-auto flex h-[72px] max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="flex h-[72px] w-full items-center gap-3 px-3 sm:px-4 lg:px-6">
         {/* Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <PrimeServeLogo size="md" priority />
         </Link>
 
+        <HeaderLocationPin />
+
         {/* Search — desktop */}
         <form
           onSubmit={handleSearch}
-          className="hidden flex-1 md:block"
+          className="hidden min-w-0 flex-1 md:block"
           role="search"
         >
           <div className="relative">

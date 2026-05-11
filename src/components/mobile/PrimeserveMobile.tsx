@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { CART_KEY } from '@/hooks/useMobileCart';
 import { PrimeServeLogo } from '@/components/brand';
+import HeaderLocationPin from '@/components/location/HeaderLocationPin';
 import type { AuthUser } from '@/types';
 
 export const PS = {
@@ -198,7 +199,10 @@ export function BrandHeader({
     <header className="relative overflow-hidden bg-[radial-gradient(120%_90%_at_92%_0%,rgba(20,184,166,0.20)_0%,rgba(11,18,32,0)_55%),linear-gradient(180deg,#0B1220_0%,#0F1A2E_100%)] px-5 pb-5 text-white">
       <StatusSpacer />
       <div className="relative z-10 pt-3">
-        <PrimeServeLogo size="sm" tone="light" className="mb-4" priority />
+        <div className="mb-4 flex items-center gap-2">
+          <PrimeServeLogo size="sm" tone="light" priority />
+          <HeaderLocationPin tone="dark" className="max-w-[148px]" />
+        </div>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             {eyebrow && <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#5EEAD4]">{eyebrow}</p>}
@@ -232,8 +236,9 @@ export function ScreenHeader({
   return (
     <header className={`${light ? 'bg-white text-slate-900 border-b border-slate-100' : 'bg-[linear-gradient(180deg,#0B1220_0%,#0F1A2E_100%)] text-white'} px-5 pb-4`}>
       <StatusSpacer />
-      <div className="pt-2">
+      <div className="flex items-center justify-between gap-2 pt-2">
         <PrimeServeLogo size="sm" tone={light ? 'default' : 'light'} priority />
+        <HeaderLocationPin tone={light ? 'light' : 'dark'} className="max-w-[148px]" />
       </div>
       <div className="flex min-h-12 items-center gap-3 pt-2">
         {backHref && (
