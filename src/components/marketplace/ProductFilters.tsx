@@ -17,7 +17,7 @@
 import { Search, X } from 'lucide-react';
 import {
   PRODUCT_CATEGORIES,
-  getSubcategoriesByCategory,
+  getMarketplaceSubcategoriesByCategory,
 } from '@/lib/constants/categories';
 
 // ---------------------------------------------------------------------------
@@ -56,7 +56,7 @@ export default function ProductFilters({
   onSubcategoryChange,
   onSearchChange,
 }: ProductFiltersProps) {
-  const subcategories = getSubcategoriesByCategory(selectedCategory);
+  const subcategories = getMarketplaceSubcategoriesByCategory(selectedCategory);
   const hasActiveFilter =
     !!selectedCategory || !!selectedSubcategory || !!searchQuery;
 

@@ -6,7 +6,8 @@
  *
  * Query params:
  *   category     - product_category enum value
- *   subcategory  - subcategory_slug string
+ *   subcategory  - subcategory_slug or buyer-facing grouped subcategory string
+ *   brand        - brand keyword; matches products.brand or product name
  *   search       - full-text search on name (ILIKE)
  *   is_approved  - 'true' (default) | 'false'
  *   is_active    - 'true' (default) | 'false'
@@ -20,6 +21,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getSubcategoryFilterSlugs } from '@/lib/constants/categories';
 import type { Enums } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
@@ -64,6 +66,10 @@ export interface ProductsApiResponse {
   per_page: number;
 }
 
+function cleanFilterTerm(value: string): string {
+  return value.replace(/[,%()]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 /**
  * Returns paginated approved+active products for the public marketplace.
  * @returns Paginated product list with filter support
@@ -96,6 +102,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const category    = searchParams.get('category') ?? '';
     const subcategory = searchParams.get('subcategory') ?? '';
+    const brand       = searchParams.get('brand') ?? '';
     const search      = searchParams.get('search') ?? '';
     const sort        = searchParams.get('sort') ?? 'relevance';
     const stockStatus = searchParams.get('stock_status') ?? '';
@@ -124,7 +131,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // Subcategory filter
     if (subcategory) {
-      query = query.eq('subcategory_slug', subcategory);
+      const subcategorySlugs = getSubcategoryFilterSlugs(category, subcategory);
+      query = subcategorySlugs.length > 1
+        ? query.in('subcategory_slug', subcategorySlugs)
+        : query.eq('subcategory_slug', subcategorySlugs[0] ?? subcategory);
+    }
+
+    // Brand filter. Some imported catalog rows carry brand names in product
+    // titles instead of the brand column, so match both fields.
+    const brandTerm = cleanFilterTerm(brand);
+    if (brandTerm) {
+      query = query.or(`brand.ilike.%${brandTerm}%,name.ilike.%${brandTerm}%`);
     }
 
     // Stock status filter
@@ -133,8 +150,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     // Search filter
-    if (search) {
-      query = query.ilike('name', `%${search}%`);
+    const searchTerm = cleanFilterTerm(search);
+    if (searchTerm) {
+      query = query.or(`name.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%`);
     }
 
     if (sort === 'price_asc') {

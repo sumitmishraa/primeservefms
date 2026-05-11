@@ -21,6 +21,7 @@ import { PublicHeader, PublicFooter } from '@/components/layout';
 import CustomSelect from '@/components/ui/CustomSelect';
 import {
   getCategoryLabel,
+  getMarketplaceBrandLabel,
   getSubcategoryLabel,
 } from '@/lib/constants/categories';
 import type { CartableProduct } from '@/components/marketplace/AddToCartButton';
@@ -71,6 +72,7 @@ function MarketplaceContent() {
 
   const urlCategory = searchParams.get('category') ?? '';
   const urlSubcategory = searchParams.get('subcategory') ?? '';
+  const urlBrand = searchParams.get('brand') ?? '';
   const urlSearch = searchParams.get('search') ?? '';
   const urlSort = searchParams.get('sort') ?? 'relevance';
   const urlPage = parseInt(searchParams.get('page') ?? '1', 10);
@@ -111,9 +113,10 @@ function MarketplaceContent() {
   );
 
   const handleCategoryChange = (cat: string) =>
-    pushParams({ category: cat, subcategory: '' });
+    pushParams({ category: cat, subcategory: '', brand: '' });
   const handleSubcategoryChange = (sub: string) =>
     pushParams({ subcategory: sub });
+  const handleBrandChange = (brand: string) => pushParams({ brand });
   const handleSortChange = (s: string) => pushParams({ sort: s });
   const handleSearchChange = (q: string) => {
     setSearchDraft(q);
@@ -134,6 +137,7 @@ function MarketplaceContent() {
     });
     if (urlCategory) params.set('category', urlCategory);
     if (urlSubcategory) params.set('subcategory', urlSubcategory);
+    if (urlBrand) params.set('brand', urlBrand);
     if (urlSearch) params.set('search', urlSearch);
     if (urlSort && urlSort !== 'relevance') params.set('sort', urlSort);
 
@@ -188,7 +192,7 @@ function MarketplaceContent() {
         setIsLoading(false);
       }
     }
-  }, [urlPage, urlCategory, urlSubcategory, urlSearch, urlSort]);
+  }, [urlPage, urlCategory, urlSubcategory, urlBrand, urlSearch, urlSort]);
 
   useEffect(() => {
     void fetchProducts();
@@ -201,7 +205,7 @@ function MarketplaceContent() {
     };
   }, []);
 
-  const hasActiveFilter = !!urlCategory || !!urlSubcategory || !!urlSearch;
+  const hasActiveFilter = !!urlCategory || !!urlSubcategory || !!urlBrand || !!urlSearch;
   const fromIdx = (urlPage - 1) * PER_PAGE + 1;
   const toIdx = Math.min(urlPage * PER_PAGE, total);
 
@@ -218,7 +222,7 @@ function MarketplaceContent() {
                 {getCategoryLabel(urlCategory)}
                 <button
                   type="button"
-                  onClick={() => pushParams({ category: '', subcategory: '' })}
+                  onClick={() => pushParams({ category: '', subcategory: '', brand: '' })}
                   className="text-teal-600 hover:text-teal-800"
                   aria-label="Remove category filter"
                 >
@@ -234,6 +238,19 @@ function MarketplaceContent() {
                   onClick={() => pushParams({ subcategory: '' })}
                   className="text-teal-600 hover:text-teal-800"
                   aria-label="Remove subcategory filter"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+            {urlBrand && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700">
+                {getMarketplaceBrandLabel(urlBrand)}
+                <button
+                  type="button"
+                  onClick={() => pushParams({ brand: '' })}
+                  className="text-teal-600 hover:text-teal-800"
+                  aria-label="Remove brand filter"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -255,7 +272,7 @@ function MarketplaceContent() {
             <button
               type="button"
               onClick={() =>
-                pushParams({ category: '', subcategory: '', search: '' })
+                pushParams({ category: '', subcategory: '', brand: '', search: '' })
               }
               className="text-xs font-semibold text-slate-500 hover:text-teal-600"
             >
@@ -269,9 +286,11 @@ function MarketplaceContent() {
             <ProductSidebar
               selectedCategory={urlCategory}
               selectedSubcategory={urlSubcategory}
+              selectedBrand={urlBrand}
               searchQuery={searchDraft}
               onCategoryChange={handleCategoryChange}
               onSubcategoryChange={handleSubcategoryChange}
+              onBrandChange={handleBrandChange}
               onSearchChange={handleSearchChange}
             />
           </div>
@@ -354,7 +373,7 @@ function MarketplaceContent() {
                 <button
                   type="button"
                   onClick={() =>
-                    pushParams({ category: '', subcategory: '', search: '' })
+                    pushParams({ category: '', subcategory: '', brand: '', search: '' })
                   }
                   className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >

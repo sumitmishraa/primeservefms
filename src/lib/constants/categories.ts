@@ -1,13 +1,7 @@
 /**
  * Primeserve product category and subcategory constants.
  *
- * Derived from the real product catalog (394 products across 6 categories).
- * productCount values are from the actual Excel sheets:
- *   Housekeeping sheet  → 170 products (Housekeeping Materials + Chemicals)
- *   Stationery sheet    → 160 products
- *   Pantry              →   2 products
- *   Facility & Tools    →   6 products
- *   Printing Solution   →   0 products (roadmap placeholder)
+ * Derived from the live approved product catalog across 6 categories.
  *
  * These values must stay in sync with:
  *   - The `product_category` enum (Migration 1)
@@ -40,7 +34,7 @@ export interface ProductCategoryMeta {
   description: string;
   /** lucide-react icon component name (PascalCase) */
   icon: string;
-  /** Approximate number of products in this category from the Excel catalog */
+  /** Approximate number of active marketplace products in this category */
   productCount: number;
 }
 
@@ -53,6 +47,16 @@ export interface SubcategoryMeta {
   slug: string;
 }
 
+export interface MarketplaceSubcategoryFilterMeta extends SubcategoryMeta {
+  /** One or more database subcategory slugs included in this buyer-facing filter. */
+  slugs: string[];
+}
+
+export interface MarketplaceBrandMeta {
+  value: string;
+  label: string;
+}
+
 // ---------------------------------------------------------------------------
 // 6 top-level product categories
 // ---------------------------------------------------------------------------
@@ -60,7 +64,7 @@ export interface SubcategoryMeta {
 /**
  * All 6 Primeserve product categories.
  * 'printing_solution' is a roadmap placeholder (0 products currently).
- * productCount is approximate — from the source Excel files.
+ * productCount is approximate — from the active marketplace catalog.
  */
 export const PRODUCT_CATEGORIES: ProductCategoryMeta[] = [
   {
@@ -68,35 +72,35 @@ export const PRODUCT_CATEGORIES: ProductCategoryMeta[] = [
     label: 'Housekeeping Materials',
     description: 'Cleaning cloths, mops, brushes, garbage bags, dispensers, and all housekeeping tools',
     icon: 'Sparkles',
-    productCount: 170,
+    productCount: 151,
   },
   {
     value: 'cleaning_chemicals',
     label: 'Cleaning Chemicals',
     description: 'Laundry, kitchen, floor, washroom, hand-care and pest-control chemicals — including the full Diversey / TASKI catalog',
     icon: 'FlaskConical',
-    productCount: 222,
+    productCount: 55,
   },
   {
     value: 'office_stationeries',
     label: 'Office Stationeries',
     description: 'Pens, files, staplers, tapes, notebooks, envelopes, and desk accessories',
     icon: 'PenTool',
-    productCount: 160,
+    productCount: 155,
   },
   {
     value: 'pantry_items',
     label: 'Pantry Items',
     description: 'Disposable cups, plates, and pantry consumables',
     icon: 'Coffee',
-    productCount: 2,
+    productCount: 0,
   },
   {
     value: 'facility_and_tools',
     label: 'Facility & Tools',
     description: 'Safety equipment, plumbing tools, and facility maintenance gear',
     icon: 'Wrench',
-    productCount: 6,
+    productCount: 19,
   },
   {
     value: 'printing_solution',
@@ -201,6 +205,221 @@ export const SUBCATEGORIES: Record<ProductCategory, SubcategoryMeta[]> = {
 };
 
 // ---------------------------------------------------------------------------
+// Buyer-facing marketplace filters
+// ---------------------------------------------------------------------------
+
+/**
+ * Shorter subcategory groups for marketplace browsing.
+ *
+ * The admin/product data still uses the exact DB slugs in SUBCATEGORIES above.
+ * These grouped values are only used by buyer-facing filters and map back to
+ * one or more DB slugs when /api/products applies the filter.
+ */
+export const MARKETPLACE_SUBCATEGORY_FILTERS: Record<ProductCategory, MarketplaceSubcategoryFilterMeta[]> = {
+  housekeeping_materials: [
+    {
+      value: 'air_and_odour_care',
+      label: 'Air & Odour Care',
+      slug: 'air_and_odour_care',
+      slugs: ['air_and_room_fresheners', 'toilet_fresheners', 'urinal_care'],
+    },
+    {
+      value: 'brooms_cloths_and_dusters',
+      label: 'Brooms, Cloths & Dusters',
+      slug: 'brooms_cloths_and_dusters',
+      slugs: ['brooms_and_cleaning_cloths', 'dusting_tools', 'wipers_and_dusters'],
+    },
+    {
+      value: 'mops_and_floor_tools',
+      label: 'Mops & Floor Tools',
+      slug: 'mops_and_floor_tools',
+      slugs: ['mops_and_mop_refills', 'floor_cleaning_tools'],
+    },
+    {
+      value: 'brushes_scrubbers_and_toilet_tools',
+      label: 'Brushes, Scrubbers & Toilet Tools',
+      slug: 'brushes_scrubbers_and_toilet_tools',
+      slugs: ['brushes_and_scrubbing_tools', 'scrubbers_and_sponges', 'toilet_cleaning_tools'],
+    },
+    {
+      value: 'garbage_bags_bins_and_plasticware',
+      label: 'Garbage Bags, Bins & Plasticware',
+      slug: 'garbage_bags_bins_and_plasticware',
+      slugs: ['garbage_bags_black', 'garbage_bags_colour_coded', 'plastic_ware_and_bins'],
+    },
+    {
+      value: 'paper_tissue_and_dispensers',
+      label: 'Paper, Tissue & Dispensers',
+      slug: 'paper_tissue_and_dispensers',
+      slugs: ['paper_and_tissue_products', 'dispensers_and_hand_dryers', 'spray_bottles_and_dispensers'],
+    },
+    {
+      value: 'glass_tools_safety_and_pest',
+      label: 'Glass Tools, Safety & Pest',
+      slug: 'glass_tools_safety_and_pest',
+      slugs: ['glass_cleaning_tools', 'gloves_and_hand_protection', 'signage_and_safety_boards', 'pest_control'],
+    },
+  ],
+
+  cleaning_chemicals: [
+    {
+      value: 'laundry_and_detergents',
+      label: 'Laundry & Detergents',
+      slug: 'laundry_and_detergents',
+      slugs: ['laundry_chemicals', 'soaps_and_detergent_powders'],
+    },
+    {
+      value: 'kitchen_and_dishwash',
+      label: 'Kitchen & Dishwash',
+      slug: 'kitchen_and_dishwash',
+      slugs: ['kitchen_hygiene_and_warewashing', 'dishwashing_machines_and_equipment'],
+    },
+    {
+      value: 'floor_and_general_cleaners',
+      label: 'Floor & General Cleaners',
+      slug: 'floor_and_general_cleaners',
+      slugs: ['housekeeping_and_general_cleaners', 'floor_care_and_polish', 'bulk_cleaning_chemicals', 'branded_cleaning_liquids'],
+    },
+    {
+      value: 'washroom_and_odour_control',
+      label: 'Washroom & Odour Control',
+      slug: 'washroom_and_odour_control',
+      slugs: ['washroom_and_odour_control'],
+    },
+    {
+      value: 'hand_hygiene_and_dispensers',
+      label: 'Hand Hygiene & Dispensers',
+      slug: 'hand_hygiene_and_dispensers',
+      slugs: ['personal_care_and_hand_hygiene', 'dispensers_and_hygiene_accessories'],
+    },
+    {
+      value: 'pest_and_fly_management',
+      label: 'Pest & Fly Management',
+      slug: 'pest_and_fly_management',
+      slugs: ['pest_control_and_fly_management'],
+    },
+  ],
+
+  pantry_items: [
+    {
+      value: 'disposable_cups_plates_and_pantry_consumables',
+      label: 'Cups, Plates & Pantry Consumables',
+      slug: 'disposable_cups_plates_and_pantry_consumables',
+      slugs: ['disposable_cups_and_plates'],
+    },
+  ],
+
+  office_stationeries: [
+    {
+      value: 'paper_notebooks_and_pads',
+      label: 'Paper, Notebooks & Pads',
+      slug: 'paper_notebooks_and_pads',
+      slugs: ['copier_and_printing_paper', 'carbon_and_transfer_paper', 'notebooks_and_writing_pads', 'sticky_notes_and_postits'],
+    },
+    {
+      value: 'writing_marking_and_correction',
+      label: 'Writing, Marking & Correction',
+      slug: 'writing_marking_and_correction',
+      slugs: ['pens_pencils_and_markers', 'stamps_ink_and_correction'],
+    },
+    {
+      value: 'files_folders_and_envelopes',
+      label: 'Files, Folders & Envelopes',
+      slug: 'files_folders_and_envelopes',
+      slugs: ['files_and_folders', 'envelopes_and_covers'],
+    },
+    {
+      value: 'stapling_clips_and_fasteners',
+      label: 'Stapling, Clips & Fasteners',
+      slug: 'stapling_clips_and_fasteners',
+      slugs: ['staplers_and_punching_machines', 'clips_pins_and_fasteners', 'rubber_bands_and_elastics'],
+    },
+    {
+      value: 'tapes_adhesives_and_cutters',
+      label: 'Tapes, Adhesives & Cutters',
+      slug: 'tapes_adhesives_and_cutters',
+      slugs: ['tapes_and_adhesives', 'scissors_and_cutters'],
+    },
+    {
+      value: 'desk_accessories_and_general_stationery',
+      label: 'Desk Accessories & General Stationery',
+      slug: 'desk_accessories_and_general_stationery',
+      slugs: ['calculators_and_desk_accessories', 'desk_organizers_and_accessories', 'batteries', 'general_stationery'],
+    },
+  ],
+
+  facility_and_tools: [
+    {
+      value: 'safety_and_facility_tools',
+      label: 'Safety & Facility Tools',
+      slug: 'safety_and_facility_tools',
+      slugs: ['safety_equipment', 'plumbing_tools'],
+    },
+  ],
+
+  printing_solution: [],
+};
+
+export const MARKETPLACE_BRANDS: Record<ProductCategory, MarketplaceBrandMeta[]> = {
+  housekeeping_materials: [
+    { value: 'Gala', label: 'Gala' },
+    { value: 'Scotch', label: 'Scotch-Brite' },
+    { value: 'Harpic', label: 'Harpic' },
+    { value: 'Hit', label: 'Hit' },
+    { value: 'Rin', label: 'Rin' },
+  ],
+  cleaning_chemicals: [
+    { value: 'Vim', label: 'Vim' },
+    { value: 'Dettol', label: 'Dettol' },
+    { value: 'Surf Excel', label: 'Surf Excel' },
+    { value: 'Rin', label: 'Rin' },
+    { value: 'Colin', label: 'Colin' },
+    { value: 'Domex', label: 'Domex' },
+    { value: 'Lizol', label: 'Lizol' },
+    { value: 'Harpic', label: 'Harpic' },
+    { value: 'Life Boy', label: 'Lifebuoy' },
+    { value: 'Good Night', label: 'Good Night' },
+  ],
+  office_stationeries: [
+    { value: 'JK', label: 'JK Paper' },
+    { value: 'SPS', label: 'SPS' },
+    { value: 'Maya', label: 'Maya' },
+    { value: 'Camlin', label: 'Camlin' },
+    { value: 'Omega', label: 'Omega' },
+    { value: 'Cello', label: 'Cello' },
+    { value: 'Kangaroo', label: 'Kangaroo' },
+    { value: 'Apsara', label: 'Apsara' },
+    { value: 'Nataraj', label: 'Nataraj' },
+    { value: 'Eveready', label: 'Eveready' },
+    { value: 'Kores', label: 'Kores' },
+    { value: 'Reynolds', label: 'Reynolds' },
+  ],
+  pantry_items: [
+    { value: 'Chuk', label: 'Chuk' },
+    { value: 'Ecoware', label: 'Ecoware' },
+    { value: 'Huhtamaki', label: 'Huhtamaki' },
+    { value: 'Nescafe', label: 'Nescafe' },
+    { value: 'Tetley', label: 'Tetley' },
+    { value: 'Paper Boat', label: 'Paper Boat' },
+  ],
+  facility_and_tools: [
+    { value: '3M', label: '3M' },
+    { value: 'Karam', label: 'Karam' },
+    { value: 'Venus', label: 'Venus' },
+    { value: 'Stanley', label: 'Stanley' },
+    { value: 'Taparia', label: 'Taparia' },
+    { value: 'Bosch', label: 'Bosch' },
+  ],
+  printing_solution: [
+    { value: 'HP', label: 'HP' },
+    { value: 'Canon', label: 'Canon' },
+    { value: 'Epson', label: 'Epson' },
+    { value: 'Brother', label: 'Brother' },
+    { value: 'Xerox', label: 'Xerox' },
+  ],
+};
+
+// ---------------------------------------------------------------------------
 // Order status metadata — admin-centric flow (Migration 4)
 // ---------------------------------------------------------------------------
 
@@ -300,6 +519,52 @@ export function getSubcategoriesByCategory(category: string): SubcategoryMeta[] 
   return SUBCATEGORIES[category as ProductCategory] ?? [];
 }
 
+export function getMarketplaceSubcategoriesByCategory(category: string): MarketplaceSubcategoryFilterMeta[] {
+  return MARKETPLACE_SUBCATEGORY_FILTERS[category as ProductCategory] ?? [];
+}
+
+export function getSubcategoryFilterSlugs(category: string, filterValue: string): string[] {
+  if (!filterValue) return [];
+
+  const groupedFilters = category
+    ? getMarketplaceSubcategoriesByCategory(category)
+    : PRODUCT_CATEGORIES.flatMap((cat) => MARKETPLACE_SUBCATEGORY_FILTERS[cat.value]);
+
+  const grouped = groupedFilters
+    .find((s) => s.slug === filterValue || s.value === filterValue);
+  if (grouped) return grouped.slugs;
+
+  const exactSubcategories = category
+    ? getSubcategoriesByCategory(category)
+    : PRODUCT_CATEGORIES.flatMap((cat) => SUBCATEGORIES[cat.value]);
+
+  const exact = exactSubcategories
+    .find((s) => s.slug === filterValue || s.value === filterValue);
+  return exact ? [exact.slug] : [filterValue];
+}
+
+export function getMarketplaceBrandsByCategory(category: string): MarketplaceBrandMeta[] {
+  if (category) return MARKETPLACE_BRANDS[category as ProductCategory] ?? [];
+
+  const seen = new Set<string>();
+  return PRODUCT_CATEGORIES.flatMap((cat) => MARKETPLACE_BRANDS[cat.value])
+    .filter((brand) => {
+      const key = brand.value.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+export function getMarketplaceBrandLabel(value: string): string {
+  const normalized = value.toLowerCase();
+  const brand = PRODUCT_CATEGORIES
+    .flatMap((cat) => MARKETPLACE_BRANDS[cat.value])
+    .find((option) => option.value.toLowerCase() === normalized);
+
+  return brand?.label ?? value;
+}
+
 /**
  * Returns the human-readable label for a product category value.
  * Returns the raw value unchanged if the category is not recognised.
@@ -332,6 +597,14 @@ export function getSubcategoryLabel(
   categoryValue: string,
   subcategorySlug: string
 ): string {
-  const subs = getSubcategoriesByCategory(categoryValue);
+  const grouped = categoryValue
+    ? getMarketplaceSubcategoriesByCategory(categoryValue)
+    : PRODUCT_CATEGORIES.flatMap((cat) => MARKETPLACE_SUBCATEGORY_FILTERS[cat.value]);
+  const groupedLabel = grouped.find((s) => s.slug === subcategorySlug)?.label;
+  if (groupedLabel) return groupedLabel;
+
+  const subs = categoryValue
+    ? getSubcategoriesByCategory(categoryValue)
+    : PRODUCT_CATEGORIES.flatMap((cat) => SUBCATEGORIES[cat.value]);
   return subs.find((s) => s.slug === subcategorySlug)?.label ?? subcategorySlug;
 }

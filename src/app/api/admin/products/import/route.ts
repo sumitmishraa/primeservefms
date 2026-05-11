@@ -537,6 +537,35 @@ function mapCrescentSection(
   };
 }
 
+function mapCrescentFacilityOverride(
+  name: string,
+  size: string,
+): { category: Enums<'product_category'>; subcategorySlug: string | null; useCase: string } | null {
+  const text = `${name} ${size}`.toLowerCase();
+
+  if (
+    /\b(plunger|patti\s*blade|scraper|blade)\b/.test(text)
+  ) {
+    return {
+      category: 'facility_and_tools',
+      subcategorySlug: 'plumbing_tools',
+      useCase: 'facility maintenance tools and plumbing accessories',
+    };
+  }
+
+  if (
+    /\b(gum\s*boots?|helmets?|safety|goggles?|google|face\s*masks?|masks?|glou?ses?|gloves?|aprons?|belts?|sign\s*boards?|cleaning\s*in\s*progress|hand\s*gloss)\b/.test(text)
+  ) {
+    return {
+      category: 'facility_and_tools',
+      subcategorySlug: 'safety_equipment',
+      useCase: 'workplace safety equipment and PPE supplies',
+    };
+  }
+
+  return null;
+}
+
 function parseCrescentSheet(
   sheetName: string,
   rawRows:   unknown[][],
@@ -627,7 +656,8 @@ function parseCrescentSheet(
     const unitRaw = colIdx.qty !== -1 && row[colIdx.qty] != null
       ? cleanWhitespace(String(row[colIdx.qty]))
       : '';
-    const meta = mapCrescentSection(sheetName, currentSection);
+    const meta = mapCrescentFacilityOverride(cleanedName || rawName, size)
+      ?? mapCrescentSection(sheetName, currentSection);
     const subcategoryId = meta.subcategorySlug
       ? ctx.subcats.find((s) => s.slug === meta.subcategorySlug && s.category === meta.category)?.id ?? null
       : null;

@@ -71,7 +71,6 @@ interface CartItemRowProps {
  */
 function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
   const [pendingQty, setPendingQty] = useState(String(item.quantity));
-  const [confirmRemove, setConfirmRemove] = useState(false);
 
   const lineTotal = item.unit_price * item.quantity;
   const belowMOQ = item.quantity < item.moq;
@@ -145,31 +144,13 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
           <p className="font-bold text-slate-900 font-mono text-sm">
             {formatINR(lineTotal)}
           </p>
-          {confirmRemove ? (
-            <div className="flex gap-1 items-center">
-              <span className="text-xs text-slate-500">Remove?</span>
-              <button
-                onClick={() => onRemove(item.product_id)}
-                className="text-xs text-rose-600 font-medium hover:underline"
-              >
-                Yes
-              </button>
-              <button
-                onClick={() => setConfirmRemove(false)}
-                className="text-xs text-slate-500 hover:underline"
-              >
-                No
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setConfirmRemove(true)}
-              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-              aria-label={`Remove ${item.product_name} from cart`}
-            >
-              <Trash2 className="w-4 h-4" aria-hidden="true" />
-            </button>
-          )}
+          <button
+            onClick={() => onRemove(item.product_id)}
+            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+            aria-label={`Remove ${item.product_name} from cart`}
+          >
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
+          </button>
         </div>
       </div>
 
@@ -216,30 +197,13 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
           <p className="font-bold text-slate-900 font-mono text-sm">
             {formatINR(lineTotal)}
           </p>
-          {confirmRemove ? (
-            <div className="flex gap-1 items-center">
-              <button
-                onClick={() => onRemove(item.product_id)}
-                className="text-xs text-rose-600 font-medium"
-              >
-                Remove?
-              </button>
-              <button
-                onClick={() => setConfirmRemove(false)}
-                className="text-xs text-slate-500"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setConfirmRemove(true)}
-              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-              aria-label={`Remove ${item.product_name} from cart`}
-            >
-              <Trash2 className="w-4 h-4" aria-hidden="true" />
-            </button>
-          )}
+          <button
+            onClick={() => onRemove(item.product_id)}
+            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+            aria-label={`Remove ${item.product_name} from cart`}
+          >
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
+          </button>
         </div>
       </div>
 

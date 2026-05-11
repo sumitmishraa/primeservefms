@@ -11,7 +11,7 @@ import {
 import { PublicHeader, PublicFooter } from '@/components/layout';
 import {
   PRODUCT_CATEGORIES,
-  getSubcategoriesByCategory,
+  getMarketplaceSubcategoriesByCategory,
 } from '@/lib/constants/categories';
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -49,7 +49,7 @@ export default function CategoriesPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             {PRODUCT_CATEGORIES.map((cat) => {
               const Icon = ICONS[cat.icon] ?? Sparkles;
-              const subs = getSubcategoriesByCategory(cat.value);
+              const subs = getMarketplaceSubcategoriesByCategory(cat.value);
               return (
                 <Link
                   key={cat.value}

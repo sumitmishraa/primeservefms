@@ -2,35 +2,44 @@
 
 import { useState } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
-import { PRODUCT_CATEGORIES, getSubcategoriesByCategory } from '@/lib/constants/categories';
+import {
+  PRODUCT_CATEGORIES,
+  getMarketplaceBrandsByCategory,
+  getMarketplaceSubcategoriesByCategory,
+} from '@/lib/constants/categories';
 
 interface ProductSidebarProps {
   selectedCategory: string;
   selectedSubcategory: string;
+  selectedBrand: string;
   searchQuery: string;
   onCategoryChange: (cat: string) => void;
   onSubcategoryChange: (sub: string) => void;
+  onBrandChange: (brand: string) => void;
   onSearchChange: (q: string) => void;
 }
 
 /**
  * Left-side vertical filter panel matching the B2B marketplace aesthetic:
  * Search, Categories accordion with checkboxes + counts, Subcategories accordion,
- * and a Brands placeholder accordion.
+ * and a Brands accordion.
  */
 export default function ProductSidebar({
   selectedCategory,
   selectedSubcategory,
+  selectedBrand,
   searchQuery,
   onCategoryChange,
   onSubcategoryChange,
+  onBrandChange,
   onSearchChange,
 }: ProductSidebarProps) {
   const [categoriesOpen, setCategoriesOpen] = useState(true);
   const [subcategoriesOpen, setSubcategoriesOpen] = useState(true);
-  const [brandsOpen, setBrandsOpen] = useState(false);
+  const [brandsOpen, setBrandsOpen] = useState(!!selectedBrand);
 
-  const subcategories = getSubcategoriesByCategory(selectedCategory);
+  const subcategories = getMarketplaceSubcategoriesByCategory(selectedCategory);
+  const brands = getMarketplaceBrandsByCategory(selectedCategory);
 
   return (
     <aside className="w-full space-y-4 lg:w-80 lg:shrink-0">
@@ -193,7 +202,7 @@ export default function ProductSidebar({
         </div>
       )}
 
-      {/* Brands — placeholder accordion (empty list, future wiring) */}
+      {/* Brands */}
       <div className="rounded-xl border border-slate-200 bg-white">
         <button
           type="button"
@@ -208,9 +217,55 @@ export default function ProductSidebar({
           />
         </button>
         {brandsOpen && (
-          <div className="border-t border-slate-100 p-4 text-xs text-slate-400">
-            Brand filters are coming soon.
-          </div>
+          <ul className="max-h-72 overflow-y-auto border-t border-slate-100 px-2 pb-2 pt-1">
+            {brands.map((brand) => {
+              const active = selectedBrand === brand.value;
+              return (
+                <li key={brand.value}>
+                  <label
+                    className={`flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-2 text-sm transition-colors ${
+                      active
+                        ? 'bg-teal-50 text-teal-700'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={active}
+                        onChange={() => onBrandChange(active ? '' : brand.value)}
+                        className="sr-only"
+                      />
+                      <span
+                        className={`flex h-4 w-4 items-center justify-center rounded border-2 ${
+                          active
+                            ? 'border-teal-600 bg-teal-600'
+                            : 'border-slate-300 bg-white'
+                        }`}
+                      >
+                        {active && (
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={3}
+                            className="h-2.5 w-2.5 text-white"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                      </span>
+                      <span className="font-medium">{brand.label}</span>
+                    </span>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
     </aside>

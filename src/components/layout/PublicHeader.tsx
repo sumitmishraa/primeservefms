@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCartStore } from '@/stores/cartStore';
-import { PRODUCT_CATEGORIES, getSubcategoriesByCategory } from '@/lib/constants/categories';
+import { PRODUCT_CATEGORIES, getMarketplaceSubcategoriesByCategory } from '@/lib/constants/categories';
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Sparkles,
@@ -412,7 +412,7 @@ export default function PublicHeader() {
           className="relative mx-auto flex h-12 max-w-7xl items-center gap-1 px-4 sm:px-6 lg:px-8"
         >
           {PRODUCT_CATEGORIES.slice(0, 6).map((cat) => {
-            const subs = getSubcategoriesByCategory(cat.value);
+            const subs = getMarketplaceSubcategoriesByCategory(cat.value);
             const isOpen = openStripCategory === cat.value;
             return (
               <div key={cat.value} className="relative">
