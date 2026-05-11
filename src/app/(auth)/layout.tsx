@@ -46,7 +46,7 @@ export default function AuthLayout({
         <div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-teal-500/10 blur-3xl" />
 
         <Link href="/" className="absolute left-12 top-10 z-10 inline-flex items-center">
-          <PrimeServeLogo size="lg" priority />
+          <PrimeServeLogo size="lg" tone="light" priority />
         </Link>
 
         <div className="relative z-10 max-w-md">

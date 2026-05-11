@@ -108,7 +108,7 @@ export default function PublicFooter() {
           {/* Col 1: Brand + description + socials */}
           <div>
             <Link href="/" className="mb-4 flex items-center gap-2">
-              <PrimeServeLogo size="md" />
+              <PrimeServeLogo size="md" tone="light" />
             </Link>
             <p className="mb-5 text-sm leading-relaxed text-slate-400">
               India&apos;s leading B2B marketplace for facility management supplies.

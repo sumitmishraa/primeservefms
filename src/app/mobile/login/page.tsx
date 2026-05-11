@@ -214,7 +214,7 @@ function MobileLoginContent() {
             Home
           </Link>
           <div className="mt-7">
-            <PrimeServeLogo size="lg" priority />
+            <PrimeServeLogo size="lg" tone="light" priority />
             <p className="mt-3 max-w-xs text-sm font-medium leading-6 text-slate-300">
               Sign in or create your B2B buyer account to access credits, orders, and account details.
             </p>

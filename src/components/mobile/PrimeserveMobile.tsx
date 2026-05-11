@@ -143,11 +143,11 @@ export function LoadingScreen({ label = 'Loading PrimeServe' }: { label?: string
   return (
     <div className="min-h-dvh bg-[#0B1220] text-white flex flex-col items-center justify-center gap-4 px-6">
       <div className="relative">
-        <PrimeServeLogo variant="mark" size="lg" className="shadow-2xl" priority />
+        <PrimeServeLogo variant="mark" size="lg" tone="light" priority />
         <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-[#2DD4BF] ps-pulse-dot" />
       </div>
       <div className="text-center">
-        <PrimeServeLogo size="sm" className="mx-auto" />
+        <PrimeServeLogo size="sm" tone="light" className="mx-auto" />
         <p className="mt-1 text-xs font-medium text-slate-400">{label}</p>
       </div>
       <Loader2 className="h-6 w-6 animate-spin text-[#2DD4BF]" />
@@ -172,7 +172,7 @@ export function MobilePage({
 }
 
 export function BrandMark({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
-  return <PrimeServeLogo variant="mark" size={size} className="shadow-[0_16px_40px_-22px_rgba(45,212,191,0.9)]" />;
+  return <PrimeServeLogo variant="mark" size={size} />;
 }
 
 export function StatusSpacer() {
@@ -198,7 +198,7 @@ export function BrandHeader({
     <header className="relative overflow-hidden bg-[radial-gradient(120%_90%_at_92%_0%,rgba(20,184,166,0.20)_0%,rgba(11,18,32,0)_55%),linear-gradient(180deg,#0B1220_0%,#0F1A2E_100%)] px-5 pb-5 text-white">
       <StatusSpacer />
       <div className="relative z-10 pt-3">
-        <PrimeServeLogo size="sm" className="mb-4" priority />
+        <PrimeServeLogo size="sm" tone="light" className="mb-4" priority />
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             {eyebrow && <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#5EEAD4]">{eyebrow}</p>}
@@ -233,7 +233,7 @@ export function ScreenHeader({
     <header className={`${light ? 'bg-white text-slate-900 border-b border-slate-100' : 'bg-[linear-gradient(180deg,#0B1220_0%,#0F1A2E_100%)] text-white'} px-5 pb-4`}>
       <StatusSpacer />
       <div className="pt-2">
-        <PrimeServeLogo size="sm" priority />
+        <PrimeServeLogo size="sm" tone={light ? 'default' : 'light'} priority />
       </div>
       <div className="flex min-h-12 items-center gap-3 pt-2">
         {backHref && (

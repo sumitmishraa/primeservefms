@@ -20,11 +20,11 @@ export default function MobileIndex() {
         <div className="ps-slide-up relative">
           <div className="absolute -inset-8 rounded-full bg-[#14B8A6]/20 blur-3xl" />
           <div className="relative">
-            <PrimeServeLogo variant="mark" size="xl" priority />
+            <PrimeServeLogo variant="mark" size="xl" tone="light" priority />
           </div>
         </div>
         <div className="ps-fade mt-7">
-          <PrimeServeLogo size="lg" className="mx-auto" priority />
+          <PrimeServeLogo size="lg" tone="light" className="mx-auto" priority />
           <p className="mt-3 max-w-xs text-sm font-medium leading-6 text-slate-300">
             B2B facility supplies, housekeeping essentials, and 45-day credit terms.
           </p>
