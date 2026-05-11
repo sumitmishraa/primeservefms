@@ -6,12 +6,12 @@ import { Suspense, useEffect, useState } from 'react';
 import type { FormEvent, InputHTMLAttributes } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
 import {
-  BrandMark,
   LoadingScreen,
   MobilePage,
   StatusSpacer,
   mobileIcons,
 } from '@/components/mobile/PrimeserveMobile';
+import { PrimeServeLogo } from '@/components/brand';
 import { sendPhoneOTP, clearRecaptchaVerifier } from '@/lib/firebase/config';
 
 type Mode = 'login' | 'register';
@@ -214,10 +214,7 @@ function MobileLoginContent() {
             Home
           </Link>
           <div className="mt-7">
-            <BrandMark size="md" />
-            <h1 className="mt-5 font-heading text-4xl font-extrabold tracking-normal">
-              Prime<span className="text-[#2DD4BF]">Serve</span>
-            </h1>
+            <PrimeServeLogo size="lg" priority />
             <p className="mt-3 max-w-xs text-sm font-medium leading-6 text-slate-300">
               Sign in or create your B2B buyer account to access credits, orders, and account details.
             </p>

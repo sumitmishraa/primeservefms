@@ -13,6 +13,7 @@ import { Menu, ShoppingCart, Bell, Home } from 'lucide-react';
 import type { UserProfile } from '@/types';
 import UserMenu from './UserMenu';
 import { useCartStore } from '@/stores/cartStore';
+import { PrimeServeLogo } from '@/components/brand';
 
 interface NavbarProps {
   /** Authenticated user — drives role-based visibility (e.g. cart icon) */
@@ -53,9 +54,9 @@ export default function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         </button>
         <Link
           href={dashboardHref}
-          className="text-xl font-bold text-teal-600 tracking-tight focus:outline-none focus:ring-2 focus:ring-teal-500 rounded"
+          className="inline-flex items-center rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
         >
-          PrimeServe
+          <PrimeServeLogo size="sm" priority />
         </Link>
         <Link
           href="/"

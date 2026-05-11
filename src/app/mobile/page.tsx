@@ -2,7 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { BrandMark, StatusSpacer } from '@/components/mobile/PrimeserveMobile';
+import { StatusSpacer } from '@/components/mobile/PrimeserveMobile';
+import { PrimeServeLogo } from '@/components/brand';
 
 export default function MobileIndex() {
   const router = useRouter();
@@ -19,13 +20,11 @@ export default function MobileIndex() {
         <div className="ps-slide-up relative">
           <div className="absolute -inset-8 rounded-full bg-[#14B8A6]/20 blur-3xl" />
           <div className="relative">
-            <BrandMark size="lg" />
+            <PrimeServeLogo variant="mark" size="xl" priority />
           </div>
         </div>
         <div className="ps-fade mt-7">
-          <h1 className="font-heading text-4xl font-extrabold tracking-normal">
-            Prime<span className="text-[#2DD4BF]">Serve</span>
-          </h1>
+          <PrimeServeLogo size="lg" className="mx-auto" priority />
           <p className="mt-3 max-w-xs text-sm font-medium leading-6 text-slate-300">
             B2B facility supplies, housekeeping essentials, and 45-day credit terms.
           </p>

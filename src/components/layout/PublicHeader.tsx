@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCartStore } from '@/stores/cartStore';
+import { PrimeServeLogo } from '@/components/brand';
 import { PRODUCT_CATEGORIES, getMarketplaceSubcategoriesByCategory } from '@/lib/constants/categories';
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -187,12 +188,7 @@ export default function PublicHeader() {
       <div className="mx-auto flex h-[72px] max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 font-heading text-base font-bold text-white">
-            P
-          </div>
-          <span className="font-heading text-xl font-bold tracking-tight text-slate-900">
-            Prime<span className="text-teal-600">Serve</span>
-          </span>
+          <PrimeServeLogo size="md" priority />
         </Link>
 
         {/* Search — desktop */}
@@ -496,9 +492,9 @@ export default function PublicHeader() {
           />
           <div className="absolute right-0 top-0 h-full w-[85%] max-w-sm overflow-y-auto bg-white p-6">
             <div className="mb-6 flex items-center justify-between">
-              <span className="font-heading text-lg font-bold">
-                Prime<span className="text-teal-600">Serve</span>
-              </span>
+              <Link href="/" onClick={() => setMobileOpen(false)} className="inline-flex items-center">
+                <PrimeServeLogo size="sm" />
+              </Link>
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}

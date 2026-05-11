@@ -14,6 +14,7 @@ import {
   Linkedin,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { PrimeServeLogo } from '@/components/brand';
 import { POLICY_LINKS } from '@/lib/legal/policy-links';
 
 const NEWSLETTER_EMAILS_KEY = 'primeserve.newsletter.subscribed';
@@ -107,12 +108,7 @@ export default function PublicFooter() {
           {/* Col 1: Brand + description + socials */}
           <div>
             <Link href="/" className="mb-4 flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white font-heading text-base font-bold text-slate-900">
-                P
-              </div>
-              <span className="font-heading text-xl font-bold tracking-tight text-white">
-                Prime<span className="text-teal-400">Serve</span>
-              </span>
+              <PrimeServeLogo size="md" />
             </Link>
             <p className="mb-5 text-sm leading-relaxed text-slate-400">
               India&apos;s leading B2B marketplace for facility management supplies.

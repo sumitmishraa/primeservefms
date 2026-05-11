@@ -1,0 +1,57 @@
+import Image from 'next/image';
+
+const FULL_LOGO = '/images/brand/primeserve-logo-full.png';
+const MARK_LOGO = '/images/brand/primeserve-logo-mark.png';
+
+function joinClasses(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(' ');
+}
+
+interface PrimeServeLogoProps {
+  variant?: 'full' | 'mark';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+  priority?: boolean;
+}
+
+export default function PrimeServeLogo({
+  variant = 'full',
+  size = 'md',
+  className,
+  priority = false,
+}: PrimeServeLogoProps) {
+  const isMark = variant === 'mark';
+  const sizeClass = isMark
+    ? {
+        sm: 'h-8 w-8',
+        md: 'h-10 w-10',
+        lg: 'h-14 w-14',
+        xl: 'h-20 w-20',
+      }[size]
+    : {
+        sm: 'h-8 w-[124px]',
+        md: 'h-10 w-[154px]',
+        lg: 'h-12 w-[184px]',
+        xl: 'h-16 w-[245px]',
+      }[size];
+
+  return (
+    <span
+      className={joinClasses(
+        'relative inline-flex shrink-0 overflow-hidden bg-white',
+        isMark ? 'rounded-xl' : 'rounded-md',
+        sizeClass,
+        className,
+      )}
+    >
+      <Image
+        src={isMark ? MARK_LOGO : FULL_LOGO}
+        alt={isMark ? 'PrimeServe logo' : 'PrimeServe'}
+        fill
+        sizes={isMark ? '80px' : '245px'}
+        priority={priority}
+        className="object-contain"
+      />
+    </span>
+  );
+}

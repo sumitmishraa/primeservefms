@@ -12,6 +12,7 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { UserProfile } from '@/types';
+import { PrimeServeLogo } from '@/components/brand';
 import Sidebar from './Sidebar';
 
 interface MobileMenuProps {
@@ -56,7 +57,8 @@ export default function MobileMenu({ user, isOpen, onClose }: MobileMenuProps) {
       {/* Slide-in panel */}
       <div className="relative z-10 flex flex-col bg-white h-full shadow-xl">
         {/* Close button row */}
-        <div className="flex items-center justify-end p-3 border-b border-slate-100 bg-white">
+        <div className="flex items-center justify-between p-3 border-b border-slate-100 bg-white">
+          <PrimeServeLogo size="sm" />
           <button
             onClick={onClose}
             className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"

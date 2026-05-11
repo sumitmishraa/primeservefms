@@ -31,6 +31,10 @@ export const metadata: Metadata = {
   title: "PrimeServe — B2B Housekeeping Procurement",
   description:
     "India's B2B marketplace for housekeeping supplies and services. Procurement simplified.",
+  icons: {
+    icon: "/images/brand/primeserve-logo-mark.png",
+    apple: "/images/brand/primeserve-logo-mark.png",
+  },
 };
 
 export default function RootLayout({
