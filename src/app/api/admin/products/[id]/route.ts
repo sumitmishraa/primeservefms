@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth/verify';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { isValidUUID } from '@/lib/security/validate';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,9 +46,9 @@ export async function PUT(
     }
 
     const { id } = await params;
-    if (!id) {
+    if (!isValidUUID(id)) {
       return NextResponse.json(
-        { data: null, error: 'Product ID is required' },
+        { data: null, error: 'Invalid product ID' },
         { status: 400 }
       );
     }
@@ -69,7 +70,7 @@ export async function PUT(
 
     const { data, error } = await supabase
       .from('products')
-      .update(updates)
+      .update(updates as never)
       .eq('id', id)
       .select()
       .single();
@@ -139,9 +140,9 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    if (!id) {
+    if (!isValidUUID(id)) {
       return NextResponse.json(
-        { data: null, error: 'Product ID is required' },
+        { data: null, error: 'Invalid product ID' },
         { status: 400 }
       );
     }

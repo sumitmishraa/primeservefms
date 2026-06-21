@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth/verify';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { isValidUUID } from '@/lib/security/validate';
 
 interface PatchBody {
   status?: 'submitted' | 'under_review' | 'quoted' | 'accepted' | 'rejected';
@@ -26,6 +27,10 @@ export async function PATCH(
     }
 
     const { id } = await params;
+    if (!isValidUUID(id)) {
+      return NextResponse.json({ data: null, error: 'Invalid quote ID' }, { status: 400 });
+    }
+
     const body = await request.json() as PatchBody;
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -37,7 +42,7 @@ export async function PATCH(
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from('quote_requests')
-      .update(updates)
+      .update(updates as never)
       .eq('id', id)
       .select('id, status, quoted_amount, admin_notes, valid_until, updated_at')
       .single();

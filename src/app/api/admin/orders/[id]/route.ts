@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth/verify';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { Tables, Enums } from '@/types/database';
+import { isValidUUID } from '@/lib/security/validate';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,6 +94,10 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!isValidUUID(id)) {
+      return NextResponse.json({ data: null, error: 'Invalid order ID' }, { status: 400 });
+    }
+
     const supabase = createAdminClient();
 
     // Fetch order, items, and buyer in parallel
@@ -160,6 +165,10 @@ export async function PATCH(
     }
 
     const { id } = await params;
+    if (!isValidUUID(id)) {
+      return NextResponse.json({ data: null, error: 'Invalid order ID' }, { status: 400 });
+    }
+
     const body = (await request.json()) as PatchBody;
 
     const supabase = createAdminClient();
@@ -222,7 +231,7 @@ export async function PATCH(
 
     const { data: updated, error: updateError } = await supabase
       .from('orders')
-      .update(updates)
+      .update(updates as never)
       .eq('id', id)
       .select('*')
       .single();

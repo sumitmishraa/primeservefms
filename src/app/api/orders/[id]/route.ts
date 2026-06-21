@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth/verify';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { ApiResponse } from '@/types';
+import { isValidUUID, validateEnum } from '@/lib/security/validate';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -28,8 +29,15 @@ export async function GET(
     if (!user) {
       return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 });
     }
+    if (user.role !== 'admin' && user.role !== 'buyer') {
+      return NextResponse.json({ data: null, error: 'Forbidden' }, { status: 403 });
+    }
 
     const { id } = await params;
+    if (!isValidUUID(id)) {
+      return NextResponse.json({ data: null, error: 'Order not found' }, { status: 404 });
+    }
+
     const supabase = createAdminClient();
 
     const query = supabase
@@ -37,7 +45,9 @@ export async function GET(
       .select('*, order_items(*)')
       .eq('id', id);
 
-    // Buyers can only view their own orders; admins see all
+    // Buyers can only view their own orders; admins see all.
+    // Vendors must use vendor-specific endpoints so they cannot enumerate
+    // arbitrary order IDs and see buyer addresses or payment metadata.
     if (user.role === 'buyer') {
       query.eq('buyer_id', user.id);
     }
@@ -80,17 +90,42 @@ export async function PATCH(
 ): Promise<NextResponse<ApiResponse<unknown>>> {
   try {
     const user = await verifyAuth(request);
-    if (!user || user.role !== 'admin') {
+    if (!user) {
       return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 });
+    }
+    if (user.role !== 'admin') {
+      return NextResponse.json({ data: null, error: 'Forbidden' }, { status: 403 });
     }
 
     const { id } = await params;
+    if (!isValidUUID(id)) {
+      return NextResponse.json({ data: null, error: 'Order not found' }, { status: 404 });
+    }
+
     const body = await request.json() as PatchOrderBody;
+
+    // Allowed enum values — reject arbitrary strings
+    const ALLOWED_ORDER_STATUSES = [
+      'pending', 'approved', 'forwarded_to_vendor', 'dispatched', 'delivered', 'cancelled',
+    ] as const;
+    const ALLOWED_PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded'] as const;
 
     // Build update payload — only include provided fields
     const update: Record<string, unknown> = {};
-    if (body.status !== undefined) update.status = body.status;
-    if (body.payment_status !== undefined) update.payment_status = body.payment_status;
+    if (body.status !== undefined) {
+      const validStatus = validateEnum(body.status, ALLOWED_ORDER_STATUSES);
+      if (!validStatus) {
+        return NextResponse.json({ data: null, error: 'Invalid status value' }, { status: 400 });
+      }
+      update.status = validStatus;
+    }
+    if (body.payment_status !== undefined) {
+      const validPaymentStatus = validateEnum(body.payment_status, ALLOWED_PAYMENT_STATUSES);
+      if (!validPaymentStatus) {
+        return NextResponse.json({ data: null, error: 'Invalid payment_status value' }, { status: 400 });
+      }
+      update.payment_status = validPaymentStatus;
+    }
     if (body.assigned_vendor_name !== undefined) update.assigned_vendor_name = body.assigned_vendor_name;
     if (body.assigned_vendor_phone !== undefined) update.assigned_vendor_phone = body.assigned_vendor_phone;
     if (body.admin_notes !== undefined) update.admin_notes = body.admin_notes;
@@ -108,7 +143,7 @@ export async function PATCH(
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from('orders')
-      .update(update)
+      .update(update as never)
       .eq('id', id)
       .select()
       .single();

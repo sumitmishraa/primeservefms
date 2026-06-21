@@ -45,8 +45,6 @@ export async function verifyAuth(
   const session = getSession(request);
   if (!session) return null;
 
-  console.log("[AUTH] Verifying session for user:", session.userId);
-
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase

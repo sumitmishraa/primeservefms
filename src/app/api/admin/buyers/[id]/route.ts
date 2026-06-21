@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth/verify';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { isValidUUID } from '@/lib/security/validate';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,10 @@ export async function PATCH(
     }
 
     const { id } = await params;
+    if (!isValidUUID(id)) {
+      return NextResponse.json({ data: null, error: 'Invalid buyer ID' }, { status: 400 });
+    }
+
     const body = (await request.json()) as AssignBody;
 
     const supabase = createAdminClient();

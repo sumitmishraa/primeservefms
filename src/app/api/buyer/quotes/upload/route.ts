@@ -64,6 +64,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
     // ── Parse Excel ──────────────────────────────────────────────────────────
     const fileBuffer = Buffer.from(await file.arrayBuffer());
+
+    // Validate file magic bytes — reject anything that isn't an Office Open XML
+    // (.xlsx: PK zip header 50 4B 03 04) or legacy CFBF (.xls: D0 CF 11 E0).
+    // Extension-only checks are trivially bypassed by renaming files.
+    const isXlsx = fileBuffer[0] === 0x50 && fileBuffer[1] === 0x4B &&
+                   fileBuffer[2] === 0x03 && fileBuffer[3] === 0x04;
+    const isXls  = fileBuffer[0] === 0xD0 && fileBuffer[1] === 0xCF &&
+                   fileBuffer[2] === 0x11 && fileBuffer[3] === 0xE0;
+    if (!isXlsx && !isXls) {
+      return NextResponse.json(
+        { data: null, error: 'File does not appear to be a valid Excel file. Only .xlsx and .xls are accepted.' },
+        { status: 400 }
+      );
+    }
     const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     if (!sheetName) {
@@ -148,7 +162,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       return NextResponse.json({ data: null, error: 'Failed to upload file. Please try again.' }, { status: 500 });
     }
 
-    const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(uploadData.path);
+    // Use a signed URL (1 year expiry) — the bucket is private so getPublicUrl
+    // would return a URL that doesn't actually work. Signed URLs are scoped to
+    // the specific file and expire, preventing enumeration of other buyers' docs.
+    const { data: signedUrlData, error: signUrlError } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrl(uploadData.path, 365 * 24 * 60 * 60);
+
+    if (signUrlError || !signedUrlData) {
+      console.error('[api/buyer/quotes/upload] signed URL error', signUrlError);
+      return NextResponse.json({ data: null, error: 'Failed to process upload. Please try again.' }, { status: 500 });
+    }
 
     // ── Insert quote request with parsed items + source URL ──────────────────
     const { data, error: insertError } = await supabase
@@ -158,7 +182,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         title,
         items: items as unknown as Record<string, unknown>[],
         status: 'submitted' as const,
-        document_url: publicUrl,
+        document_url: signedUrlData.signedUrl,
         notes: null,
       } as never)
       .select('id')

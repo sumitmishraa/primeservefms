@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createSession } from '@/lib/auth/session';
+import { rateLimit } from '@/lib/security/rate-limit';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -30,6 +31,15 @@ interface LoginBody {
  * Sets an httpOnly session cookie on success.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Rate limit: 10 login attempts per IP per minute
+  const rl = rateLimit(request, { limit: 10, windowMs: 60_000, keyPrefix: 'login' });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Too many login attempts. Please wait a minute and try again.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     // 1. Parse body
     let body: LoginBody;
@@ -127,7 +137,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    console.log('[LOGIN] User authenticated:', user.email, 'role:', user.role);
+    console.log('[LOGIN] User authenticated id:', user.id, 'role:', user.role);
 
     // 5. Session + response
     const response = NextResponse.json(

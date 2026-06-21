@@ -1188,6 +1188,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // 3. Read workbook
     const buffer = Buffer.from(await fileObj.arrayBuffer());
+
+    // Validate file magic bytes to prevent malicious file uploads masquerading
+    // as .xlsx. Office Open XML starts with PK zip header (50 4B 03 04).
+    const isXlsx = buffer[0] === 0x50 && buffer[1] === 0x4B &&
+                   buffer[2] === 0x03 && buffer[3] === 0x04;
+    if (!isXlsx) {
+      return NextResponse.json(
+        { data: null, error: 'File does not appear to be a valid .xlsx workbook.' },
+        { status: 400 }
+      );
+    }
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     mark('workbook parsed', { sheets: workbook.SheetNames });
 

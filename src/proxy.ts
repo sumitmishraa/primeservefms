@@ -170,6 +170,56 @@ function isAuthPage(pathname: string): boolean {
   return pathname === "/login" || pathname === "/register";
 }
 
+// ─── Security headers ─────────────────────────────────────────────────────────
+
+/**
+ * Applies OWASP-recommended security response headers to every response.
+ * CSP is intentionally kept pragmatic for a Next.js + Firebase + Razorpay app.
+ */
+function applySecurityHeaders(response: NextResponse): void {
+  // Prevent clickjacking
+  response.headers.set("X-Frame-Options", "DENY");
+  // Prevent MIME-type sniffing
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  // Enable XSS filter (legacy browsers)
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+  // Strict referrer policy — no referrer on cross-origin navigation
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  // Remove server fingerprint
+  response.headers.delete("X-Powered-By");
+  // Permissions policy — disable features the app doesn't use
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(self), payment=(self)"
+  );
+  // HSTS — force HTTPS in production (1 year, include subdomains)
+  if (process.env.NODE_ENV === "production") {
+    response.headers.set(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains; preload"
+    );
+  }
+  // Content Security Policy
+  // next/image uses _next/image; Firebase Auth uses apis.google.com and identitytoolkit;
+  // Razorpay uses api.razorpay.com and checkout.razorpay.com; Supabase uses supabase.co
+  response.headers.set(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://checkout.razorpay.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: blob: https://*.supabase.co https://firebasestorage.googleapis.com https://lh3.googleusercontent.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://identitytoolkit.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com https://api.razorpay.com https://firebaseinstallations.googleapis.com",
+      "frame-src https://checkout.razorpay.com https://www.google.com",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "upgrade-insecure-requests",
+    ].join("; ")
+  );
+}
+
 // ─── Proxy function ───────────────────────────────────────────────────────────
 
 /**
@@ -186,19 +236,25 @@ export function proxy(request: NextRequest): NextResponse {
 
   // ── If user is already logged in, redirect away from auth pages ──────────
   if (session && isAuthPage(pathname)) {
-    return NextResponse.redirect(new URL('/', request.url));
+    const res = NextResponse.redirect(new URL('/', request.url));
+    applySecurityHeaders(res);
+    return res;
   }
 
   // ── Allow public routes through ──────────────────────────────────────────
   if (isPublicPath(pathname)) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    applySecurityHeaders(res);
+    return res;
   }
 
   // ── Require session for all other routes ─────────────────────────────────
   if (!session) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    const res = NextResponse.redirect(loginUrl);
+    applySecurityHeaders(res);
+    return res;
   }
 
   const { userId, role } = session;
@@ -221,7 +277,9 @@ export function proxy(request: NextRequest): NextResponse {
   // sections for review" behaviour (commit a8b6758). Per-section access is
   // now strict; admins must use the admin panel, not the buyer/vendor UIs.
   if (requiresAdmin && role !== "admin") {
-    return NextResponse.redirect(new URL("/", request.url));
+    const res = NextResponse.redirect(new URL("/", request.url));
+    applySecurityHeaders(res);
+    return res;
   }
 
   const hasAccess =
@@ -235,7 +293,9 @@ export function proxy(request: NextRequest): NextResponse {
     // Authenticated but wrong role on /buyer or /vendor — send them to their
     // own dashboard. (/admin was already handled above with a strict bounce.)
     const correctDashboard = new URL(dashboardFor(role), request.url);
-    return NextResponse.redirect(correctDashboard);
+    const res = NextResponse.redirect(correctDashboard);
+    applySecurityHeaders(res);
+    return res;
   }
 
   // ── Allowed — pass user identity in request headers ───────────────────────
@@ -246,9 +306,12 @@ export function proxy(request: NextRequest): NextResponse {
   requestHeaders.set("x-user-id", userId);
   requestHeaders.set("x-user-role", role);
 
-  return NextResponse.next({
+  const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
+
+  applySecurityHeaders(response);
+  return response;
 }
 
 // ─── Matcher ──────────────────────────────────────────────────────────────────

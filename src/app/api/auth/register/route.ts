@@ -17,6 +17,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createSession } from '@/lib/auth/session';
+import { rateLimit } from '@/lib/security/rate-limit';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -49,6 +50,15 @@ type RegisterBody = z.infer<typeof registerSchema>;
  * sets a session cookie, and returns the user profile.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Rate limit: 5 registrations per IP per 10 minutes
+  const rl = rateLimit(request, { limit: 5, windowMs: 10 * 60_000, keyPrefix: 'register' });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Too many registration attempts. Please wait 10 minutes and try again.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   console.log('[REGISTER] Request received');
   try {
     // 1. Parse + validate
@@ -116,19 +126,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     //    forced offline).
     const salt = await bcrypt.genSalt(12);
     const password_hash = await bcrypt.hash(password, salt);
-    console.log(
-      '[REGISTER] bcrypt hash generated for',
-      email,
-      '— prefix:',
-      password_hash.slice(0, 7),  // e.g. "$2b$12$"
-      'length:',
-      password_hash.length,        // bcrypt output is always 60 chars
-      'looksValid:',
-      /^\$2[aby]\$/.test(password_hash)
-    );
 
     // 6. Insert user
-    console.log('[REGISTER] Creating user in Supabase...');
+    console.log('[REGISTER] Creating user in Supabase');
     const { data: newUser, error: insertError } = await supabase
       .from('users')
       .insert({
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    console.log('[REGISTER] User created:', newUser.id, email);
+    console.log('[REGISTER] User created:', newUser.id);
 
     // 7. Session + response
     const response = NextResponse.json(

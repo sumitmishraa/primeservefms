@@ -18,11 +18,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import { verifyAuth } from '@/lib/auth/verify';
 
-// Initialise the Razorpay instance with server-side credentials
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+let razorpay: Razorpay | null = null;
+
+function getRazorpay() {
+  if (!razorpay) {
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID!,
+      key_secret: process.env.RAZORPAY_KEY_SECRET!,
+    });
+  }
+  return razorpay;
+}
 
 /**
  * Creates a Razorpay order for the given INR amount.
@@ -50,9 +56,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const body = (await request.json()) as { amount: number };
     const { amount } = body;
 
-    if (!amount || typeof amount !== 'number' || amount <= 0) {
+    if (!amount || typeof amount !== 'number' || !isFinite(amount) || amount <= 0) {
       return NextResponse.json(
         { data: null, error: 'Invalid amount' },
+        { status: 400 },
+      );
+    }
+
+    // Sanity bounds: minimum ₹1, maximum ₹50,00,000 per single order.
+    // This prevents both sub-paisa amounts and overflow/manipulation attacks.
+    const MIN_INR = 1;
+    const MAX_INR = 5_000_000;
+    if (amount < MIN_INR || amount > MAX_INR) {
+      return NextResponse.json(
+        { data: null, error: `Order amount must be between ₹${MIN_INR} and ₹${MAX_INR.toLocaleString('en-IN')}` },
         { status: 400 },
       );
     }
@@ -61,7 +78,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const amountInPaise = Math.round(amount * 100);
 
     // ── Step 3: Create Razorpay order ──────────────────────────────────────
-    const order = await razorpay.orders.create({
+    const order = await getRazorpay().orders.create({
       amount: amountInPaise,
       currency: 'INR',
       receipt: `ps-${user.id.slice(0, 8)}-${Date.now()}`,
@@ -74,7 +91,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         order_id: order.id,
         amount: order.amount,
         currency: order.currency,
-        key_id: process.env.RAZORPAY_KEY_ID,
+        key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       },
       error: null,
     });

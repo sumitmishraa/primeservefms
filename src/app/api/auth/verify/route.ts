@@ -27,6 +27,7 @@ import { z } from 'zod';
 import { getFirebaseAuth } from '@/lib/firebase/admin';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createSession } from '@/lib/auth/session';
+import { rateLimit } from '@/lib/security/rate-limit';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -51,6 +52,15 @@ type VerifyBody = z.infer<typeof verifySchema>;
  * Verifies a Firebase phone OTP ID token and sets a Primeserve session cookie.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Rate limit: 10 OTP verifications per IP per minute
+  const rl = rateLimit(request, { limit: 10, windowMs: 60_000, keyPrefix: 'verify' });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Too many verification attempts. Please wait a minute and try again.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     // 1. Parse + validate body
     let body: VerifyBody;
@@ -150,22 +160,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       if (password) {
         const salt = await bcrypt.genSalt(12);
         password_hash = await bcrypt.hash(password, salt);
-        console.log(
-          '[VERIFY/REGISTER] bcrypt hash generated for',
-          firebasePhone,
-          '— prefix:',
-          password_hash.slice(0, 7),
-          'length:',
-          password_hash.length,
-          'looksValid:',
-          /^\$2[aby]\$/.test(password_hash)
-        );
-      } else {
-        console.log(
-          '[VERIFY/REGISTER] No password provided for',
-          firebasePhone,
-          '— password_hash will be NULL; email/password login disabled for this account'
-        );
       }
 
       // Insert new user
@@ -193,7 +187,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
       }
 
-      console.log('[VERIFY/REGISTER] New user created:', newUser.id, firebasePhone);
+      console.log('[VERIFY/REGISTER] New user created:', newUser.id);
 
       const response = NextResponse.json(
         {
@@ -243,7 +237,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    console.log('[VERIFY/LOGIN] Authenticated:', user.phone, 'role:', user.role);
+    console.log('[VERIFY/LOGIN] Authenticated user id:', user.id, 'role:', user.role);
 
     const response = NextResponse.json(
       {

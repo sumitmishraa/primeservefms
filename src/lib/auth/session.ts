@@ -135,7 +135,9 @@ export function createSession(
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    // strict prevents the cookie from being sent on cross-site requests,
+    // blocking CSRF attacks that target authenticated endpoints.
+    sameSite: "strict",
     maxAge: SESSION_MAX_AGE,
     path: "/",
   });

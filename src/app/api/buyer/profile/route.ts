@@ -13,6 +13,16 @@ const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function toPublicUserProfile(user: Awaited<ReturnType<typeof verifyAuth>>) {
+  if (!user) return null;
+  const {
+    firebase_uid: _firebaseUid,
+    password_hash: _passwordHash,
+    ...publicProfile
+  } = user;
+  return publicProfile;
+}
+
 // ---------------------------------------------------------------------------
 // GET
 // ---------------------------------------------------------------------------
@@ -35,7 +45,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
     return NextResponse.json({
       data: {
-        ...user,
+        ...toPublicUserProfile(user),
         client_name: (clientRes.data as { name: string } | null)?.name ?? null,
         branch_name: (branchRes.data as { name: string } | null)?.name ?? null,
       },
@@ -126,16 +136,34 @@ export async function PUT(request: NextRequest): Promise<NextResponse<ApiRespons
       return NextResponse.json({ data: null, error: 'No fields to update' }, { status: 400 });
     }
 
+    // Explicitly whitelist only the columns buyers are allowed to update.
+    // Any attempt to escalate role, change is_active, or modify firebase_uid
+    // is silently discarded because those fields are never added to `update`.
+    const ALLOWED_COLUMNS = new Set([
+      'full_name', 'phone', 'designation', 'department', 'alt_phone',
+      'procurement_email', 'invoice_email', 'company_name', 'company_type',
+      'gst_number', 'tax_id', 'avatar_url', 'saved_addresses',
+    ]);
+    for (const key of Object.keys(update)) {
+      if (!ALLOWED_COLUMNS.has(key)) {
+        delete update[key];
+      }
+    }
+
+    if (!Object.keys(update).length) {
+      return NextResponse.json({ data: null, error: 'No updatable fields provided' }, { status: 400 });
+    }
+
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from('users')
-      .update(update)
+      .update(update as never)
       .eq('id', user.id)
       .select()
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ data, error: null });
+    return NextResponse.json({ data: toPublicUserProfile(data), error: null });
   } catch (error) {
     console.error('[api/buyer/profile PUT]', error);
     return NextResponse.json({ data: null, error: 'Failed to update profile' }, { status: 500 });

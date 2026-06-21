@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth/verify';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { ApiResponse } from '@/types';
+import { isValidUUID } from '@/lib/security/validate';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -22,6 +23,10 @@ export async function GET(
     if (!user) return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 });
 
     const { id } = await params;
+    if (!isValidUUID(id)) {
+      return NextResponse.json({ data: null, error: 'Invalid order ID' }, { status: 400 });
+    }
+
     const supabase = createAdminClient();
 
     const { data, error } = await supabase
