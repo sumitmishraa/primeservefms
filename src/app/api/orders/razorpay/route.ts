@@ -20,10 +20,17 @@ import type { ApiResponse } from "@/types";
 // Razorpay client — initialised once at module level (server-side only)
 // ---------------------------------------------------------------------------
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+let razorpay: Razorpay | null = null;
+
+function getRazorpay() {
+  if (!razorpay) {
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID!,
+      key_secret: process.env.RAZORPAY_KEY_SECRET!,
+    });
+  }
+  return razorpay;
+}
 
 // ---------------------------------------------------------------------------
 // Request body shape
@@ -56,6 +63,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     if (!user) {
       return NextResponse.json({ data: null, error: "Unauthorized" }, { status: 401 });
     }
+    if (user.role !== "buyer") {
+      return NextResponse.json({ data: null, error: "Only buyers can place orders" }, { status: 403 });
+    }
 
     const body = await request.json() as CreateRazorpayOrderBody;
     const { amount, receipt } = body;
@@ -70,7 +80,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     // Razorpay requires amount in paise (smallest currency unit)
     const amountInPaise = Math.round(amount * 100);
 
-    const order = await razorpay.orders.create({
+    const order = await getRazorpay().orders.create({
       amount: amountInPaise,
       currency: "INR",
       receipt: receipt ?? `ps-${user.id.slice(0, 8)}-${Date.now()}`,

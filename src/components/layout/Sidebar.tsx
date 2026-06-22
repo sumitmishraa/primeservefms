@@ -4,22 +4,23 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Package,
-  User,
   LayoutDashboard,
   BarChart3,
   Users,
   Settings,
   Upload,
   BookUser,
-  Building2,
   CreditCard,
   FileText,
   ShoppingCart,
   ClipboardList,
+  BadgeCheck,
+  FolderOpen,
   type LucideIcon,
 } from 'lucide-react';
 import type { UserProfile } from '@/types';
 import type { UserRole } from '@/types';
+import CompanySwitcher from '@/components/buyer/CompanySwitcher';
 
 interface NavItem {
   label: string;
@@ -28,25 +29,25 @@ interface NavItem {
 }
 
 const BUYER_NAV: NavItem[] = [
-  { label: 'Dashboard', href: '/buyer/account/dashboard', icon: LayoutDashboard },
-  { label: 'Profile Settings', href: '/buyer/account/profile', icon: User },
-  { label: 'Company Details', href: '/buyer/account/company', icon: Building2 },
-  { label: 'My Orders', href: '/buyer/orders', icon: Package },
-  { label: 'Credit Overview', href: '/buyer/account/credit', icon: CreditCard },
-  { label: 'Request Quotation', href: '/buyer/account/quotes', icon: FileText },
+  { label: 'Dashboard',          href: '/buyer/account/dashboard',     icon: LayoutDashboard },
+  { label: 'Apply for Credit',   href: '/buyer/account/credit-apply',  icon: BadgeCheck },
+  { label: 'My Details',         href: '/buyer/account/details',       icon: FolderOpen },
+  { label: 'Orders',             href: '/buyer/account/orders',        icon: Package },
+  { label: 'Credit Overview',    href: '/buyer/account/credit',        icon: CreditCard },
+  { label: 'Request Quotation',  href: '/buyer/account/quotes',        icon: FileText },
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { label: 'Clients', href: '/admin/clients', icon: Building2 },
-  { label: 'Product Catalog', href: '/admin/products', icon: Package },
-  { label: 'Import Products', href: '/admin/products/import', icon: Upload },
-  { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-  { label: 'Quote Requests', href: '/admin/quotes', icon: ClipboardList },
-  { label: 'Buyers', href: '/admin/buyers', icon: Users },
-  { label: 'Vendor Directory', href: '/admin/vendors', icon: BookUser },
-  { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { label: 'Settings', href: '/admin/settings', icon: Settings },
+  { label: 'Dashboard',          href: '/admin',                       icon: LayoutDashboard },
+  { label: 'Clients',            href: '/admin/clients',               icon: LayoutDashboard },
+  { label: 'Product Catalog',    href: '/admin/products',              icon: Package },
+  { label: 'Import Products',    href: '/admin/products/import',       icon: Upload },
+  { label: 'Orders',             href: '/admin/orders',                icon: ShoppingCart },
+  { label: 'Quote Requests',     href: '/admin/quotes',                icon: ClipboardList },
+  { label: 'Buyers',             href: '/admin/buyers',                icon: Users },
+  { label: 'Vendor Directory',   href: '/admin/vendors',               icon: BookUser },
+  { label: 'Analytics',          href: '/admin/analytics',             icon: BarChart3 },
+  { label: 'Settings',           href: '/admin/settings',              icon: Settings },
 ];
 
 function getNavItems(role: UserRole, pathname: string): NavItem[] {
@@ -96,6 +97,7 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
   const isAdminViewingBuyer = user.role === 'admin' && pathname.startsWith('/buyer');
   const avatarInitial = user.full_name.charAt(0).toUpperCase();
   const isBuyer = user.role === 'buyer';
+  const showCompanySwitcher = isBuyer || isAdminViewingBuyer;
 
   return (
     <div className="h-full bg-white border-r border-slate-200 w-65 flex flex-col">
@@ -117,7 +119,6 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
                 {user.company_name}
               </p>
             )}
-            {/* Show role badge only for non-buyers (admin/vendor need context) */}
             {!isBuyer && (
               <span
                 className={`inline-block mt-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}
@@ -128,6 +129,16 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
           </div>
         </div>
       </div>
+
+      {/* ── Company switcher (buyers with multiple companies) ─────────────── */}
+      {showCompanySwitcher && (
+        <div className="px-3 py-2.5 border-b border-slate-100">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1.5 px-0.5">
+            Company
+          </p>
+          <CompanySwitcher compact />
+        </div>
+      )}
 
       {/* ── Admin-in-buyer-view banner ────────────────────────────────────── */}
       {isAdminViewingBuyer && (

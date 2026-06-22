@@ -257,7 +257,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse<ApiRespons
     }
 
     const supabase = createAdminClient();
-    const { error } = await supabase.from('users').update(update).eq('id', user.id);
+    const { error } = await supabase.from('users').update(update as never).eq('id', user.id);
     if (error) throw error;
 
     return NextResponse.json({ data: null, error: null });

@@ -28,9 +28,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Return full profile, excluding the internal firebase_uid field
+    // Return a browser-safe profile. password_hash is a credential verifier:
+    // even though it is hashed, exposing it would allow offline cracking.
     const {
       firebase_uid: _firebaseUid,
+      password_hash: _passwordHash,
       ...publicProfile
     } = user;
 

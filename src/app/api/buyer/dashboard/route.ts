@@ -53,6 +53,19 @@ export interface CreditRow {
   bucket: 'overdue' | 'due_soon' | 'upcoming';
 }
 
+export interface BranchSpend {
+  branch_id: string;
+  branch_name: string;
+  spend: number;
+  order_count: number;
+}
+
+export interface TopProduct {
+  product_name: string;
+  total_qty: number;
+  total_spend: number;
+}
+
 export interface DashboardData {
   // KPIs
   monthly_spend: number;
@@ -65,11 +78,14 @@ export interface DashboardData {
   // Charts
   spend_trend: SpendPoint[];
   status_breakdown: Record<string, number>;
+  // Branch intelligence
+  branch_breakdown: BranchSpend[];
+  top_products: TopProduct[];
   // Tables
   recent_orders: {
     id: string; order_number: string; status: string;
     total_amount: number; created_at: string; item_count: number;
-    payment_method: string;
+    payment_method: string; branch_name: string | null;
   }[];
   credit_rows: CreditRow[];
   // Context
@@ -91,18 +107,27 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       searchParams.get('start') ?? undefined,
       searchParams.get('end') ?? undefined,
     );
+    // Optional client/branch filters (multi-outlet support)
+    const filterClientId = searchParams.get('client_id');
+    const filterBranchId = searchParams.get('branch_id');
 
     const supabase = createAdminClient();
 
     // ── Scoped order fetch ───────────────────────────────────────────────────
-    // v1: assigned-branch-only scope.  Always filter by buyer_id; if the buyer
-    // also has a branch_id add that filter so we never bleed cross-branch data.
     let ordersQuery = supabase
       .from('orders')
-      .select('id, order_number, status, payment_status, payment_method, total_amount, delivered_at, created_at')
+      .select('id, order_number, status, payment_status, payment_method, total_amount, delivered_at, created_at, branch_id, client_id')
       .eq('buyer_id', user.id);
 
-    if (user.branch_id) {
+    if (filterClientId) {
+      ordersQuery = ordersQuery.eq('client_id', filterClientId);
+    } else if (user.client_id) {
+      ordersQuery = ordersQuery.eq('client_id', user.client_id);
+    }
+
+    if (filterBranchId) {
+      ordersQuery = ordersQuery.eq('branch_id', filterBranchId);
+    } else if (!filterClientId && user.branch_id) {
       ordersQuery = ordersQuery.eq('branch_id', user.branch_id);
     }
 
@@ -184,27 +209,96 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       .select('id', { count: 'exact', head: true })
       .eq('buyer_id', user.id);
 
-    // ── Order items for recent orders ────────────────────────────────────────
+    // ── Order items for recent orders + top products ─────────────────────────
     const recent5 = orders.slice(0, 5);
     const recentIds = recent5.map((o) => o.id);
-    const { data: recentItems } = recentIds.length
-      ? await supabase.from('order_items').select('order_id').in('order_id', recentIds)
-      : { data: [] };
+    const allOrderIds = orders.map((o) => o.id);
+
+    const [recentItemsRes, allItemsRes] = await Promise.all([
+      recentIds.length
+        ? supabase.from('order_items').select('order_id').in('order_id', recentIds)
+        : Promise.resolve({ data: [] }),
+      allOrderIds.length
+        ? supabase
+            .from('order_items')
+            .select('order_id, product_name, quantity, total_amount')
+            .in('order_id', allOrderIds)
+        : Promise.resolve({ data: [] }),
+    ]);
 
     const itemCountMap = new Map<string, number>();
-    for (const item of recentItems ?? []) {
+    for (const item of recentItemsRes.data ?? []) {
       itemCountMap.set(item.order_id, (itemCountMap.get(item.order_id) ?? 0) + 1);
     }
 
-    // ── Branch / client names ────────────────────────────────────────────────
+    // ── Top products ─────────────────────────────────────────────────────────
+    const productMap = new Map<string, { total_qty: number; total_spend: number }>();
+    for (const item of allItemsRes.data ?? []) {
+      const entry = productMap.get(item.product_name) ?? { total_qty: 0, total_spend: 0 };
+      entry.total_qty += item.quantity ?? 0;
+      entry.total_spend += item.total_amount ?? 0;
+      productMap.set(item.product_name, entry);
+    }
+    const top_products: TopProduct[] = [...productMap.entries()]
+      .map(([product_name, v]) => ({ product_name, ...v }))
+      .sort((a, b) => b.total_spend - a.total_spend)
+      .slice(0, 5);
+
+    // ── Branch breakdown (spend per branch in period) ─────────────────────────
+    const branchIdSet = new Set(
+      periodOrders.map((o) => (o as { branch_id?: string | null }).branch_id).filter(Boolean),
+    ) as Set<string>;
+
+    const branchNamesRes = branchIdSet.size
+      ? await supabase.from('branches').select('id, name').in('id', [...branchIdSet])
+      : { data: [] };
+
+    const branchNameMap = new Map(
+      (branchNamesRes.data ?? []).map((b: { id: string; name: string }) => [b.id, b.name]),
+    );
+
+    const branchSpendMap = new Map<string, { spend: number; order_count: number }>();
+    for (const o of periodOrders) {
+      const bid = (o as { branch_id?: string | null }).branch_id;
+      if (!bid) continue;
+      const entry = branchSpendMap.get(bid) ?? { spend: 0, order_count: 0 };
+      entry.spend += o.total_amount ?? 0;
+      entry.order_count += 1;
+      branchSpendMap.set(bid, entry);
+    }
+
+    const branch_breakdown: BranchSpend[] = [...branchSpendMap.entries()]
+      .map(([bid, v]) => ({
+        branch_id: bid,
+        branch_name: branchNameMap.get(bid) ?? 'Unknown Branch',
+        spend: Math.round(v.spend),
+        order_count: v.order_count,
+      }))
+      .sort((a, b) => b.spend - a.spend);
+
+    // ── Branch / client names for context ────────────────────────────────────
+    const resolvedClientId = filterClientId ?? user.client_id;
+    const resolvedBranchId = filterBranchId ?? user.branch_id;
+
     const [clientRes, branchRes] = await Promise.all([
-      user.client_id
-        ? supabase.from('clients').select('name').eq('id', user.client_id).single()
+      resolvedClientId
+        ? supabase.from('clients').select('name').eq('id', resolvedClientId).single()
         : Promise.resolve({ data: null }),
-      user.branch_id
-        ? supabase.from('branches').select('name').eq('id', user.branch_id).single()
+      resolvedBranchId
+        ? supabase.from('branches').select('name').eq('id', resolvedBranchId).single()
         : Promise.resolve({ data: null }),
     ]);
+
+    // Add branch_name to recent orders
+    const recentOrderBranchIds = recent5
+      .map((o) => (o as { branch_id?: string | null }).branch_id)
+      .filter(Boolean) as string[];
+    const extraBranchNamesRes = recentOrderBranchIds.length
+      ? await supabase.from('branches').select('id, name').in('id', recentOrderBranchIds)
+      : { data: [] };
+    const recentBranchMap = new Map(
+      (extraBranchNamesRes.data ?? []).map((b: { id: string; name: string }) => [b.id, b.name]),
+    );
 
     return NextResponse.json({
       data: {
@@ -217,15 +311,21 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         quote_requests: quoteCount ?? 0,
         spend_trend: trendMonths,
         status_breakdown,
-        recent_orders: recent5.map((o) => ({
-          id: o.id,
-          order_number: o.order_number,
-          status: o.status,
-          total_amount: o.total_amount,
-          created_at: o.created_at,
-          item_count: itemCountMap.get(o.id) ?? 0,
-          payment_method: o.payment_method,
-        })),
+        branch_breakdown,
+        top_products,
+        recent_orders: recent5.map((o) => {
+          const bid = (o as { branch_id?: string | null }).branch_id;
+          return {
+            id: o.id,
+            order_number: o.order_number,
+            status: o.status,
+            total_amount: o.total_amount,
+            created_at: o.created_at,
+            item_count: itemCountMap.get(o.id) ?? 0,
+            payment_method: o.payment_method,
+            branch_name: bid ? (recentBranchMap.get(bid) ?? null) : null,
+          };
+        }),
         credit_rows,
         branch_name: (branchRes.data as { name: string } | null)?.name ?? null,
         client_name: (clientRes.data as { name: string } | null)?.name ?? null,

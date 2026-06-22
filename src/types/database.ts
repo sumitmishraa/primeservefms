@@ -666,6 +666,84 @@ export type Database = {
       };
 
       // -----------------------------------------------------------------------
+      // user_clients — join table linking one user to multiple client companies
+      // Migration 20260622
+      // -----------------------------------------------------------------------
+      user_clients: {
+        Row: {
+          id: string;
+          user_id: string;
+          client_id: string;
+          role: 'owner' | 'manager' | 'viewer';
+          is_primary: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          client_id: string;
+          role?: 'owner' | 'manager' | 'viewer';
+          is_primary?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['user_clients']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
+      // credit_applications — self-service credit line applications
+      // Migration 20260622
+      // -----------------------------------------------------------------------
+      credit_applications: {
+        Row: {
+          id: string;
+          buyer_id: string;
+          client_id: string | null;
+          status: 'submitted' | 'under_review' | 'approved' | 'rejected';
+          gst_certificate_url: string | null;
+          pan_card_url: string | null;
+          cin_document_url: string | null;
+          cancelled_cheque_url: string | null;
+          itr_url: string | null;
+          bank_statement_url: string | null;
+          requested_credit_limit: number | null;
+          business_years: number | null;
+          annual_turnover: string | null;
+          notes: string | null;
+          admin_notes: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          submitted_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          buyer_id: string;
+          client_id?: string | null;
+          status?: 'submitted' | 'under_review' | 'approved' | 'rejected';
+          gst_certificate_url?: string | null;
+          pan_card_url?: string | null;
+          cin_document_url?: string | null;
+          cancelled_cheque_url?: string | null;
+          itr_url?: string | null;
+          bank_statement_url?: string | null;
+          requested_credit_limit?: number | null;
+          business_years?: number | null;
+          annual_turnover?: string | null;
+          notes?: string | null;
+          admin_notes?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          submitted_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['credit_applications']['Insert']>;
+        Relationships: never[];
+      };
+
+      // -----------------------------------------------------------------------
       // quote_requests — buyer monthly requirement uploads / quote requests
       // Migration 7
       // -----------------------------------------------------------------------

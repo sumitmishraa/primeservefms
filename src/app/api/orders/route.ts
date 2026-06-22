@@ -23,6 +23,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { formatOrderNumber } from "@/lib/utils/formatting";
 import type { ApiResponse, ShippingAddress, CartItem } from "@/types";
 
+function signaturesMatch(expected: string, provided: string): boolean {
+  const expectedBuffer = Buffer.from(expected, "hex");
+  const providedBuffer = Buffer.from(provided, "hex");
+  return (
+    expectedBuffer.length === providedBuffer.length &&
+    crypto.timingSafeEqual(expectedBuffer, providedBuffer)
+  );
+}
+
 // ---------------------------------------------------------------------------
 // POST body shape
 // ---------------------------------------------------------------------------
@@ -68,6 +77,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     if (!user) {
       return NextResponse.json({ data: null, error: "Unauthorized" }, { status: 401 });
     }
+    if (user.role !== "buyer") {
+      return NextResponse.json({ data: null, error: "Only buyers can view buyer orders" }, { status: 403 });
+    }
 
     const supabase = createAdminClient();
     const { data, error } = await supabase
@@ -103,6 +115,9 @@ export async function POST(
     const user = await verifyAuth(request);
     if (!user) {
       return NextResponse.json({ data: null, error: "Unauthorized" }, { status: 401 });
+    }
+    if (user.role !== "buyer") {
+      return NextResponse.json({ data: null, error: "Only buyers can place orders" }, { status: 403 });
     }
 
     const body = await request.json() as CreateOrderBody;
@@ -142,7 +157,7 @@ export async function POST(
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
 
-    if (expectedSignature !== razorpay_signature) {
+    if (!signaturesMatch(expectedSignature, razorpay_signature)) {
       console.error("[api/orders POST] Signature mismatch for order", razorpay_order_id);
       return NextResponse.json(
         { data: null, error: "Payment verification failed — invalid signature" },

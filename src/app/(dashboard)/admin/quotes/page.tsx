@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   FileText, Loader2, ChevronDown, ChevronUp, Search,
-  CheckCircle2, AlertCircle, Clock, XCircle, Check, X,
+  Check, X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatINR, formatDate } from '@/lib/utils/formatting';
@@ -145,9 +145,7 @@ export default function AdminQuotesPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [respondingId, setRespondingId] = useState<string | null>(null);
 
-  useEffect(() => { loadQuotes(); }, [activeTab]);
-
-  async function loadQuotes() {
+  const loadQuotes = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ per_page: '50' });
@@ -162,7 +160,9 @@ export default function AdminQuotesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [activeTab]);
+
+  useEffect(() => { void loadQuotes(); }, [loadQuotes]);
 
   const filtered = search.trim()
     ? quotes.filter((q) => {

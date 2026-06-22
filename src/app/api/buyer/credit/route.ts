@@ -20,6 +20,7 @@ export interface CreditOrderRow {
   due_date: string | null;
   days_overdue: number;
   bucket: 'overdue' | 'due_soon' | 'upcoming';
+  branch_name: string | null;
 }
 
 export interface CreditAccount {
@@ -29,6 +30,7 @@ export interface CreditAccount {
   outstanding: number;
   due_soon: number;
   overdue: number;
+  credit_limit: number | null;
   open_credit_orders: CreditOrderRow[];
 }
 
@@ -39,10 +41,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
     const supabase = createAdminClient();
 
-    // Credit account row (status + notes only — ignore limit/used columns)
+    // Credit account row
     const { data: acct, error: acctErr } = await supabase
       .from('credit_accounts')
-      .select('id, status, notes')
+      .select('id, status, notes, credit_limit')
       .eq('buyer_id', user.id)
       .maybeSingle();
 
@@ -51,7 +53,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     // Open credit orders scoped to buyer (and branch if assigned)
     let q = supabase
       .from('orders')
-      .select('id, order_number, total_amount, delivered_at')
+      .select('id, order_number, total_amount, delivered_at, branch_id, branches(name)')
       .eq('buyer_id', user.id)
       .eq('payment_method', 'credit_45day')
       .eq('payment_status', 'pending')
@@ -87,6 +89,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         }
       }
 
+      const branchRel = (o.branches as unknown) as { name: string } | null;
+
       return {
         order_id: o.id,
         order_number: o.order_number,
@@ -95,18 +99,22 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         due_date,
         days_overdue,
         bucket,
+        branch_name: branchRel?.name ?? null,
       };
     });
 
-    const status = (acct as { status: 'pending' | 'active' | 'suspended' } | null)?.status ?? 'pending';
-    const notes = (acct as { notes: string | null } | null)?.notes ?? null;
-    const id = (acct as { id: string } | null)?.id ?? null;
+    const acctRow = acct as { status: 'pending' | 'active' | 'suspended'; notes: string | null; id: string; credit_limit: number | null } | null;
+    const status       = acctRow?.status       ?? 'pending';
+    const notes        = acctRow?.notes        ?? null;
+    const id           = acctRow?.id           ?? null;
+    const credit_limit = acctRow?.credit_limit ?? null;
 
     return NextResponse.json({
       data: {
         id,
         status,
         notes,
+        credit_limit,
         outstanding: Math.round(outstanding),
         due_soon: Math.round(due_soon),
         overdue: Math.round(overdue),

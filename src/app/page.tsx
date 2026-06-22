@@ -102,7 +102,6 @@ const TESTIMONIALS = [
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<CartableProduct[]>([]);
   const [featuredLoading, setFeaturedLoading] = useState(true);
-  const [featuredScrollDone, setFeaturedScrollDone] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [sectionVisible, setSectionVisible] = useState(false);
   const featuredRailRef = useRef<HTMLDivElement>(null);
@@ -259,7 +258,6 @@ export default function HomePage() {
     if (featuredProducts.length === 0) return undefined;
 
     featuredScrollDoneRef.current = false;
-    setFeaturedScrollDone(false);
 
     let frame = 0;
     let lastTime = performance.now();
@@ -277,7 +275,6 @@ export default function HomePage() {
 
         if (rail.scrollLeft >= maxScroll - 2) {
           featuredScrollDoneRef.current = true;
-          setFeaturedScrollDone(true);
           window.cancelAnimationFrame(frame);
           return;
         }

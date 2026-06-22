@@ -36,10 +36,17 @@ import type { ApiResponse, ShippingAddress, PricingTier } from '@/types';
 // Razorpay client (server-side only)
 // ---------------------------------------------------------------------------
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+let razorpay: Razorpay | null = null;
+
+function getRazorpay() {
+  if (!razorpay) {
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID!,
+      key_secret: process.env.RAZORPAY_KEY_SECRET!,
+    });
+  }
+  return razorpay;
+}
 
 // ---------------------------------------------------------------------------
 // Request / response types
@@ -102,6 +109,9 @@ export async function POST(
     const user = await verifyAuth(request);
     if (!user) {
       return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 });
+    }
+    if (user.role !== 'buyer') {
+      return NextResponse.json({ data: null, error: 'Only buyers can place orders' }, { status: 403 });
     }
 
     const body = await request.json() as CreateOrderBody;
@@ -268,7 +278,7 @@ export async function POST(
     }
 
     // ── Razorpay path: create Razorpay order ──────────────────────────────────
-    const razorpayOrder = await razorpay.orders.create({
+    const razorpayOrder = await getRazorpay().orders.create({
       amount: Math.round(total_amount * 100),
       currency: 'INR',
       receipt: order_number,

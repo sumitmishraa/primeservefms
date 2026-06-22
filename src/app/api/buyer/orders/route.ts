@@ -19,17 +19,23 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
     const status = searchParams.get('status') as Enums<'order_status'> | null;
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'));
     const perPage = Math.min(50, parseInt(searchParams.get('per_page') ?? '20'));
+    const filterClientId = searchParams.get('client_id');
+    const filterBranchId = searchParams.get('branch_id');
+    const search = searchParams.get('search')?.trim() ?? null;
 
     const supabase = createAdminClient();
 
     // Fetch orders without join to avoid Supabase relationship type error
     let query = supabase
       .from('orders')
-      .select('id, order_number, status, payment_status, payment_method, subtotal, gst_amount, shipping_amount, total_amount, created_at, notes', { count: 'exact' })
+      .select('id, order_number, status, payment_status, payment_method, subtotal, gst_amount, shipping_amount, total_amount, created_at, notes, branch_id, client_id', { count: 'exact' })
       .eq('buyer_id', user.id)
       .order('created_at', { ascending: false });
 
     if (status) query = query.eq('status', status);
+    if (filterClientId) query = query.eq('client_id', filterClientId);
+    if (filterBranchId) query = query.eq('branch_id', filterBranchId);
+    if (search) query = query.ilike('order_number', `%${search}%`);
 
     const { data: orders, error, count } = await query
       .range((page - 1) * perPage, page * perPage - 1);
@@ -57,11 +63,23 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       itemsByOrder.set(item.order_id, list);
     }
 
-    // Merge items into orders
-    const ordersWithItems = orders.map((o) => ({
-      ...o,
-      order_items: itemsByOrder.get(o.id) ?? [],
-    }));
+    // Fetch branch names for orders that have a branch_id
+    const branchIdsInPage = [...new Set(orders.map((o) => (o as { branch_id?: string | null }).branch_id).filter(Boolean))] as string[];
+    const { data: branchRows } = branchIdsInPage.length
+      ? await supabase.from('branches').select('id, name').in('id', branchIdsInPage)
+      : { data: [] };
+
+    const branchNameMap = new Map((branchRows ?? []).map((b: { id: string; name: string }) => [b.id, b.name]));
+
+    // Merge items + branch_name into orders
+    const ordersWithItems = orders.map((o) => {
+      const bid = (o as { branch_id?: string | null }).branch_id;
+      return {
+        ...o,
+        order_items: itemsByOrder.get(o.id) ?? [],
+        branch_name: bid ? (branchNameMap.get(bid) ?? null) : null,
+      };
+    });
 
     return NextResponse.json({
       data: { orders: ordersWithItems, total: count ?? 0, page, per_page: perPage },

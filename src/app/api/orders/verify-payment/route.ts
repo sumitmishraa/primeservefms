@@ -13,6 +13,15 @@ import { verifyAuth } from '@/lib/auth/verify';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { ApiResponse } from '@/types';
 
+function signaturesMatch(expected: string, provided: string): boolean {
+  const expectedBuffer = Buffer.from(expected, 'hex');
+  const providedBuffer = Buffer.from(provided, 'hex');
+  return (
+    expectedBuffer.length === providedBuffer.length &&
+    crypto.timingSafeEqual(expectedBuffer, providedBuffer)
+  );
+}
+
 interface VerifyPaymentBody {
   order_id: string;
   razorpay_order_id: string;
@@ -27,6 +36,9 @@ export async function POST(
     const user = await verifyAuth(request);
     if (!user) {
       return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 });
+    }
+    if (user.role !== 'buyer') {
+      return NextResponse.json({ data: null, error: 'Only buyers can verify payments' }, { status: 403 });
     }
 
     const body = await request.json() as VerifyPaymentBody;
@@ -45,7 +57,7 @@ export async function POST(
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
-    if (expectedSignature !== razorpay_signature) {
+    if (!signaturesMatch(expectedSignature, razorpay_signature)) {
       console.error('[api/orders/verify-payment] Signature mismatch for order', order_id);
       return NextResponse.json(
         { data: null, error: 'Payment verification failed — invalid signature' },
