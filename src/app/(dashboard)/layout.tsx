@@ -21,42 +21,42 @@ import MobileMenu from '@/components/layout/MobileMenu';
 
 function DashboardSkeleton() {
   return (
-    <div className="min-h-screen bg-slate-50 animate-pulse">
+    <div className="min-h-screen bg-navy-950 animate-pulse">
       {/* Navbar skeleton */}
-      <div className="fixed top-0 inset-x-0 h-16 bg-white border-b border-slate-200 z-40 flex items-center px-4 gap-3">
-        <div className="w-8 h-8 rounded-lg bg-slate-200 lg:hidden" />
-        <div className="w-28 h-5 rounded bg-slate-200" />
-        <div className="hidden sm:block w-28 h-8 rounded-lg bg-slate-200" />
+      <div className="fixed top-0 inset-x-0 h-16 bg-[#0B1220]/80 border-b border-white/8 z-40 flex items-center px-4 gap-3">
+        <div className="w-8 h-8 rounded-lg bg-white/10 lg:hidden" />
+        <div className="w-28 h-5 rounded bg-white/10" />
+        <div className="hidden sm:block w-28 h-8 rounded-lg bg-white/10" />
         <div className="ml-auto flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-slate-200" />
-          <div className="w-8 h-8 rounded-lg bg-slate-200" />
-          <div className="w-9 h-9 rounded-full bg-slate-200" />
+          <div className="w-8 h-8 rounded-lg bg-white/10" />
+          <div className="w-8 h-8 rounded-lg bg-white/10" />
+          <div className="w-9 h-9 rounded-full bg-white/10" />
         </div>
       </div>
       {/* Sidebar skeleton */}
-      <div className="hidden lg:block fixed top-16 left-0 h-[calc(100vh-64px)] w-[260px] bg-white border-r border-slate-200 p-4">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-          <div className="w-12 h-12 rounded-full bg-slate-200 flex-shrink-0" />
+      <div className="hidden lg:block fixed top-16 left-0 h-[calc(100vh-64px)] w-[260px] bg-[#0B1220]/95 border-r border-white/8 p-4">
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/8">
+          <div className="w-12 h-12 rounded-full bg-white/10 shrink-0" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 bg-slate-200 rounded w-3/4" />
-            <div className="h-3 bg-slate-200 rounded w-1/2" />
+            <div className="h-4 bg-white/10 rounded w-3/4" />
+            <div className="h-3 bg-white/10 rounded w-1/2" />
           </div>
         </div>
         {([1, 2, 3, 4, 5, 6] as const).map((i) => (
           <div key={i} className="flex items-center gap-3 px-3 py-2.5 mb-0.5">
-            <div className="w-4 h-4 rounded bg-slate-200 flex-shrink-0" />
-            <div className="h-4 bg-slate-200 rounded w-3/4" />
+            <div className="w-4 h-4 rounded bg-white/10 shrink-0" />
+            <div className="h-4 bg-white/10 rounded w-3/4" />
           </div>
         ))}
       </div>
       {/* Content skeleton */}
       <div className="lg:ml-[260px] pt-20 p-6 space-y-4">
-        <div className="h-8 bg-slate-200 rounded-lg w-1/3" />
-        <div className="h-4 bg-slate-200 rounded w-2/3" />
-        <div className="h-4 bg-slate-200 rounded w-1/2" />
+        <div className="h-8 bg-white/10 rounded-lg w-1/3" />
+        <div className="h-4 bg-white/8 rounded w-2/3" />
+        <div className="h-4 bg-white/8 rounded w-1/2" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
           {([1, 2, 3] as const).map((i) => (
-            <div key={i} className="h-24 bg-white rounded-xl border border-slate-200" />
+            <div key={i} className="h-24 bg-white/5 rounded-xl border border-white/8" />
           ))}
         </div>
       </div>
@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   if (!isAuthenticated || !user) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-navy-950">
       {/* Top navigation */}
       <Navbar
         user={user}

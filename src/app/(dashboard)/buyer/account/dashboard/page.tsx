@@ -1,15 +1,25 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  TrendingUp, TrendingDown, CreditCard, AlertTriangle, Clock,
+  TrendingUp, CreditCard, AlertTriangle, Clock,
   CheckCircle2, Package, FileText, Plus, ChevronRight, Loader2,
-  Download, LayoutDashboard, ArrowRight,
+  Download, ArrowRight,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatINR, formatDate } from '@/lib/utils/formatting';
 import type { DashboardData } from '@/app/api/buyer/dashboard/route';
+
+const BranchMapCard = dynamic(
+  () => import('@/components/buyer/BranchMapCard'),
+  { ssr: false, loading: () => (
+    <div className="bg-white/5 border border-white/8 rounded-2xl h-80 animate-pulse flex items-center justify-center">
+      <Loader2 className="w-6 h-6 animate-spin text-teal-500/50" />
+    </div>
+  )},
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -21,65 +31,35 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-amber-50 text-amber-700 border border-amber-200',
-  approved: 'bg-blue-50 text-blue-700 border border-blue-200',
-  forwarded_to_vendor: 'bg-purple-50 text-purple-700 border border-purple-200',
-  dispatched: 'bg-orange-50 text-orange-700 border border-orange-200',
-  delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-  cancelled: 'bg-rose-50 text-rose-700 border border-rose-200',
+  pending: 'bg-amber-500/15 text-amber-300 border border-amber-500/20',
+  approved: 'bg-blue-500/15 text-blue-300 border border-blue-500/20',
+  forwarded_to_vendor: 'bg-purple-500/15 text-purple-300 border border-purple-500/20',
+  dispatched: 'bg-orange-500/15 text-orange-300 border border-orange-500/20',
+  delivered: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20',
+  cancelled: 'bg-rose-500/15 text-rose-300 border border-rose-500/20',
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function KpiCard({
-  label, value, sub, subColor = 'text-slate-500', borderColor = 'border-slate-200',
-  icon: Icon, iconColor = 'text-slate-400',
+  label, value, sub, subColor = 'text-slate-500', accentColor = 'border-l-slate-600',
+  icon: Icon, iconBg = 'bg-white/8', iconColor = 'text-slate-400',
 }: {
   label: string; value: string; sub?: string; subColor?: string;
-  borderColor?: string; icon: React.ElementType; iconColor?: string;
+  accentColor?: string; icon: React.ElementType; iconBg?: string; iconColor?: string;
 }) {
   return (
-    <div className={`bg-white rounded-xl border ${borderColor} shadow-sm p-5 flex flex-col gap-3`}>
+    <div className={`bg-white/5 backdrop-blur-md border border-white/8 border-l-[3px] ${accentColor} rounded-2xl shadow-xl shadow-black/20 p-5 flex flex-col gap-3 transition-all duration-200 hover:bg-white/8`}>
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-        <Icon className={`w-4 h-4 ${iconColor}`} aria-hidden="true" />
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</p>
+        <div className={`w-8 h-8 rounded-xl ${iconBg} flex items-center justify-center`}>
+          <Icon className={`w-4 h-4 ${iconColor}`} aria-hidden="true" />
+        </div>
       </div>
       <div>
-        <p className="text-2xl font-bold text-slate-900 font-mono">{value}</p>
-        {sub && <p className={`text-xs mt-1 ${subColor}`}>{sub}</p>}
+        <p className="text-2xl font-bold text-white tabular-nums tracking-tight">{value}</p>
+        {sub && <p className={`text-xs mt-1 font-medium ${subColor}`}>{sub}</p>}
       </div>
-    </div>
-  );
-}
-
-function SpendBar({ name, amount, max, pct }: { name: string; amount: number; max: number; pct?: string }) {
-  const width = max > 0 ? Math.round((amount / max) * 100) : 0;
-  return (
-    <div className="flex items-center gap-3">
-      <div className="w-28 shrink-0 truncate text-sm text-slate-700 font-medium" title={name}>{name}</div>
-      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-        <div className="h-full bg-teal-500 rounded-full transition-all duration-500" style={{ width: `${width}%` }} />
-      </div>
-      <div className="w-20 text-right shrink-0">
-        <span className="text-sm font-semibold text-slate-800 font-mono">{formatINR(amount)}</span>
-        {pct && <span className="text-xs text-slate-400 ml-1">({pct}%)</span>}
-      </div>
-    </div>
-  );
-}
-
-function SpendTrendBar({ month, amount, maxAmount }: { month: string; amount: number; maxAmount: number }) {
-  const height = maxAmount > 0 ? Math.max(4, Math.round((amount / maxAmount) * 100)) : 4;
-  return (
-    <div className="flex flex-col items-center gap-1.5 flex-1">
-      <span className="text-xs text-slate-500 font-mono">{amount > 0 ? formatINR(amount) : '—'}</span>
-      <div className="w-full flex items-end justify-center" style={{ height: 80 }}>
-        <div
-          className="w-full max-w-10 rounded-t-lg bg-teal-500 transition-all duration-500"
-          style={{ height: `${height}%` }}
-        />
-      </div>
-      <span className="text-[10px] text-slate-400 text-center">{month}</span>
     </div>
   );
 }
@@ -134,9 +114,6 @@ export default function BuyerDashboard() {
     load('custom', selectedClientId, selectedBranchId, customStart, customEnd);
   }
 
-  const trendMax = Math.max(...(data?.spend_trend?.map((p) => p.amount) ?? [1]), 1);
-  const branchMax = Math.max(...(data?.branch_breakdown?.map((b) => b.spend) ?? [1]), 1);
-
   const PERIOD_LABELS: Record<Period, string> = {
     this_month: 'This Month', last_3_months: 'Last 3 Months', this_fy: 'This FY', custom: 'Custom',
   };
@@ -151,25 +128,28 @@ export default function BuyerDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
-      {/* ── Top bar: greeting + filters ────────────────────────────────────── */}
+      {/* ── Top bar: greeting + period selector ────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">{greeting}{data?.client_name ? `, ${data.client_name.split(' ')[0]}` : ''}</h1>
+          <h1 className="text-xl font-bold text-white">
+            {greeting}{data?.client_name ? `, ${data.client_name.split(' ')[0]}` : ''}
+          </h1>
           <p className="text-sm text-slate-500 mt-0.5">
             {data?.branch_name ? `${data.branch_name} · ` : ''}{data?.client_name ?? 'Your procurement overview'}
           </p>
         </div>
 
-        {/* Period selector */}
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+          <div className="flex items-center gap-1 p-1 bg-white/5 border border-white/8 rounded-xl">
             {(['this_month', 'last_3_months', 'this_fy', 'custom'] as Period[]).map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => handlePeriodChange(p)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                  period === p ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 ${
+                  period === p
+                    ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
+                    : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
                 {PERIOD_LABELS[p]}
@@ -186,19 +166,19 @@ export default function BuyerDashboard() {
             type="date"
             value={customStart}
             onChange={(e) => setCustomStart(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="px-3 py-1.5 text-sm bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500/50"
           />
-          <span className="text-slate-400 text-sm">to</span>
+          <span className="text-slate-500 text-sm">to</span>
           <input
             type="date"
             value={customEnd}
             onChange={(e) => setCustomEnd(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="px-3 py-1.5 text-sm bg-white/5 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500/50"
           />
           <button
             type="button"
             onClick={applyCustomRange}
-            className="px-4 py-1.5 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors"
+            className="px-4 py-1.5 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-500 transition-colors"
           >
             Apply
           </button>
@@ -207,7 +187,7 @@ export default function BuyerDashboard() {
 
       {loading ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-7 h-7 animate-spin text-teal-600" />
+          <Loader2 className="w-7 h-7 animate-spin text-teal-500" />
         </div>
       ) : (
         <>
@@ -216,36 +196,40 @@ export default function BuyerDashboard() {
             <KpiCard
               label="Total Spend"
               value={formatINR(data?.monthly_spend ?? 0)}
-              sub={`In selected period`}
+              sub="In selected period"
               icon={TrendingUp}
-              iconColor="text-teal-500"
-              borderColor="border-l-4 border-l-teal-500 border-slate-200"
+              iconBg="bg-teal-500/15"
+              iconColor="text-teal-400"
+              accentColor="border-l-teal-500/80"
             />
             <KpiCard
               label="Outstanding Credit"
               value={formatINR(data?.outstanding_credit ?? 0)}
               sub="Pending payment"
               icon={CreditCard}
-              iconColor="text-slate-400"
-              borderColor="border-l-4 border-l-slate-400 border-slate-200"
+              iconBg="bg-blue-500/15"
+              iconColor="text-blue-400"
+              accentColor="border-l-blue-500/60"
             />
             <KpiCard
               label="Due Soon"
               value={formatINR(data?.due_soon ?? 0)}
               sub="Within 7 days"
-              subColor={(data?.due_soon ?? 0) > 0 ? 'text-amber-600 font-semibold' : 'text-slate-400'}
+              subColor={(data?.due_soon ?? 0) > 0 ? 'text-amber-400' : 'text-slate-500'}
               icon={(data?.due_soon ?? 0) > 0 ? Clock : CheckCircle2}
-              iconColor={(data?.due_soon ?? 0) > 0 ? 'text-amber-500' : 'text-emerald-500'}
-              borderColor={(data?.due_soon ?? 0) > 0 ? 'border-l-4 border-l-amber-400 border-slate-200' : 'border-slate-200'}
+              iconBg={(data?.due_soon ?? 0) > 0 ? 'bg-amber-500/15' : 'bg-emerald-500/15'}
+              iconColor={(data?.due_soon ?? 0) > 0 ? 'text-amber-400' : 'text-emerald-400'}
+              accentColor={(data?.due_soon ?? 0) > 0 ? 'border-l-amber-500/80' : 'border-l-slate-600'}
             />
             <KpiCard
               label="Overdue"
               value={formatINR(data?.overdue ?? 0)}
               sub={(data?.overdue ?? 0) > 0 ? 'Pay immediately' : 'All clear'}
-              subColor={(data?.overdue ?? 0) > 0 ? 'text-rose-600 font-semibold' : 'text-emerald-600'}
+              subColor={(data?.overdue ?? 0) > 0 ? 'text-rose-400' : 'text-emerald-400'}
               icon={(data?.overdue ?? 0) > 0 ? AlertTriangle : CheckCircle2}
-              iconColor={(data?.overdue ?? 0) > 0 ? 'text-rose-500' : 'text-emerald-500'}
-              borderColor={(data?.overdue ?? 0) > 0 ? 'border-l-4 border-l-rose-500 border-slate-200' : 'border-slate-200'}
+              iconBg={(data?.overdue ?? 0) > 0 ? 'bg-rose-500/15' : 'bg-emerald-500/15'}
+              iconColor={(data?.overdue ?? 0) > 0 ? 'text-rose-400' : 'text-emerald-400'}
+              accentColor={(data?.overdue ?? 0) > 0 ? 'border-l-rose-500/80' : 'border-l-slate-600'}
             />
           </div>
 
@@ -256,152 +240,112 @@ export default function BuyerDashboard() {
               value={String(data?.active_orders ?? 0)}
               sub="In progress"
               icon={Package}
+              iconBg="bg-orange-500/15"
               iconColor="text-orange-400"
-              borderColor="border-slate-200"
+              accentColor="border-l-slate-600"
             />
             <KpiCard
               label="Delivered"
               value={String(data?.delivered_orders ?? 0)}
               sub="All time"
               icon={CheckCircle2}
+              iconBg="bg-emerald-500/15"
               iconColor="text-emerald-400"
-              borderColor="border-slate-200"
+              accentColor="border-l-slate-600"
             />
             <KpiCard
               label="Quote Requests"
               value={String(data?.quote_requests ?? 0)}
               sub="All time"
               icon={FileText}
+              iconBg="bg-blue-500/15"
               iconColor="text-blue-400"
-              borderColor="border-slate-200"
+              accentColor="border-l-slate-600"
             />
           </div>
 
           {/* ── Overdue alert ─────────────────────────────────────────────── */}
           {(data?.overdue ?? 0) > 0 && (
-            <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-200 rounded-xl">
-              <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
-              <p className="text-sm text-rose-700 font-medium flex-1">
-                You have <strong>{formatINR(data?.overdue ?? 0)}</strong> overdue. Pay immediately to avoid account suspension.
+            <div className="flex items-center gap-3 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl">
+              <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+              <p className="text-sm text-rose-300 font-medium flex-1">
+                You have <strong className="text-rose-200">{formatINR(data?.overdue ?? 0)}</strong> overdue. Pay immediately to avoid account suspension.
               </p>
               <Link
                 href="/buyer/account/credit"
-                className="flex items-center gap-1 text-sm font-semibold text-rose-600 hover:text-rose-800 shrink-0"
+                className="flex items-center gap-1 text-sm font-semibold text-rose-400 hover:text-rose-300 transition-colors shrink-0"
               >
                 View <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
           )}
 
-          {/* ── Middle row: Spend by Branch + Quick Actions ───────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+          {/* ── Branch Map ────────────────────────────────────────────────── */}
+          <BranchMapCard
+            branches={data?.branch_breakdown ?? []}
+            totalSpend={data?.monthly_spend ?? 0}
+          />
 
-            {/* Spend by Branch */}
-            <div className="lg:col-span-3 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 className="text-sm font-semibold text-slate-800">Spend by Branch</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Current period</p>
-                </div>
-                <Link href="/buyer/account/details?tab=branches" className="text-xs text-teal-600 hover:underline font-medium">
-                  Manage Branches
+          {/* ── Quick Actions ─────────────────────────────────────────────── */}
+          <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl shadow-xl shadow-black/20 p-6">
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Quick Actions</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {[
+                {
+                  label: 'Download Invoice Summary',
+                  sub: 'Get monthly statement',
+                  icon: Download,
+                  href: '/buyer/account/orders',
+                  iconBg: 'bg-teal-500/15',
+                  iconColor: 'text-teal-400',
+                },
+                {
+                  label: 'View Outstanding Payments',
+                  sub: `${formatINR(data?.outstanding_credit ?? 0)} pending`,
+                  icon: CreditCard,
+                  href: '/buyer/account/credit',
+                  iconBg: 'bg-blue-500/15',
+                  iconColor: 'text-blue-400',
+                },
+                {
+                  label: 'Add New Branch',
+                  sub: 'Expand your outlets',
+                  icon: Plus,
+                  href: '/buyer/account/details?tab=branches',
+                  iconBg: 'bg-emerald-500/15',
+                  iconColor: 'text-emerald-400',
+                },
+                {
+                  label: 'Apply for Credit',
+                  sub: '45-day payment terms',
+                  icon: FileText,
+                  href: '/buyer/account/credit-apply',
+                  iconBg: 'bg-amber-500/15',
+                  iconColor: 'text-amber-400',
+                },
+                {
+                  label: 'Request Quotation',
+                  sub: 'Get bulk pricing',
+                  icon: Package,
+                  href: '/buyer/account/quotes',
+                  iconBg: 'bg-purple-500/15',
+                  iconColor: 'text-purple-400',
+                },
+              ].map((action) => (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-white/4 hover:bg-teal-500/10 border border-white/8 hover:border-teal-500/30 transition-all duration-150 group"
+                >
+                  <div className={`w-9 h-9 rounded-xl ${action.iconBg} flex items-center justify-center shrink-0`}>
+                    <action.icon className={`w-4 h-4 ${action.iconColor}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-200 truncate">{action.label}</p>
+                    <p className="text-xs text-slate-500 truncate">{action.sub}</p>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-teal-400 transition-colors shrink-0" />
                 </Link>
-              </div>
-              {!data?.branch_breakdown?.length ? (
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <LayoutDashboard className="w-8 h-8 text-slate-200 mb-2" />
-                  <p className="text-sm text-slate-400">No branch data for this period</p>
-                </div>
-              ) : (
-                <div className="space-y-3.5">
-                  {data.branch_breakdown.slice(0, 6).map((b) => (
-                    <SpendBar
-                      key={b.branch_id}
-                      name={b.branch_name}
-                      amount={b.spend}
-                      max={branchMax}
-                      pct={branchMax > 0 ? String(Math.round((b.spend / (data?.monthly_spend || branchMax)) * 100)) : undefined}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Quick Actions */}
-            <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-slate-800 mb-4">Quick Actions</h2>
-              <div className="space-y-2">
-                {[
-                  {
-                    label: 'Download Invoice Summary',
-                    sub: 'Get monthly statement',
-                    icon: Download,
-                    href: '/buyer/account/orders',
-                    color: 'text-teal-600 bg-teal-50',
-                  },
-                  {
-                    label: 'View Outstanding Payments',
-                    sub: `${formatINR(data?.outstanding_credit ?? 0)} pending`,
-                    icon: CreditCard,
-                    href: '/buyer/account/credit',
-                    color: 'text-blue-600 bg-blue-50',
-                  },
-                  {
-                    label: 'Add New Branch',
-                    sub: 'Expand your outlets',
-                    icon: Plus,
-                    href: '/buyer/account/details?tab=branches',
-                    color: 'text-emerald-600 bg-emerald-50',
-                  },
-                  {
-                    label: 'Apply for Credit',
-                    sub: '45-day payment terms',
-                    icon: FileText,
-                    href: '/buyer/account/credit-apply',
-                    color: 'text-amber-600 bg-amber-50',
-                  },
-                  {
-                    label: 'Request Quotation',
-                    sub: 'Get bulk pricing',
-                    icon: Package,
-                    href: '/buyer/account/quotes',
-                    color: 'text-purple-600 bg-purple-50',
-                  },
-                ].map((action) => (
-                  <Link
-                    key={action.href}
-                    href={action.href}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors group"
-                  >
-                    <div className={`w-9 h-9 rounded-lg ${action.color} flex items-center justify-center shrink-0`}>
-                      <action.icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-800 truncate">{action.label}</p>
-                      <p className="text-xs text-slate-400 truncate">{action.sub}</p>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 transition-colors shrink-0" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* ── Spend Trend ───────────────────────────────────────────────── */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-sm font-semibold text-slate-800">Spend Trend</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Last 6 months</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-teal-500" />
-                <span className="text-xs text-slate-500">Monthly spend</span>
-              </div>
-            </div>
-            <div className="flex items-end gap-2">
-              {(data?.spend_trend ?? []).map((point) => (
-                <SpendTrendBar key={point.month} month={point.month} amount={point.amount} maxAmount={trendMax} />
               ))}
             </div>
           </div>
@@ -410,26 +354,28 @@ export default function BuyerDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
             {/* Recent Orders */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between p-5 border-b border-slate-100">
-                <h2 className="text-sm font-semibold text-slate-800">Recent Orders</h2>
-                <Link href="/buyer/account/orders" className="text-xs text-teal-600 hover:underline font-medium flex items-center gap-1">
+            <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl shadow-xl shadow-black/20">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Recent Orders</h2>
+                <Link href="/buyer/account/orders" className="text-xs text-teal-400 hover:text-teal-300 transition-colors font-medium flex items-center gap-1">
                   View All <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
 
               {!data?.recent_orders?.length ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center p-6">
-                  <Package className="w-8 h-8 text-slate-200 mb-2" />
-                  <p className="text-sm text-slate-400">No orders yet</p>
-                  <Link href="/buyer/marketplace" className="mt-3 text-sm text-teal-600 hover:underline font-medium">Browse Marketplace →</Link>
+                  <Package className="w-8 h-8 text-slate-700 mb-2" />
+                  <p className="text-sm text-slate-500">No orders yet</p>
+                  <Link href="/buyer/marketplace" className="mt-3 text-sm text-teal-400 hover:text-teal-300 transition-colors font-medium">
+                    Browse Marketplace →
+                  </Link>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-white/5">
                   {data.recent_orders.map((order) => (
-                    <div key={order.id} className="p-4 hover:bg-slate-50 transition-colors">
+                    <div key={order.id} className="p-4 hover:bg-white/4 transition-colors">
                       <div className="flex items-center justify-between mb-1">
-                        <Link href={`/buyer/orders/${order.id}`} className="font-mono text-sm font-medium text-teal-700 hover:underline">
+                        <Link href={`/buyer/orders/${order.id}`} className="text-sm font-semibold text-teal-400 hover:text-teal-300 transition-colors tabular-nums">
                           {order.order_number}
                         </Link>
                         <div className="flex items-center gap-2">
@@ -437,22 +383,22 @@ export default function BuyerDashboard() {
                             href={`/api/buyer/orders/${order.id}/invoice`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-1 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded transition-colors"
+                            className="p-1 text-slate-600 hover:text-teal-400 hover:bg-teal-500/10 rounded transition-colors"
                             title="Download Invoice"
                           >
                             <Download className="w-3.5 h-3.5" />
                           </a>
-                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_STYLES[order.status] ?? 'bg-slate-100 text-slate-600'}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_STYLES[order.status] ?? 'bg-white/8 text-slate-400 border border-white/10'}`}>
                             {STATUS_LABELS[order.status] ?? order.status}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="text-xs text-slate-500">
-                          {order.branch_name && <span className="font-medium text-slate-600">{order.branch_name} · </span>}
+                          {order.branch_name && <span className="font-medium text-slate-400">{order.branch_name} · </span>}
                           {order.item_count} item{order.item_count !== 1 ? 's' : ''} · {formatDate(order.created_at)}
                         </div>
-                        <span className="font-mono text-sm font-semibold text-slate-900">{formatINR(order.total_amount)}</span>
+                        <span className="text-sm font-bold text-white tabular-nums tracking-tight">{formatINR(order.total_amount)}</span>
                       </div>
                     </div>
                   ))}
@@ -461,27 +407,27 @@ export default function BuyerDashboard() {
             </div>
 
             {/* Outstanding Credit */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between p-5 border-b border-slate-100">
-                <h2 className="text-sm font-semibold text-slate-800">Outstanding Credit</h2>
-                <Link href="/buyer/account/credit" className="text-xs text-teal-600 hover:underline font-medium flex items-center gap-1">
+            <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl shadow-xl shadow-black/20">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Outstanding Credit</h2>
+                <Link href="/buyer/account/credit" className="text-xs text-teal-400 hover:text-teal-300 transition-colors font-medium flex items-center gap-1">
                   View All <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
 
               {!data?.credit_rows?.length ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center p-6">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-200 mb-2" />
-                  <p className="text-sm text-slate-400">No outstanding credit orders</p>
+                  <CheckCircle2 className="w-8 h-8 text-emerald-500/30 mb-2" />
+                  <p className="text-sm text-slate-500">No outstanding credit orders</p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-white/5">
                   {data.credit_rows.map((row) => {
                     const bucketStyle = row.bucket === 'overdue'
-                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                      ? 'bg-rose-500/15 text-rose-300 border border-rose-500/20'
                       : row.bucket === 'due_soon'
-                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                        : 'bg-slate-50 text-slate-600 border border-slate-200';
+                        ? 'bg-amber-500/15 text-amber-300 border border-amber-500/20'
+                        : 'bg-white/8 text-slate-400 border border-white/10';
                     const bucketLabel = row.bucket === 'overdue'
                       ? `${row.days_overdue}d overdue`
                       : row.bucket === 'due_soon'
@@ -489,9 +435,9 @@ export default function BuyerDashboard() {
                         : 'Upcoming';
 
                     return (
-                      <div key={row.order_id} className="p-4">
+                      <div key={row.order_id} className="p-4 hover:bg-white/4 transition-colors">
                         <div className="flex items-center justify-between mb-1">
-                          <Link href={`/buyer/orders/${row.order_id}`} className="font-mono text-sm font-medium text-teal-700 hover:underline">
+                          <Link href={`/buyer/orders/${row.order_id}`} className="text-sm font-semibold text-teal-400 hover:text-teal-300 transition-colors tabular-nums">
                             {row.order_number}
                           </Link>
                           <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${bucketStyle}`}>
@@ -499,8 +445,8 @@ export default function BuyerDashboard() {
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <p className="text-xs text-slate-400">Due: {row.due_date ? formatDate(row.due_date) : 'Not delivered yet'}</p>
-                          <span className="font-mono text-sm font-semibold text-slate-900">{formatINR(row.total_amount)}</span>
+                          <p className="text-xs text-slate-500">Due: {row.due_date ? formatDate(row.due_date) : 'Not delivered yet'}</p>
+                          <span className="text-sm font-bold text-white tabular-nums tracking-tight">{formatINR(row.total_amount)}</span>
                         </div>
                       </div>
                     );
@@ -512,34 +458,34 @@ export default function BuyerDashboard() {
 
           {/* ── Top Products ──────────────────────────────────────────────── */}
           {(data?.top_products?.length ?? 0) > 0 && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl shadow-xl shadow-black/20 p-6">
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-sm font-semibold text-slate-800">Top Ordered Products</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">By spend, all time</p>
+                  <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Top Ordered Products</h2>
+                  <p className="text-xs text-slate-600 mt-0.5">By spend, all time</p>
                 </div>
-                <Link href="/buyer/marketplace" className="text-xs text-teal-600 hover:underline font-medium">
+                <Link href="/buyer/marketplace" className="text-xs text-teal-400 hover:text-teal-300 transition-colors font-medium">
                   Browse Marketplace →
                 </Link>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left border-b border-slate-100">
-                      <th className="pb-2 text-xs font-semibold text-slate-500 pr-4">Product</th>
-                      <th className="pb-2 text-xs font-semibold text-slate-500 text-right pr-4">Qty Ordered</th>
-                      <th className="pb-2 text-xs font-semibold text-slate-500 text-right">Total Spend</th>
+                    <tr className="text-left border-b border-white/8">
+                      <th className="pb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500 pr-4">Product</th>
+                      <th className="pb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right pr-4">Qty Ordered</th>
+                      <th className="pb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500 text-right">Total Spend</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-white/5">
                     {data?.top_products?.map((p, i) => (
-                      <tr key={p.product_name} className="hover:bg-slate-50">
-                        <td className="py-3 pr-4 font-medium text-slate-800">
-                          <span className="text-xs text-slate-400 mr-2">{i + 1}.</span>
+                      <tr key={p.product_name} className="hover:bg-white/4 transition-colors">
+                        <td className="py-3 pr-4 font-medium text-slate-200">
+                          <span className="text-xs text-slate-600 mr-2">{i + 1}.</span>
                           {p.product_name}
                         </td>
-                        <td className="py-3 pr-4 text-right font-mono text-slate-600">{p.total_qty.toLocaleString('en-IN')}</td>
-                        <td className="py-3 text-right font-mono font-semibold text-slate-900">{formatINR(p.total_spend)}</td>
+                        <td className="py-3 pr-4 text-right text-slate-400 tabular-nums">{p.total_qty.toLocaleString('en-IN')}</td>
+                        <td className="py-3 text-right font-bold text-white tabular-nums tracking-tight">{formatINR(p.total_spend)}</td>
                       </tr>
                     ))}
                   </tbody>

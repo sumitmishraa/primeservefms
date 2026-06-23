@@ -93,11 +93,11 @@ function ProfileTab() {
     }
   }
 
-  const inputCls = 'w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white transition-colors';
-  const readonlyCls = 'w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 text-slate-400 cursor-not-allowed';
+  const inputCls = 'w-full px-3 py-2.5 text-sm bg-white/5 border border-white/10 text-white placeholder:text-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500/50 transition-colors';
+  const readonlyCls = 'w-full px-3 py-2.5 text-sm bg-white/3 border border-white/8 text-slate-600 rounded-xl cursor-not-allowed';
 
-  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-teal-600" /></div>;
-  if (!profile) return <div className="text-center py-16 text-slate-400">Could not load profile. Please refresh.</div>;
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-teal-500" /></div>;
+  if (!profile) return <div className="text-center py-16 text-slate-500">Could not load profile. Please refresh.</div>;
 
   return (
     <div className="space-y-5">
@@ -117,68 +117,68 @@ function ProfileTab() {
       </div>
 
       {/* Personal info */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
-          <User className="w-4 h-4 text-teal-600" />
-          <h3 className="text-sm font-semibold text-slate-700">Personal Information</h3>
+          <User className="w-4 h-4 text-teal-400" />
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Personal Information</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Full Name <span className="text-rose-500">*</span></label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Full Name <span className="text-rose-400">*</span></label>
             <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputCls} placeholder="Your full name" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Designation</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Designation</label>
             <input type="text" value={designation} onChange={(e) => setDesignation(e.target.value)} className={inputCls} placeholder="e.g. Procurement Manager" />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Login Email <span className="text-slate-400 font-normal">(read-only)</span></label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Login Email <span className="text-slate-600 font-normal">(read-only)</span></label>
             <input type="email" value={profile.email ?? ''} readOnly className={readonlyCls} />
           </div>
         </div>
       </div>
 
       {/* Contact */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
-          <Phone className="w-4 h-4 text-teal-600" />
-          <h3 className="text-sm font-semibold text-slate-700">Contact Details</h3>
+          <Phone className="w-4 h-4 text-teal-400" />
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Contact Details</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Primary Phone</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Primary Phone</label>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} placeholder="+91 98765 43210" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">WhatsApp / Alternate</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">WhatsApp / Alternate</label>
             <input type="tel" value={altPhone} onChange={(e) => setAltPhone(e.target.value)} className={inputCls} placeholder="+91 98765 43210" />
           </div>
         </div>
       </div>
 
       {/* Business emails */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-1.5">
-          <Mail className="w-4 h-4 text-teal-600" />
-          <h3 className="text-sm font-semibold text-slate-700">Business Email Addresses</h3>
+          <Mail className="w-4 h-4 text-teal-400" />
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Business Email Addresses</h3>
         </div>
-        <p className="text-xs text-slate-400 mb-5 ml-6">Both emails are required for order communications and invoicing.</p>
+        <p className="text-xs text-slate-600 mb-5 ml-6">Both emails are required for order communications and invoicing.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Company Email <span className="text-rose-500">*</span></label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Company Email <span className="text-rose-400">*</span></label>
             <input type="email" value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className={inputCls} placeholder="orders@yourcompany.com" />
-            <p className="mt-1 text-xs text-slate-400">For order updates and communications</p>
+            <p className="mt-1 text-xs text-slate-600">For order updates and communications</p>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Invoicing Email <span className="text-rose-500">*</span></label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Invoicing Email <span className="text-rose-400">*</span></label>
             <input type="email" value={invoiceEmail} onChange={(e) => setInvoiceEmail(e.target.value)} className={inputCls} placeholder="accounts@yourcompany.com" />
-            <p className="mt-1 text-xs text-slate-400">For invoices and billing</p>
+            <p className="mt-1 text-xs text-slate-600">For invoices and billing</p>
           </div>
         </div>
       </div>
 
       <div className="flex justify-end">
-        <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 disabled:opacity-60 transition-colors shadow-sm">
+        <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-500 disabled:opacity-60 transition-colors shadow-lg shadow-teal-500/20">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
           {saving ? 'Saving…' : 'Save Changes'}
         </button>
@@ -328,10 +328,10 @@ function CompanyTab() {
     }
   }
 
-  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-teal-600" /></div>;
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-teal-500" /></div>;
 
-  const inputCls = 'w-full px-3 py-2.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white transition-colors';
-  const readonlyCls = 'w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg bg-slate-50 text-slate-400 cursor-not-allowed';
+  const inputCls = 'w-full px-3 py-2.5 text-sm bg-white/5 border border-white/10 text-white placeholder:text-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500/50 transition-colors';
+  const readonlyCls = 'w-full px-3 py-2.5 text-sm bg-white/3 border border-white/8 text-slate-600 rounded-xl cursor-not-allowed';
   const docs = (data?.business_documents ?? []) as BusinessDocument[];
 
   const DocRow = ({ docType, label, fileRef }: { docType: BusinessDocument['doc_type']; label: string; fileRef: React.RefObject<HTMLInputElement | null> }) => {
@@ -339,29 +339,29 @@ function CompanyTab() {
     const uploading = uploadingDoc === docType;
     const deleting = deletingUrl === existing?.url;
     return (
-      <div className={`flex items-center justify-between p-4 rounded-xl border-2 border-dashed transition-colors ${existing ? 'border-teal-200 bg-teal-50' : 'border-slate-200 bg-slate-50'}`}>
+      <div className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-150 ${existing ? 'border-teal-500/30 bg-teal-500/10' : 'border-white/8 bg-white/4'}`}>
         <div className="flex items-center gap-3">
-          <FileText className={`w-5 h-5 ${existing ? 'text-teal-600' : 'text-slate-400'}`} />
+          <FileText className={`w-5 h-5 ${existing ? 'text-teal-400' : 'text-slate-500'}`} />
           <div>
-            <p className="text-sm font-medium text-slate-800">{label}</p>
+            <p className="text-sm font-medium text-slate-200">{label}</p>
             {existing ? (
-              <p className="text-xs text-teal-600 font-medium flex items-center gap-1 mt-0.5">
+              <p className="text-xs text-teal-400 font-medium flex items-center gap-1 mt-0.5">
                 <Check className="w-3 h-3" /> Uploaded
               </p>
             ) : (
-              <p className="text-xs text-slate-400">Required</p>
+              <p className="text-xs text-slate-600">Required</p>
             )}
           </div>
         </div>
         <div className="flex items-center gap-2">
           {existing && (
             <>
-              <a href={existing.url} target="_blank" rel="noopener noreferrer" className="text-xs text-teal-600 hover:underline font-medium px-2 py-1 rounded hover:bg-teal-100 transition-colors">View</a>
+              <a href={existing.url} target="_blank" rel="noopener noreferrer" className="text-xs text-teal-400 hover:text-teal-300 font-medium px-2 py-1 rounded-lg hover:bg-teal-500/10 transition-colors">View</a>
               <button
                 type="button"
                 disabled={deleting}
                 onClick={() => handleDocDelete(existing.url)}
-                className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50"
+                className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors disabled:opacity-50"
                 aria-label="Delete document"
               >
                 {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -372,7 +372,7 @@ function CompanyTab() {
             type="button"
             disabled={uploading}
             onClick={() => fileRef.current?.click()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-teal-600 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-teal-500/40 text-teal-400 hover:bg-teal-500/15 rounded-lg transition-colors disabled:opacity-50"
           >
             {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
             {existing ? 'Replace' : 'Upload'}
@@ -413,36 +413,36 @@ function CompanyTab() {
       </div>
 
       {/* Business Identity */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
-          <Building2 className="w-4 h-4 text-teal-600" />
-          <h3 className="text-sm font-semibold text-slate-700">Business Identity</h3>
+          <Building2 className="w-4 h-4 text-teal-400" />
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Business Identity</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {(data?.client_name || data?.branch_name) && (
             <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-slate-600 mb-1.5">Organisation <span className="font-normal text-slate-400">(assigned by admin)</span></label>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Organisation <span className="font-normal text-slate-400">(assigned by admin)</span></label>
               <input type="text" value={`${data?.client_name ?? ''}${data?.branch_name ? ` — ${data.branch_name}` : ''}`} readOnly className={readonlyCls} />
             </div>
           )}
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Legal Company Name <span className="text-rose-500">*</span></label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Legal Company Name <span className="text-rose-500">*</span></label>
             <input type="text" value={legalCompanyName} onChange={(e) => setLegalCompanyName(e.target.value)} className={inputCls} placeholder="As on MCA / Incorporation Certificate" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Trade Name</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Trade Name</label>
             <input type="text" value={tradeName} onChange={(e) => setTradeName(e.target.value)} className={inputCls} placeholder="Brand or DBA name" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Website</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Website</label>
             <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} className={inputCls} placeholder="https://yourcompany.com" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Incorporation Year <span className="text-rose-500">*</span></label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Incorporation Year <span className="text-rose-500">*</span></label>
             <input type="number" value={incorporationYear} onChange={(e) => setIncorporationYear(e.target.value)} className={inputCls} placeholder="e.g. 2018" min={1900} max={new Date().getFullYear()} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Expected Monthly Spend</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Expected Monthly Spend</label>
             <CustomSelect
               value={monthlySpend}
               onChange={setMonthlySpend}
@@ -454,78 +454,78 @@ function CompanyTab() {
       </div>
 
       {/* Tax & Compliance */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
-          <AlertCircle className="w-4 h-4 text-teal-600" />
-          <h3 className="text-sm font-semibold text-slate-700">Tax & Compliance</h3>
+          <AlertCircle className="w-4 h-4 text-teal-400" />
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Tax & Compliance</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">GST Number <span className="text-rose-500">*</span></label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">GST Number <span className="text-rose-500">*</span></label>
             <input type="text" value={gstNumber} onChange={(e) => handleGstChange(e.target.value)} className={`${inputCls} font-mono uppercase`} placeholder="22AAAAA0000A1Z5" maxLength={15} />
             {gstError && <p className="mt-1 text-xs text-rose-500">{gstError}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">PAN Number <span className="text-rose-500">*</span></label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">PAN Number <span className="text-rose-500">*</span></label>
             <input type="text" value={panNumber} onChange={(e) => { setPanNumber(e.target.value.toUpperCase()); setPanError(''); }} className={`${inputCls} font-mono uppercase`} placeholder="ABCDE1234F" maxLength={10} />
             {panError && <p className="mt-1 text-xs text-rose-500">{panError}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">CIN / LLPIN <span className="text-rose-500">*</span></label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">CIN / LLPIN <span className="text-rose-500">*</span></label>
             <input type="text" value={cinNumber} onChange={(e) => setCinNumber(e.target.value.toUpperCase())} className={`${inputCls} font-mono uppercase`} placeholder="U74999KA2020PTC123456" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">MSME / Udyam Number <span className="text-slate-400 font-normal">(optional)</span></label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">MSME / Udyam Number <span className="text-slate-400 font-normal">(optional)</span></label>
             <input type="text" value={msmeNumber} onChange={(e) => setMsmeNumber(e.target.value.toUpperCase())} className={`${inputCls} font-mono uppercase`} placeholder="UDYAM-KA-00-0000000" />
           </div>
         </div>
       </div>
 
       {/* Shipping Address */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
-          <MapPin className="w-4 h-4 text-teal-600" />
-          <h3 className="text-sm font-semibold text-slate-700">Primary Shipping Address</h3>
+          <MapPin className="w-4 h-4 text-teal-400" />
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Primary Shipping Address</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Address Line 1</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Address Line 1</label>
             <input type="text" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} className={inputCls} placeholder="Building, Street" />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Address Line 2</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Address Line 2</label>
             <input type="text" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} className={inputCls} placeholder="Area, Landmark" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">City</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">City</label>
             <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className={inputCls} placeholder="Bangalore" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">State</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">State</label>
             <CustomSelect value={state} onChange={setState} options={INDIAN_STATES.map((s) => ({ value: s, label: s }))} placeholder="Select state" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Pincode</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Pincode</label>
             <input type="text" value={pincode} onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))} className={inputCls} placeholder="560034" maxLength={6} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Contact Person</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Contact Person</label>
             <input type="text" value={shippingContact} onChange={(e) => setShippingContact(e.target.value)} className={inputCls} placeholder="Name" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">Contact Phone</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Contact Phone</label>
             <input type="tel" value={shippingPhone} onChange={(e) => setShippingPhone(e.target.value)} className={inputCls} placeholder="+91 98765 43210" />
           </div>
         </div>
       </div>
 
       {/* Documents */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-2">
-          <FileText className="w-4 h-4 text-teal-600" />
-          <h3 className="text-sm font-semibold text-slate-700">Business Documents</h3>
+          <FileText className="w-4 h-4 text-teal-400" />
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Business Documents</h3>
         </div>
-        <p className="text-xs text-slate-400 mb-5">PDF, JPG, PNG or WebP · Max 10 MB each</p>
+        <p className="text-xs text-slate-600 mb-5">PDF, JPG, PNG or WebP · Max 10 MB each</p>
         <div className="space-y-3">
           <DocRow docType="gst_certificate" label="GST Registration Certificate" fileRef={gstFileRef} />
           <DocRow docType="pan_card" label="PAN Card" fileRef={panFileRef} />
@@ -533,7 +533,7 @@ function CompanyTab() {
       </div>
 
       <div className="flex justify-end">
-        <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 disabled:opacity-60 transition-colors shadow-sm">
+        <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-500 disabled:opacity-60 transition-colors shadow-lg shadow-teal-500/20">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
           {saving ? 'Saving…' : 'Save Company Details'}
         </button>
@@ -603,13 +603,13 @@ function BranchesTab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-slate-800">Branches & Outlets</h3>
+          <h3 className="text-base font-semibold text-white">Branches & Outlets</h3>
           <p className="text-sm text-slate-500 mt-0.5">Manage all your physical locations for accurate procurement tracking</p>
         </div>
         <button
           type="button"
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-xl hover:bg-teal-500 transition-colors shadow-lg shadow-teal-500/20"
         >
           <Plus className="w-4 h-4" />
           Add Branch
@@ -618,16 +618,16 @@ function BranchesTab() {
 
       {/* Company tabs (for multi-company founders) */}
       {clients.length > 1 && (
-        <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">
+        <div className="flex gap-1 p-1 bg-white/5 border border-white/8 rounded-xl w-fit">
           {clients.map((c) => (
             <button
               key={c.id}
               type="button"
               onClick={() => switchClient(c.id)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 ${
                 activeClientId === c.id
-                  ? 'bg-white text-teal-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-teal-500/15 text-teal-400 border border-teal-500/20'
+                  : 'text-slate-500 hover:text-slate-200 border border-transparent'
               }`}
             >
               {c.display_name ?? c.name}
@@ -638,18 +638,18 @@ function BranchesTab() {
 
       {/* Branch grid */}
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-teal-600" /></div>
+        <div className="flex justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-teal-500" /></div>
       ) : branches.length === 0 ? (
-        <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center">
-          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white/5 border border-white/10 border-dashed rounded-2xl p-12 text-center">
+          <div className="w-12 h-12 rounded-full bg-white/8 flex items-center justify-center mx-auto mb-4">
             <GitBranch className="w-6 h-6 text-slate-400" />
           </div>
-          <h4 className="text-base font-semibold text-slate-700 mb-1">No branches yet</h4>
-          <p className="text-sm text-slate-400 mb-5 max-w-sm mx-auto">Add your first outlet to start tracking procurement per location. Each branch gets its own order history and spend analytics.</p>
+          <h4 className="text-base font-semibold text-slate-300 mb-1">No branches yet</h4>
+          <p className="text-sm text-slate-500 mb-5 max-w-sm mx-auto">Add your first outlet to start tracking procurement per location. Each branch gets its own order history and spend analytics.</p>
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-xl hover:bg-teal-500 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Your First Branch
@@ -693,24 +693,24 @@ export default function DetailsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       {/* Page header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">My Details</h1>
+        <h1 className="text-2xl font-bold text-white">Profile Details</h1>
         <p className="text-sm text-slate-500 mt-1">Manage your profile, company information, and branch locations</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit mb-7">
+      <div className="flex gap-1 p-1 bg-white/5 border border-white/8 rounded-xl w-fit mb-7">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-150 ${
               tab === id
-                ? 'bg-white text-teal-700 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-teal-500/15 text-teal-400 border border-teal-500/20'
+                : 'text-slate-500 hover:text-slate-200 border border-transparent'
             }`}
           >
             <Icon className="w-4 h-4" />

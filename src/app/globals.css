@@ -10,6 +10,15 @@
   --color-brand-navy: #0B1220;
   --color-brand-navy-soft: #111827;
   --color-brand-gold: #F59E0B;
+
+  /* Dark dashboard theme */
+  --color-navy-950: #060d19;
+  --color-navy-900: #0B1220;
+  --color-navy-800: #111c30;
+  --color-navy-700: #1a2640;
+  --color-glass-border: rgba(255,255,255,0.08);
+  --color-glass-bg: rgba(255,255,255,0.04);
+  --color-glass-highlight: rgba(255,255,255,0.12);
 }
 
 :root {
