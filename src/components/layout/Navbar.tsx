@@ -42,12 +42,12 @@ export default function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         : '/buyer/marketplace';
 
   return (
-    <header className="fixed top-0 inset-x-0 h-16 bg-navy-900/80 backdrop-blur-xl border-b border-white/8 z-40 flex items-center px-4 gap-3">
+    <header className="fixed top-0 inset-x-0 h-16 bg-white border-b border-slate-200 z-40 flex items-center px-4 gap-3">
       {/* ── Left: hamburger + logo ─────────────────────────────────────────── */}
       <div className="flex items-center gap-3 shrink-0">
         <button
           onClick={onMobileMenuToggle}
-          className="lg:hidden p-2 rounded-lg text-slate-400 hover:bg-white/8 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
+          className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
           aria-label="Open navigation menu"
         >
           <Menu className="w-5 h-5" aria-hidden="true" />
@@ -60,7 +60,7 @@ export default function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         </Link>
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs font-semibold text-slate-400 transition-colors hover:border-teal-400/40 hover:bg-teal-500/10 hover:text-teal-400 sm:px-3"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700 sm:px-3"
         >
           <Home className="h-3.5 w-3.5" aria-hidden="true" />
           Back to Home
@@ -73,7 +73,7 @@ export default function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         {user.role === 'buyer' && (
           <Link
             href="/buyer/cart"
-            className="relative p-2 rounded-lg text-slate-300 hover:bg-white/8 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
+            className="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
             aria-label={
               cartCount > 0 ? `Cart — ${cartCount} items` : 'Cart — empty'
             }
@@ -89,7 +89,7 @@ export default function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
 
         {/* Bell notifications */}
         <button
-          className="relative p-2 rounded-lg text-slate-300 hover:bg-white/8 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
+          className="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
           aria-label={
             notificationCount > 0
               ? `Notifications — ${notificationCount} unread`
