@@ -21,7 +21,7 @@ import MobileMenu from '@/components/layout/MobileMenu';
 
 function DashboardSkeleton() {
   return (
-    <div className="min-h-screen bg-navy-950 animate-pulse">
+    <div className="min-h-screen bg-slate-50 animate-pulse">
       {/* Navbar skeleton */}
       <div className="fixed top-0 inset-x-0 h-16 bg-[#0B1220]/80 border-b border-white/8 z-40 flex items-center px-4 gap-3">
         <div className="w-8 h-8 rounded-lg bg-white/10 lg:hidden" />
@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   if (!isAuthenticated || !user) return null;
 
   return (
-    <div className="min-h-screen bg-navy-950">
+    <div className="min-h-screen bg-slate-50">
       {/* Top navigation */}
       <Navbar
         user={user}

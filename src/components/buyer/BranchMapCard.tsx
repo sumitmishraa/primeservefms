@@ -78,7 +78,7 @@ export default function BranchMapCard({ branches, totalSpend }: BranchMapCardPro
 
   if (!branches.length) {
     return (
-      <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl p-6">
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Branch Activity</h2>
@@ -106,8 +106,8 @@ export default function BranchMapCard({ branches, totalSpend }: BranchMapCardPro
   }
 
   return (
-    <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xl shadow-black/20">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
         <div>
           <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Branch Activity</h2>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -124,7 +124,7 @@ export default function BranchMapCard({ branches, totalSpend }: BranchMapCardPro
 
       <div className="flex flex-col lg:flex-row min-h-[300px]">
         {/* Left: Branch list */}
-        <div className="lg:w-2/5 p-5 space-y-4 overflow-y-auto lg:max-h-80 scrollbar-hide border-b lg:border-b-0 lg:border-r border-white/8">
+        <div className="lg:w-2/5 p-5 space-y-4 overflow-y-auto lg:max-h-80 scrollbar-hide border-b lg:border-b-0 lg:border-r border-slate-100">
           {branches.slice(0, 8).map((branch, i) => {
             const width = maxSpend > 0 ? Math.round((branch.spend / maxSpend) * 100) : 0;
             return (
@@ -141,7 +141,7 @@ export default function BranchMapCard({ branches, totalSpend }: BranchMapCardPro
                     </span>
                   </div>
                 </div>
-                <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-teal-500 to-teal-400 rounded-full transition-all duration-700"
                     style={{ width: `${width}%` }}

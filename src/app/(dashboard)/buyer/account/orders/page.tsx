@@ -39,12 +39,12 @@ const STATUS_TABS: { value: OrderStatus | 'all'; label: string }[] = [
 ];
 
 const STATUS_STYLES: Record<string, string> = {
-  pending:             'bg-amber-500/15  text-amber-300  border-amber-500/20',
-  approved:            'bg-blue-500/15   text-blue-300   border-blue-500/20',
-  forwarded_to_vendor: 'bg-purple-500/15 text-purple-300 border-purple-500/20',
-  dispatched:          'bg-orange-500/15 text-orange-300 border-orange-500/20',
-  delivered:           'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
-  cancelled:           'bg-rose-500/15   text-rose-300   border-rose-500/20',
+  pending:             'bg-amber-100  text-amber-700  border-amber-200',
+  approved:            'bg-blue-100   text-blue-700   border-blue-200',
+  forwarded_to_vendor: 'bg-purple-100 text-purple-700 border-purple-200',
+  dispatched:          'bg-orange-100 text-orange-700 border-orange-200',
+  delivered:           'bg-emerald-100 text-emerald-700 border-emerald-200',
+  cancelled:           'bg-rose-100   text-rose-700   border-rose-200',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -54,9 +54,9 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const PAYMENT_STYLES: Record<string, string> = {
-  paid:    'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
-  pending: 'bg-amber-500/15   text-amber-300   border-amber-500/20',
-  overdue: 'bg-rose-500/15    text-rose-300    border-rose-500/20',
+  paid:    'bg-emerald-100 text-emerald-700 border-emerald-200',
+  pending: 'bg-amber-100   text-amber-700   border-amber-200',
+  overdue: 'bg-rose-100    text-rose-700    border-rose-200',
 };
 
 const PER_PAGE = 10;
@@ -213,20 +213,20 @@ export default function AccountOrdersPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Orders</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Orders</h1>
         <p className="text-sm text-slate-500 mt-0.5">Track and manage all procurement orders across your branches.</p>
       </div>
 
       {/* Filter bar */}
-      <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl shadow-xl shadow-black/20 overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
 
         {/* Top row: Track Orders + All Branches + Search */}
-        <div className="flex flex-wrap items-center gap-2 p-3 border-b border-white/8">
+        <div className="flex flex-wrap items-center gap-2 p-3 border-b border-slate-100">
 
           {/* Track Orders toggle */}
           <button
             onClick={() => setTrackOrdersOpen((v) => !v)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-400 text-sm font-semibold transition-all hover:bg-teal-500/20 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 border border-teal-600 text-white text-sm font-semibold transition-all hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             <Package className="w-4 h-4" />
             Track Orders
@@ -237,16 +237,16 @@ export default function AccountOrdersPage() {
           <div className="relative">
             <button
               onClick={() => setBranchDropOpen((v) => !v)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-sm font-medium transition-all hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 text-sm font-medium transition-all hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <MapPin className="w-3.5 h-3.5 text-slate-400" />
               {selectedBranch ? selectedBranchName : 'All Branches'}
               <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-150 ${branchDropOpen ? 'rotate-180' : ''}`} />
             </button>
             {branchDropOpen && (
-              <div className="absolute top-full left-0 mt-1.5 w-52 bg-navy-800 border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-20 overflow-hidden py-1">
+              <div className="absolute top-full left-0 mt-1.5 w-52 bg-white border border-slate-200 rounded-xl shadow-lg z-20 overflow-hidden py-1">
                 <button
-                  className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${!selectedBranch ? 'bg-teal-500/20 text-teal-400 font-semibold' : 'text-slate-300 hover:bg-teal-500/10 hover:text-teal-400'}`}
+                  className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${!selectedBranch ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-slate-700 hover:bg-slate-50'}`}
                   onClick={() => { setSelectedBranch(''); setBranchDropOpen(false); }}
                 >
                   All Branches
@@ -254,7 +254,7 @@ export default function AccountOrdersPage() {
                 {branches.map((b) => (
                   <button
                     key={b.id}
-                    className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${selectedBranch === b.id ? 'bg-teal-500/20 text-teal-400 font-semibold' : 'text-slate-300 hover:bg-teal-500/10 hover:text-teal-400'}`}
+                    className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${selectedBranch === b.id ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-slate-700 hover:bg-slate-50'}`}
                     onClick={() => { setSelectedBranch(b.id); setBranchDropOpen(false); }}
                   >
                     {b.name}
@@ -269,7 +269,7 @@ export default function AccountOrdersPage() {
             <select
               value={selectedClient}
               onChange={(e) => setSelectedClient(e.target.value)}
-              className="py-2 pl-3 pr-8 text-sm bg-white/5 border border-white/10 text-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="py-2 pl-3 pr-8 text-sm bg-white border border-slate-300 text-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="">All Companies</option>
               {clients.map((c) => (
@@ -286,10 +286,10 @@ export default function AccountOrdersPage() {
               placeholder="Search by order number…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm bg-white/5 border border-white/10 text-white placeholder:text-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500/50"
+              className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+              <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -299,7 +299,7 @@ export default function AccountOrdersPage() {
           {hasFilters && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 px-3 py-2 rounded-xl border border-white/8 hover:border-white/15 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 px-3 py-2 rounded-xl border border-slate-200 hover:border-slate-300 transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" /> Clear
             </button>
@@ -315,8 +315,8 @@ export default function AccountOrdersPage() {
                 onClick={() => setActiveStatus(tab.value)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-150 ${
                   activeStatus === tab.value
-                    ? 'bg-teal-500/20 text-teal-400 border-teal-500/30'
-                    : 'bg-white/4 text-slate-500 border-white/8 hover:border-teal-500/30 hover:text-teal-400'
+                    ? 'bg-teal-600 text-white border-teal-600'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300 hover:text-teal-700'
                 }`}
               >
                 {tab.label}
@@ -328,17 +328,17 @@ export default function AccountOrdersPage() {
 
       {/* Branch summary bar */}
       {selectedBranch && !loading && (
-        <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl px-5 py-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-          <span className="font-semibold text-teal-300">{selectedBranchName}</span>
-          <span className="text-teal-400/70">{branchTotal} order{branchTotal !== 1 ? 's' : ''}</span>
-          <span className="text-teal-400/70">Total: <span className="font-bold text-teal-300 tabular-nums">{formatINR(branchSpend)}</span></span>
-          <span className="text-teal-400/70">{branchPending} in progress</span>
-          <span className="text-teal-400/70">{branchDelivered} delivered</span>
+        <div className="bg-teal-50 border border-teal-200 rounded-xl px-5 py-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+          <span className="font-semibold text-teal-700">{selectedBranchName}</span>
+          <span className="text-teal-600/80">{branchTotal} order{branchTotal !== 1 ? 's' : ''}</span>
+          <span className="text-teal-600/80">Total: <span className="font-bold text-teal-700 tabular-nums">{formatINR(branchSpend)}</span></span>
+          <span className="text-teal-600/80">{branchPending} in progress</span>
+          <span className="text-teal-600/80">{branchDelivered} delivered</span>
         </div>
       )}
 
       {/* Order list */}
-      <div className="bg-white/5 backdrop-blur-md border border-white/8 rounded-2xl shadow-xl shadow-black/20 overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         {loading ? (
           <div className="py-14 text-center">
             <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
@@ -346,34 +346,34 @@ export default function AccountOrdersPage() {
           </div>
         ) : orders.length === 0 ? (
           <div className="py-14 text-center">
-            <Package className="w-10 h-10 text-slate-700 mx-auto mb-3" />
-            <p className="text-slate-400 font-medium text-sm">No orders found</p>
-            <p className="text-slate-600 text-xs mt-1">
+            <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-600 font-medium text-sm">No orders found</p>
+            <p className="text-slate-400 text-xs mt-1">
               {hasFilters ? 'Try adjusting your filters.' : "You haven't placed any orders yet."}
             </p>
             {hasFilters && (
-              <button onClick={clearFilters} className="mt-3 text-xs text-teal-400 hover:text-teal-300 transition-colors">
+              <button onClick={clearFilters} className="mt-3 text-xs text-teal-600 hover:text-teal-700 transition-colors">
                 Clear all filters
               </button>
             )}
           </div>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-slate-100">
             {orders.map((order) => {
-              const statusStyle = STATUS_STYLES[order.status] ?? 'bg-white/8 text-slate-400 border-white/10';
+              const statusStyle = STATUS_STYLES[order.status] ?? 'bg-slate-100 text-slate-500 border-slate-200';
               const payStyle    = PAYMENT_STYLES[order.payment_status] ?? PAYMENT_STYLES.pending;
               const isDelivered = order.status === 'delivered';
               const pdfKey      = `${order.id}-invoice`;
               const dcKey       = `${order.id}-dc`;
 
               return (
-                <div key={order.id} className="px-5 py-4 hover:bg-white/4 transition-colors">
+                <div key={order.id} className="px-5 py-4 hover:bg-slate-50 transition-colors">
                   <div className="flex flex-col sm:flex-row sm:items-start gap-3">
 
                     {/* Left: main info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                        <span className="text-sm font-bold text-teal-400 tabular-nums tracking-tight">{order.order_number}</span>
+                        <span className="text-sm font-bold text-teal-600 tabular-nums tracking-tight">{order.order_number}</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${statusStyle}`}>
                           {STATUS_LABELS[order.status] ?? order.status}
                         </span>
@@ -385,10 +385,10 @@ export default function AccountOrdersPage() {
                       {(order.branch_name || order.client_name) && (
                         <div className="flex items-center gap-1.5 mb-1.5">
                           <Building2 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                          <span className="text-sm text-slate-400">
+                          <span className="text-sm text-slate-600">
                             {order.branch_name ?? 'Unknown Branch'}
                             {order.client_name && (
-                              <span className="text-slate-600"> · {order.client_name}</span>
+                              <span className="text-slate-400"> · {order.client_name}</span>
                             )}
                           </span>
                         </div>
@@ -402,12 +402,12 @@ export default function AccountOrdersPage() {
 
                     {/* Right: amount + actions */}
                     <div className="shrink-0 flex flex-col items-end gap-2">
-                      <span className="text-base font-bold text-white tabular-nums tracking-tight">{formatINR(order.total_amount)}</span>
+                      <span className="text-base font-bold text-slate-900 tabular-nums tracking-tight">{formatINR(order.total_amount)}</span>
 
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/buyer/orders/${order.id}`}
-                          className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-slate-400 hover:border-teal-500/30 hover:text-teal-400 transition-colors font-medium"
+                          className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-300 hover:text-teal-700 transition-colors font-medium"
                         >
                           View Details
                         </Link>
@@ -416,7 +416,7 @@ export default function AccountOrdersPage() {
                           onClick={() => handleDownload(order.id, 'invoice', order.order_number)}
                           disabled={pdfLoading === pdfKey}
                           title="Download Invoice"
-                          className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-white/10 text-slate-400 hover:border-teal-500/30 hover:text-teal-400 disabled:opacity-50 transition-colors"
+                          className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-300 hover:text-teal-700 disabled:opacity-50 transition-colors"
                         >
                           {pdfLoading === pdfKey
                             ? <div className="w-3 h-3 border border-slate-400 border-t-transparent rounded-full animate-spin" />
@@ -430,7 +430,7 @@ export default function AccountOrdersPage() {
                             onClick={() => handleDownload(order.id, 'dc', order.order_number)}
                             disabled={pdfLoading === dcKey}
                             title="Download Delivery Challan"
-                            className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-white/10 text-slate-400 hover:border-teal-500/30 hover:text-teal-400 disabled:opacity-50 transition-colors"
+                            className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-300 hover:text-teal-700 disabled:opacity-50 transition-colors"
                           >
                             {pdfLoading === dcKey
                               ? <div className="w-3 h-3 border border-slate-400 border-t-transparent rounded-full animate-spin" />
@@ -451,11 +451,11 @@ export default function AccountOrdersPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white/5 border border-white/8 rounded-2xl px-5 py-3">
+        <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl shadow-sm px-5 py-3">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed font-medium transition-colors"
+            className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed font-medium transition-colors"
           >
             <ChevronLeft className="w-4 h-4" /> Previous
           </button>
@@ -465,7 +465,7 @@ export default function AccountOrdersPage() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed font-medium transition-colors"
+            className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed font-medium transition-colors"
           >
             Next <ChevronRight className="w-4 h-4" />
           </button>
