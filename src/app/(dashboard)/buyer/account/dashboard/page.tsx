@@ -39,26 +39,29 @@ const STATUS_STYLES: Record<string, string> = {
   cancelled: 'bg-rose-100 text-rose-700 border border-rose-200',
 };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── KPI Card ─────────────────────────────────────────────────────────────────
 
 function KpiCard({
-  label, value, sub, subColor = 'text-slate-500', accentColor = 'border-l-slate-300',
-  icon: Icon, iconBg = 'bg-slate-100', iconColor = 'text-slate-500',
+  label, value, sub, subColor = 'text-slate-500',
+  icon: Icon, iconBg, barColor,
 }: {
   label: string; value: string; sub?: string; subColor?: string;
-  accentColor?: string; icon: React.ElementType; iconBg?: string; iconColor?: string;
+  icon: React.ElementType; iconBg: string; barColor: string;
 }) {
   return (
-    <div className={`bg-white border border-slate-200 border-l-[3px] ${accentColor} rounded-xl shadow-sm p-5 flex flex-col gap-3 transition-all duration-200 hover:bg-slate-50`}>
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</p>
-        <div className={`w-8 h-8 rounded-xl ${iconBg} flex items-center justify-center`}>
-          <Icon className={`w-4 h-4 ${iconColor}`} aria-hidden="true" />
+    <div className="relative bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden flex flex-col transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+      <div className={`h-[3px] w-full ${barColor}`} />
+      <div className="p-5 flex flex-col gap-4">
+        <div className="flex items-start justify-between">
+          <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center shadow-sm`}>
+            <Icon className="w-5 h-5 text-white" aria-hidden="true" />
+          </div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right mt-1 leading-relaxed">{label}</p>
         </div>
-      </div>
-      <div>
-        <p className="text-2xl font-bold text-slate-900 tabular-nums tracking-tight">{value}</p>
-        {sub && <p className={`text-xs mt-1 font-medium ${subColor}`}>{sub}</p>}
+        <div>
+          <p className="text-2xl font-extrabold text-slate-900 tabular-nums tracking-tight leading-none">{value}</p>
+          {sub && <p className={`text-xs mt-1.5 font-semibold ${subColor}`}>{sub}</p>}
+        </div>
       </div>
     </div>
   );
@@ -125,6 +128,9 @@ export default function BuyerDashboard() {
     return 'Good evening';
   })();
 
+  const dueSoon = data?.due_soon ?? 0;
+  const overdue = data?.overdue ?? 0;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
@@ -148,7 +154,7 @@ export default function BuyerDashboard() {
                 onClick={() => handlePeriodChange(p)}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 ${
                   period === p
-                    ? 'bg-teal-600 text-white'
+                    ? 'bg-teal-600 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -191,45 +197,51 @@ export default function BuyerDashboard() {
         </div>
       ) : (
         <>
-          {/* ── Row 1: Primary KPIs ──────────────────────────────────────── */}
+          {/* ── Row 1: Financial KPIs ─────────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <KpiCard
               label="Total Spend"
               value={formatINR(data?.monthly_spend ?? 0)}
               sub="In selected period"
+              subColor="text-slate-500"
               icon={TrendingUp}
-              iconBg="bg-teal-500/15"
-              iconColor="text-teal-400"
-              accentColor="border-l-teal-500/80"
+              iconBg="bg-linear-to-br from-teal-400 to-emerald-500"
+              barColor="bg-linear-to-r from-teal-400 to-emerald-500"
             />
             <KpiCard
               label="Outstanding Credit"
               value={formatINR(data?.outstanding_credit ?? 0)}
               sub="Pending payment"
+              subColor="text-slate-500"
               icon={CreditCard}
-              iconBg="bg-blue-500/15"
-              iconColor="text-blue-400"
-              accentColor="border-l-blue-500/60"
+              iconBg="bg-linear-to-br from-blue-400 to-indigo-500"
+              barColor="bg-linear-to-r from-blue-400 to-indigo-500"
             />
             <KpiCard
               label="Due Soon"
-              value={formatINR(data?.due_soon ?? 0)}
+              value={formatINR(dueSoon)}
               sub="Within 7 days"
-              subColor={(data?.due_soon ?? 0) > 0 ? 'text-amber-400' : 'text-slate-500'}
-              icon={(data?.due_soon ?? 0) > 0 ? Clock : CheckCircle2}
-              iconBg={(data?.due_soon ?? 0) > 0 ? 'bg-amber-500/15' : 'bg-emerald-500/15'}
-              iconColor={(data?.due_soon ?? 0) > 0 ? 'text-amber-400' : 'text-emerald-400'}
-              accentColor={(data?.due_soon ?? 0) > 0 ? 'border-l-amber-500/80' : 'border-l-slate-600'}
+              subColor={dueSoon > 0 ? 'text-amber-600' : 'text-slate-500'}
+              icon={dueSoon > 0 ? Clock : CheckCircle2}
+              iconBg={dueSoon > 0
+                ? 'bg-linear-to-br from-amber-400 to-orange-500'
+                : 'bg-linear-to-br from-emerald-400 to-teal-500'}
+              barColor={dueSoon > 0
+                ? 'bg-linear-to-r from-amber-400 to-orange-500'
+                : 'bg-linear-to-r from-emerald-400 to-teal-500'}
             />
             <KpiCard
               label="Overdue"
-              value={formatINR(data?.overdue ?? 0)}
-              sub={(data?.overdue ?? 0) > 0 ? 'Pay immediately' : 'All clear'}
-              subColor={(data?.overdue ?? 0) > 0 ? 'text-rose-400' : 'text-emerald-400'}
-              icon={(data?.overdue ?? 0) > 0 ? AlertTriangle : CheckCircle2}
-              iconBg={(data?.overdue ?? 0) > 0 ? 'bg-rose-500/15' : 'bg-emerald-500/15'}
-              iconColor={(data?.overdue ?? 0) > 0 ? 'text-rose-400' : 'text-emerald-400'}
-              accentColor={(data?.overdue ?? 0) > 0 ? 'border-l-rose-500/80' : 'border-l-slate-600'}
+              value={formatINR(overdue)}
+              sub={overdue > 0 ? 'Pay immediately' : 'All clear'}
+              subColor={overdue > 0 ? 'text-rose-600' : 'text-emerald-600'}
+              icon={overdue > 0 ? AlertTriangle : CheckCircle2}
+              iconBg={overdue > 0
+                ? 'bg-linear-to-br from-rose-400 to-rose-600'
+                : 'bg-linear-to-br from-emerald-400 to-teal-500'}
+              barColor={overdue > 0
+                ? 'bg-linear-to-r from-rose-400 to-rose-600'
+                : 'bg-linear-to-r from-emerald-400 to-teal-500'}
             />
           </div>
 
@@ -240,36 +252,33 @@ export default function BuyerDashboard() {
               value={String(data?.active_orders ?? 0)}
               sub="In progress"
               icon={Package}
-              iconBg="bg-orange-500/15"
-              iconColor="text-orange-400"
-              accentColor="border-l-slate-600"
+              iconBg="bg-linear-to-br from-orange-400 to-amber-500"
+              barColor="bg-linear-to-r from-orange-400 to-amber-500"
             />
             <KpiCard
               label="Delivered"
               value={String(data?.delivered_orders ?? 0)}
               sub="All time"
               icon={CheckCircle2}
-              iconBg="bg-emerald-500/15"
-              iconColor="text-emerald-400"
-              accentColor="border-l-slate-600"
+              iconBg="bg-linear-to-br from-emerald-400 to-teal-500"
+              barColor="bg-linear-to-r from-emerald-400 to-teal-500"
             />
             <KpiCard
               label="Quote Requests"
               value={String(data?.quote_requests ?? 0)}
               sub="All time"
               icon={FileText}
-              iconBg="bg-blue-500/15"
-              iconColor="text-blue-400"
-              accentColor="border-l-slate-600"
+              iconBg="bg-linear-to-br from-indigo-400 to-violet-500"
+              barColor="bg-linear-to-r from-indigo-400 to-violet-500"
             />
           </div>
 
           {/* ── Overdue alert ─────────────────────────────────────────────── */}
-          {(data?.overdue ?? 0) > 0 && (
+          {overdue > 0 && (
             <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-200 rounded-xl">
               <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
               <p className="text-sm text-rose-700 font-medium flex-1">
-                You have <strong className="text-rose-900">{formatINR(data?.overdue ?? 0)}</strong> overdue. Pay immediately to avoid account suspension.
+                You have <strong className="text-rose-900">{formatINR(overdue)}</strong> overdue. Pay immediately to avoid account suspension.
               </p>
               <Link
                 href="/buyer/account/credit"
@@ -296,40 +305,35 @@ export default function BuyerDashboard() {
                   sub: 'Get monthly statement',
                   icon: Download,
                   href: '/buyer/account/orders',
-                  iconBg: 'bg-teal-500/15',
-                  iconColor: 'text-teal-400',
+                  iconBg: 'bg-linear-to-br from-teal-400 to-emerald-500',
                 },
                 {
                   label: 'View Outstanding Payments',
                   sub: `${formatINR(data?.outstanding_credit ?? 0)} pending`,
                   icon: CreditCard,
                   href: '/buyer/account/credit',
-                  iconBg: 'bg-blue-500/15',
-                  iconColor: 'text-blue-400',
+                  iconBg: 'bg-linear-to-br from-blue-400 to-indigo-500',
                 },
                 {
                   label: 'Add New Branch',
                   sub: 'Expand your outlets',
                   icon: Plus,
                   href: '/buyer/account/details?tab=branches',
-                  iconBg: 'bg-emerald-500/15',
-                  iconColor: 'text-emerald-400',
+                  iconBg: 'bg-linear-to-br from-emerald-400 to-teal-500',
                 },
                 {
                   label: 'Apply for Credit',
                   sub: '45-day payment terms',
                   icon: FileText,
                   href: '/buyer/account/credit-apply',
-                  iconBg: 'bg-amber-500/15',
-                  iconColor: 'text-amber-400',
+                  iconBg: 'bg-linear-to-br from-amber-400 to-orange-500',
                 },
                 {
                   label: 'Request Quotation',
                   sub: 'Get bulk pricing',
                   icon: Package,
                   href: '/buyer/account/quotes',
-                  iconBg: 'bg-purple-500/15',
-                  iconColor: 'text-purple-400',
+                  iconBg: 'bg-linear-to-br from-indigo-400 to-violet-500',
                 },
               ].map((action) => (
                 <Link
@@ -337,8 +341,8 @@ export default function BuyerDashboard() {
                   href={action.href}
                   className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-300 transition-all duration-150 group"
                 >
-                  <div className={`w-9 h-9 rounded-xl ${action.iconBg} flex items-center justify-center shrink-0`}>
-                    <action.icon className={`w-4 h-4 ${action.iconColor}`} />
+                  <div className={`w-9 h-9 rounded-xl ${action.iconBg} flex items-center justify-center shrink-0 shadow-sm`}>
+                    <action.icon className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-800 truncate">{action.label}</p>

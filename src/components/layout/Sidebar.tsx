@@ -74,9 +74,9 @@ function getActivePath(pathname: string, items: NavItem[]): string | null {
 }
 
 function getRoleBadgeClass(role: UserRole): string {
-  if (role === 'vendor') return 'bg-purple-500/15 text-purple-300 border border-purple-500/20';
-  if (role === 'admin') return 'bg-rose-500/15 text-rose-300 border border-rose-500/20';
-  return 'bg-teal-500/15 text-teal-300 border border-teal-500/20';
+  if (role === 'vendor') return 'bg-purple-50 text-purple-700 border border-purple-200';
+  if (role === 'admin') return 'bg-rose-50 text-rose-700 border border-rose-200';
+  return 'bg-teal-50 text-teal-700 border border-teal-200';
 }
 
 function getRoleLabel(role: UserRole): string {
@@ -100,22 +100,22 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
   const showCompanySwitcher = isBuyer || isAdminViewingBuyer;
 
   return (
-    <div className="h-full bg-navy-900/95 backdrop-blur-xl border-r border-white/8 w-65 flex flex-col">
+    <div className="h-full bg-white border-r border-slate-200 w-65 flex flex-col">
       {/* ── User info ─────────────────────────────────────────────────────── */}
-      <div className="p-4 border-b border-white/8">
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/8">
+      <div className="p-4 border-b border-slate-100">
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
           <div
-            className="w-10 h-10 rounded-full bg-linear-to-br from-teal-500 to-teal-700 text-white font-bold text-base flex items-center justify-center shrink-0 select-none shadow-lg shadow-teal-900/40"
+            className="w-10 h-10 rounded-full bg-linear-to-br from-teal-500 to-teal-700 text-white font-bold text-base flex items-center justify-center shrink-0 select-none shadow-md shadow-teal-200"
             aria-hidden="true"
           >
             {avatarInitial}
           </div>
           <div className="min-w-0">
-            <p className="font-semibold text-white truncate text-sm leading-snug">
+            <p className="font-semibold text-slate-900 truncate text-sm leading-snug">
               {user.full_name}
             </p>
             {user.company_name && (
-              <p className="text-xs text-teal-400 truncate mt-0.5">
+              <p className="text-xs text-teal-600 truncate mt-0.5">
                 {user.company_name}
               </p>
             )}
@@ -132,8 +132,8 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
 
       {/* ── Company switcher (buyers with multiple companies) ─────────────── */}
       {showCompanySwitcher && (
-        <div className="px-3 py-2.5 border-b border-white/8">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1.5 px-0.5">
+        <div className="px-3 py-2.5 border-b border-slate-100">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1.5 px-0.5">
             Company
           </p>
           <CompanySwitcher compact />
@@ -142,12 +142,12 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
 
       {/* ── Admin-in-buyer-view banner ────────────────────────────────────── */}
       {isAdminViewingBuyer && (
-        <div className="mx-3 mt-3 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-          <p className="text-xs text-amber-300 font-medium">Viewing as Buyer</p>
+        <div className="mx-3 mt-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+          <p className="text-xs text-amber-700 font-medium">Viewing as Buyer</p>
           <Link
             href="/admin"
             onClick={onNavClick}
-            className="text-xs text-teal-400 hover:underline font-medium"
+            className="text-xs text-teal-600 hover:text-teal-700 hover:underline font-medium"
           >
             ← Back to Admin
           </Link>
@@ -170,19 +170,19 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
               onClick={onNavClick}
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-inset ${
                 active
-                  ? 'bg-teal-500/15 text-teal-400 border border-teal-500/20'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent'
+                  ? 'bg-teal-50 text-teal-700 border border-teal-100'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
               }`}
               aria-current={active ? 'page' : undefined}
             >
               {active && (
                 <span
-                  className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.75 bg-teal-400 rounded-r-full"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-0.75 bg-teal-500 rounded-r-full"
                   aria-hidden="true"
                 />
               )}
               <Icon
-                className={`w-4 h-4 shrink-0 ${active ? 'text-teal-400' : 'text-slate-500'}`}
+                className={`w-4 h-4 shrink-0 ${active ? 'text-teal-600' : 'text-slate-400'}`}
                 aria-hidden="true"
               />
               {item.label}
@@ -192,14 +192,14 @@ export default function Sidebar({ user, onNavClick }: SidebarProps) {
       </nav>
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <div className="p-4 border-t border-white/8">
+      <div className="p-4 border-t border-slate-100">
         <a
           href="mailto:support@primeserve.in"
-          className="block text-xs text-teal-400 hover:text-teal-300 transition-colors mb-1.5 focus:outline-none focus:ring-1 focus:ring-teal-500 rounded"
+          className="block text-xs text-teal-600 hover:text-teal-700 transition-colors mb-1.5 focus:outline-none focus:ring-1 focus:ring-teal-500 rounded"
         >
           Need Help?
         </a>
-        <p className="text-xs text-slate-600">PrimeServe v1.0 MVP</p>
+        <p className="text-xs text-slate-400">PrimeServe v1.0 MVP</p>
       </div>
     </div>
   );
