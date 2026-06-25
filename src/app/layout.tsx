@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, DM_Sans, IBM_Plex_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
@@ -19,11 +19,11 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-/** Monospace (prices, order IDs) — JetBrains Mono */
-const jetbrainsMono = JetBrains_Mono({
+/** Monospace (prices, order IDs) — IBM Plex Mono (claimcheck/receipt style) */
+const ibmPlexMono = IBM_Plex_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -45,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${plusJakartaSans.variable} ${dmSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${dmSans.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans bg-slate-50 text-slate-900">
         {children}

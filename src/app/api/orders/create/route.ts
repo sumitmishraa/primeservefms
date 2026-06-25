@@ -302,7 +302,7 @@ export async function POST(
           order_number,
           payment_method: 'razorpay',
           razorpay_order_id: razorpayOrder.id,
-          razorpay_key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+          razorpay_key: process.env.RAZORPAY_KEY_ID!,
           amount: razorpayOrder.amount as number,
           currency: razorpayOrder.currency,
           buyer_name: user.full_name,
