@@ -20,12 +20,36 @@ const VALID_DOC_TYPES: BusinessDocument['doc_type'][] = [
   'gst_certificate',
   'trade_license',
   'pan_card',
+  'pan_card_back',
   'bank_statement',
   'incorporation_proof',
+  'cin_document',
   'cancelled_cheque',
+  'itr',
   'msme_certificate',
   'other',
 ];
+
+// ── Per-document-type format rules ──────────────────────────────────────────
+// Certificates accept images, PDF, or Excel. Bank statements accept PDF/Excel
+// only (a 6-month statement is never a photo) — enforced server-side so a wrong
+// file is rejected even if the client `accept` attribute is bypassed.
+const CERT_EXTS = ['pdf', 'jpg', 'jpeg', 'png', 'xls', 'xlsx'];
+const BANK_EXTS = ['pdf', 'xls', 'xlsx'];
+
+const EXCEL_MIMES = [
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+];
+const CERT_MIMES = ['application/pdf', 'image/jpeg', 'image/png', ...EXCEL_MIMES];
+const BANK_MIMES = ['application/pdf', ...EXCEL_MIMES];
+
+function allowedFormatsFor(docType: BusinessDocument['doc_type']) {
+  if (docType === 'bank_statement') {
+    return { exts: BANK_EXTS, mimes: BANK_MIMES, label: 'a PDF or Excel file' };
+  }
+  return { exts: CERT_EXTS, mimes: CERT_MIMES, label: 'a JPG, PNG, PDF, or Excel file' };
+}
 
 // ---------------------------------------------------------------------------
 // GET
@@ -67,10 +91,21 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       return NextResponse.json({ data: null, error: 'File must be under 10 MB' }, { status: 400 });
     }
 
+    // Server-side format guard (extension + MIME, when the browser provides one)
+    const ext = (file.name.split('.').pop() ?? '').toLowerCase();
+    const { exts, mimes, label } = allowedFormatsFor(doc_type);
+    const extOk = exts.includes(ext);
+    const mimeOk = !file.type || mimes.includes(file.type);
+    if (!extOk || !mimeOk) {
+      return NextResponse.json(
+        { data: null, error: `Invalid file type. Please upload ${label}.` },
+        { status: 400 },
+      );
+    }
+
     const supabase = createAdminClient();
     await supabase.storage.createBucket(BUCKET, { public: false, fileSizeLimit: MAX_SIZE_BYTES });
 
-    const ext = file.name.split('.').pop() ?? 'bin';
     const fileName = `${user.id}/${doc_type}_${Date.now()}.${ext}`;
     const fileBuffer = Buffer.from(await file.arrayBuffer());
 

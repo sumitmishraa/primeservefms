@@ -23,7 +23,7 @@ export interface AdminCreditApplicationItem {
   business_years: number | null;
   notes: string | null;
   admin_notes: string | null;
-  submitted_at: string;
+  submitted_at: string | null;
   reviewed_at: string | null;
   // Document presence flags
   has_gst: boolean;
@@ -57,7 +57,10 @@ export async function GET(
       .order('submitted_at', { ascending: false });
 
     if (statusFilter) {
-      query = query.eq('status', statusFilter as 'submitted' | 'under_review' | 'approved' | 'rejected');
+      query = query.eq(
+        'status',
+        statusFilter as 'draft' | 'submitted' | 'under_review' | 'documents_verified' | 'meeting_scheduled' | 'approved' | 'rejected',
+      );
     }
 
     const { data: apps, error: appsErr } = await query;

@@ -140,9 +140,12 @@ export interface BusinessDocument {
     | 'gst_certificate'
     | 'trade_license'
     | 'pan_card'
+    | 'pan_card_back'
     | 'bank_statement'
     | 'incorporation_proof'
+    | 'cin_document'
     | 'cancelled_cheque'
+    | 'itr'
     | 'msme_certificate'
     | 'other';
   /** Supabase Storage public URL */

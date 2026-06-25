@@ -294,3 +294,38 @@ body {
     opacity: 1;
   }
 }
+
+/* ── "Apply for Credit" CTA — attention pulse + sheen sweep ─────────────── */
+@keyframes ps-credit-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(20 184 166 / 0.45); }
+  50%      { box-shadow: 0 0 0 6px rgb(20 184 166 / 0); }
+}
+@keyframes ps-credit-sheen {
+  0%   { transform: translateX(-160%) rotate(18deg); }
+  60%, 100% { transform: translateX(320%) rotate(18deg); }
+}
+.ps-credit-cta {
+  position: relative;
+  overflow: hidden;
+  animation: ps-credit-pulse 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+.ps-credit-cta::after {
+  content: "";
+  position: absolute;
+  inset: -50% auto -50% 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  transform: translateX(-160%) rotate(18deg);
+  animation: ps-credit-sheen 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+.ps-credit-cta:hover {
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-credit-cta,
+  .ps-credit-cta::after {
+    animation: none;
+  }
+}

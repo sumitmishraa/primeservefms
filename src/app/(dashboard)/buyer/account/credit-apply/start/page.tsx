@@ -3,210 +3,258 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
-  BadgeCheck, Loader2, Check, CheckCircle2, Clock,
-  XCircle, Upload, FileText, ChevronRight, ChevronLeft, Shield, Zap, TrendingUp, Lock,
+  Building2, Receipt, CreditCard, FileCheck, Landmark, ClipboardCheck,
+  Upload, Check, Loader2, ChevronLeft, ChevronRight, ArrowLeft,
+  CheckCircle2, ShieldCheck, FileText, RotateCcw,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { CreditApplicationRecord } from '@/app/api/buyer/credit-application/route';
+import type { CompanyDetails } from '@/app/api/buyer/company/route';
+import type { UserProfile, BusinessDocument } from '@/types';
+import {
+  companyStepSchema, gstStepSchema, panStepSchema, cinStepSchema,
+  type EntityType,
+} from '@/lib/validation/credit';
+import CreditStatusTracker from '@/components/buyer/CreditStatusTracker';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Constants ──────────────────────────────────────────────────────────────
 
-const CREDIT_LIMITS = [
-  { value: 25000,  label: '₹25K' },
-  { value: 50000,  label: '₹50K' },
-  { value: 100000, label: '₹1L' },
-  { value: 200000, label: '₹2L' },
-  { value: 500000, label: '₹5L' },
-];
+const STEPS = [
+  { n: 1, label: 'Company',    Icon: Building2 },
+  { n: 2, label: 'GST',        Icon: Receipt },
+  { n: 3, label: 'PAN',        Icon: CreditCard },
+  { n: 4, label: 'CIN / LLP',  Icon: FileCheck },
+  { n: 5, label: 'Bank',       Icon: Landmark },
+  { n: 6, label: 'Review',     Icon: ClipboardCheck },
+] as const;
 
-const TURNOVER_OPTIONS = [
-  'Under ₹25 Lakhs',
-  '₹25 Lakhs – ₹1 Crore',
-  '₹1 Crore – ₹5 Crore',
-  '₹5 Crore – ₹25 Crore',
-  'Above ₹25 Crore',
-];
+const TOTAL_STEPS = STEPS.length;
+const CERT_ACCEPT = '.pdf,.jpg,.jpeg,.png,.xls,.xlsx';
+const BANK_ACCEPT = '.pdf,.xls,.xlsx';
+const CERT_EXTS = ['pdf', 'jpg', 'jpeg', 'png', 'xls', 'xlsx'];
+const BANK_EXTS = ['pdf', 'xls', 'xlsx'];
 
-// ─── Status display ───────────────────────────────────────────────────────────
+// ─── Upload field ───────────────────────────────────────────────────────────
 
-function ApplicationStatus({ app }: { app: CreditApplicationRecord }) {
-  const statusConfig: Record<string, { icon: React.ElementType; color: string; border: string; bg: string; title: string; body: string }> = {
-    submitted: {
-      icon: Clock, color: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50',
-      title: 'Application Under Review',
-      body: "Your application is under review. We'll notify you within 3–5 business days.",
-    },
-    under_review: {
-      icon: Clock, color: 'text-blue-700', border: 'border-blue-200', bg: 'bg-blue-50',
-      title: 'Being Reviewed',
-      body: 'Our team is actively reviewing your documents and business details.',
-    },
-    approved: {
-      icon: CheckCircle2, color: 'text-emerald-700', border: 'border-emerald-200', bg: 'bg-emerald-50',
-      title: 'Approved! Your credit line is active.',
-      body: 'Congratulations! You can now place orders on 45-day credit terms.',
-    },
-    rejected: {
-      icon: XCircle, color: 'text-rose-700', border: 'border-rose-200', bg: 'bg-rose-50',
-      title: 'Application Not Approved',
-      body: app.admin_notes ?? 'Your application was not approved at this time. Please contact support for details.',
-    },
-  };
-
-  const cfg = statusConfig[app.status] ?? statusConfig.submitted;
-  const Icon = cfg.icon;
-  const submittedDate = new Date(app.submitted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-
-  return (
-    <div className="max-w-2xl mx-auto">
-      <div className={`rounded-2xl border ${cfg.border} ${cfg.bg} backdrop-blur-md p-8`}>
-        <div className="flex items-start gap-4">
-          <div className={`w-12 h-12 rounded-full ${cfg.bg} border ${cfg.border} flex items-center justify-center shrink-0`}>
-            <Icon className={`w-6 h-6 ${cfg.color}`} />
-          </div>
-          <div className="flex-1">
-            <h2 className={`text-lg font-bold ${cfg.color}`}>{cfg.title}</h2>
-            <p className="text-slate-600 text-sm mt-1">{cfg.body}</p>
-            <p className="text-xs text-slate-400 mt-3">Submitted on {submittedDate}</p>
-          </div>
-        </div>
-      </div>
-      <div className="mt-6 flex gap-3">
-        <Link href="/buyer/account/dashboard" className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white text-sm font-semibold rounded-xl hover:bg-teal-500 transition-colors">
-          Back to Dashboard
-        </Link>
-        <Link href="/buyer/account/credit" className="flex items-center gap-2 px-5 py-2.5 border border-slate-200 text-slate-600 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">
-          View Credit Overview
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-// ─── Success screen ───────────────────────────────────────────────────────────
-
-function SuccessScreen() {
-  return (
-    <div className="max-w-lg mx-auto text-center py-12">
-      <div className="w-16 h-16 bg-emerald-50 border-2 border-emerald-200 rounded-full flex items-center justify-center mx-auto mb-6">
-        <CheckCircle2 className="w-8 h-8 text-emerald-600" />
-      </div>
-      <h2 className="text-xl font-bold text-slate-900 mb-2">Application Submitted!</h2>
-      <p className="text-slate-600 text-sm leading-relaxed mb-8 max-w-sm mx-auto">
-        Thank you for applying for a PrimeServe credit line. We&apos;ve received your documents and will review your application within <strong className="text-slate-900">3–5 business days</strong>.
-      </p>
-      <div className="flex gap-3 justify-center">
-        <Link href="/buyer/account/dashboard" className="flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white text-sm font-semibold rounded-xl hover:bg-teal-500 transition-colors">
-          Back to Dashboard
-        </Link>
-        <Link href="/buyer/account/credit" className="flex items-center gap-2 px-5 py-2.5 border border-slate-200 text-slate-600 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">
-          View Credit Overview
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-// ─── Document upload row ──────────────────────────────────────────────────────
-
-interface DocUploadRowProps {
+interface UploadFieldProps {
   label: string;
-  required?: boolean;
+  hint: string;
+  accept: string;
+  exts: string[];
   uploaded: boolean;
+  fileName?: string;
   uploading: boolean;
   onFile: (f: File) => void;
-  preUploaded?: boolean;
 }
 
-function DocUploadRow({ label, required, uploaded, uploading, onFile, preUploaded }: DocUploadRowProps) {
-  const fileRef = useRef<HTMLInputElement>(null);
+function UploadField({ label, hint, accept, exts, uploaded, fileName, uploading, onFile }: UploadFieldProps) {
+  const ref = useRef<HTMLInputElement>(null);
+
+  function pick(f: File | undefined) {
+    if (!f) return;
+    const ext = (f.name.split('.').pop() ?? '').toLowerCase();
+    if (!exts.includes(ext)) {
+      toast.error(`Invalid file type. Allowed: ${exts.join(', ').toUpperCase()}`);
+      return;
+    }
+    onFile(f);
+  }
 
   return (
-    <div className={`flex items-center justify-between p-3.5 rounded-xl border transition-all duration-150 ${
-      uploaded || preUploaded
-        ? 'border-teal-300 bg-teal-50'
-        : 'border-slate-200 bg-white hover:bg-slate-50'
-    }`}>
-      <div className="flex items-center gap-3">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-          uploaded || preUploaded ? 'bg-teal-100' : 'bg-slate-100'
-        }`}>
-          {uploaded || preUploaded
-            ? <Check className="w-4 h-4 text-teal-600" />
-            : <FileText className="w-4 h-4 text-slate-500" />
-          }
+    <div
+      className={`rounded-xl border p-4 transition-colors ${
+        uploaded ? 'border-teal-300 bg-teal-50' : 'border-slate-200 bg-white'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${uploaded ? 'bg-teal-100' : 'bg-slate-100'}`}>
+            {uploaded ? <Check className="h-4 w-4 text-teal-600" /> : <FileText className="h-4 w-4 text-slate-500" />}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-800">{label}</p>
+            {uploaded
+              ? <p className="truncate text-xs text-teal-600">Uploaded{fileName ? ` — ${fileName}` : ''}</p>
+              : <p className="text-xs text-slate-400">{hint}</p>}
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-medium text-slate-800">{label}</p>
-          {required && !uploaded && !preUploaded && <p className="text-xs text-rose-600 mt-0.5">Required</p>}
-          {preUploaded && <p className="text-xs text-teal-600 mt-0.5">Already on file</p>}
-          {uploaded && !preUploaded && <p className="text-xs text-teal-600 mt-0.5">Ready to submit</p>}
-        </div>
+        <button
+          type="button"
+          disabled={uploading}
+          onClick={() => ref.current?.click()}
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-teal-300 px-3 py-1.5 text-xs font-semibold text-teal-600 transition-colors hover:bg-teal-50 disabled:opacity-50"
+        >
+          {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+          {uploaded ? 'Replace' : 'Upload'}
+        </button>
+        <input
+          ref={ref}
+          type="file"
+          accept={accept}
+          className="hidden"
+          onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ''; }}
+        />
       </div>
-      {!preUploaded && (
-        <>
-          <button
-            type="button"
-            disabled={uploading}
-            onClick={() => fileRef.current?.click()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-teal-300 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-50"
-          >
-            {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-            {uploaded ? 'Replace' : 'Upload'}
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png,.webp"
-            className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
-          />
-        </>
-      )}
     </div>
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+// ─── Field helpers ──────────────────────────────────────────────────────────
 
-export default function CreditApplyStartPage() {
+function Field({ label, error, children, required }: { label: string; error?: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-xs font-medium text-slate-600">
+        {label} {required && <span className="text-rose-500">*</span>}
+      </label>
+      {children}
+      {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
+    </div>
+  );
+}
+
+const inputCls =
+  'w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30';
+
+// ─── Page ───────────────────────────────────────────────────────────────────
+
+export default function CreditApplyWizardPage() {
   const [loading, setLoading] = useState(true);
-  const [submitted, setSubmitted] = useState(false);
-  const [existing, setExisting] = useState<CreditApplicationRecord | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [app, setApp] = useState<CreditApplicationRecord | null>(null);
+  const [justSubmitted, setJustSubmitted] = useState(false);
 
-  const [requestedLimit, setRequestedLimit] = useState<number>(100000);
-  const [businessYears, setBusinessYears] = useState('');
-  const [annualTurnover, setAnnualTurnover] = useState('');
-  const [notes, setNotes] = useState('');
+  const [step, setStep] = useState(1);
+  const [resumedFrom, setResumedFrom] = useState(0); // step we resumed at (for banner)
 
+  // Step 1 — company & applicant
+  const [entityType, setEntityType] = useState<EntityType>('company');
+  const [legalName, setLegalName] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [designation, setDesignation] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+
+  // Identity numbers
+  const [gstNumber, setGstNumber] = useState('');
+  const [panNumber, setPanNumber] = useState('');
+  const [cinNumber, setCinNumber] = useState('');
+
+  // Document URLs + names
   const [gstUrl, setGstUrl] = useState('');
-  const [panUrl, setPanUrl] = useState('');
+  const [panFrontUrl, setPanFrontUrl] = useState('');
+  const [panBackUrl, setPanBackUrl] = useState('');
   const [cinUrl, setCinUrl] = useState('');
-  const [chequeUrl, setChequeUrl] = useState('');
-  const [itrUrl, setItrUrl] = useState('');
   const [bankUrl, setBankUrl] = useState('');
-  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [docNames, setDocNames] = useState<Record<string, string>>({});
 
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // ── Initial load: application + profile + company ──────────────────────────
   useEffect(() => {
-    fetch('/api/buyer/credit-application')
-      .then((r) => r.json())
-      .then((j: { data: CreditApplicationRecord | null }) => { if (j.data) setExisting(j.data); })
-      .catch(() => {/* silently ignore */})
-      .finally(() => setLoading(false));
+    (async () => {
+      try {
+        const [appRes, profRes, compRes, docRes] = await Promise.all([
+          fetch('/api/buyer/credit-application').then((r) => r.json()) as Promise<{ data: CreditApplicationRecord | null }>,
+          fetch('/api/buyer/profile').then((r) => r.json()) as Promise<{ data: (UserProfile & { client_name: string | null }) | null }>,
+          fetch('/api/buyer/company').then((r) => r.json()) as Promise<{ data: CompanyDetails | null }>,
+          fetch('/api/buyer/documents').then((r) => r.json()) as Promise<{ data: BusinessDocument[] | null }>,
+        ]);
+
+        const existing = appRes.data;
+        const prof = profRes.data;
+        const comp = compRes.data;
+        const docs = docRes.data ?? [];
+
+        // Prefill step-1 fields from profile/company
+        const ct = comp?.company_type;
+        setEntityType(ct === 'llp' ? 'llp' : 'company');
+        setLegalName(comp?.legal_company_name ?? comp?.company_name ?? '');
+        setFullName(prof?.full_name ?? '');
+        setDesignation(prof?.designation ?? '');
+        setEmail(prof?.procurement_email ?? prof?.email ?? '');
+        setPhone(prof?.phone ?? '');
+        setGstNumber(comp?.gst_number ?? '');
+        setPanNumber(comp?.tax_id ?? '');
+        setCinNumber(comp?.cin_number ?? '');
+
+        // Pre-existing profile docs (offered as already-on-file for new applications)
+        const findDoc = (t: BusinessDocument['doc_type']) => docs.find((d) => d.doc_type === t);
+        const profileGst = findDoc('gst_certificate');
+        const profilePan = findDoc('pan_card');
+
+        if (existing && existing.status !== 'draft') {
+          // Active / terminal — show tracker, not the form
+          setApp(existing);
+        } else if (existing && existing.status === 'draft') {
+          // Resume the draft — overlay saved values
+          if (existing.entity_type) setEntityType(existing.entity_type);
+          if (existing.gst_number) setGstNumber(existing.gst_number);
+          if (existing.pan_number) setPanNumber(existing.pan_number);
+          if (existing.cin_number) setCinNumber(existing.cin_number);
+          setGstUrl(existing.gst_certificate_url ?? profileGst?.url ?? '');
+          setPanFrontUrl(existing.pan_card_url ?? profilePan?.url ?? '');
+          setPanBackUrl(existing.pan_card_back_url ?? '');
+          setCinUrl(existing.cin_document_url ?? '');
+          setBankUrl(existing.bank_statement_url ?? '');
+          setApp(existing);
+          const resumeStep = Math.min(Math.max(existing.current_step ?? 1, 1), TOTAL_STEPS);
+          setStep(resumeStep);
+          if (resumeStep > 1) setResumedFrom(resumeStep);
+        } else {
+          // Brand-new — offer any profile docs already on file
+          setGstUrl(profileGst?.url ?? '');
+          setPanFrontUrl(profilePan?.url ?? '');
+        }
+      } catch {
+        toast.error('Could not load your application. Please refresh.');
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  async function uploadDoc(docKey: string, file: File, setter: (url: string) => void) {
-    setUploadingDoc(docKey);
+  // ── Draft autosave (PUT) ───────────────────────────────────────────────────
+  async function saveDraft(patch: Record<string, unknown>): Promise<boolean> {
+    try {
+      const res = await fetch('/api/buyer/credit-application', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      const j = (await res.json()) as { data: CreditApplicationRecord | null; error: string | null };
+      if (!res.ok || j.error) throw new Error(j.error ?? 'Failed to save');
+      if (j.data) setApp(j.data);
+      return true;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save progress');
+      return false;
+    }
+  }
+
+  // ── Upload ─────────────────────────────────────────────────────────────────
+  async function uploadDoc(
+    docType: BusinessDocument['doc_type'],
+    file: File,
+    setUrl: (u: string) => void,
+    draftKey: string,
+  ) {
+    setUploadingDoc(docType);
     try {
       const form = new FormData();
-      form.append('doc_type', docKey);
+      form.append('doc_type', docType);
       form.append('file', file);
       const res = await fetch('/api/buyer/documents', { method: 'POST', body: form });
-      const j = await res.json() as { data: { url: string } | null; error: string | null };
+      const j = (await res.json()) as { data: { url: string } | null; error: string | null };
       if (!res.ok || j.error) throw new Error(j.error ?? 'Upload failed');
-      setter(j.data?.url ?? '');
+      const url = j.data?.url ?? '';
+      setUrl(url);
+      setDocNames((m) => ({ ...m, [docType]: file.name }));
       toast.success('Document uploaded');
+      // Autosave the link so a resume keeps it
+      void saveDraft({ [draftKey]: url });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Upload failed');
     } finally {
@@ -214,316 +262,409 @@ export default function CreditApplyStartPage() {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!gstUrl && !chequeUrl) {
-      toast.error('Please upload at least your GST certificate and cancelled cheque');
-      return;
-    }
+  // ── Step navigation ────────────────────────────────────────────────────────
+  function back() {
+    setErrors({});
+    setStep((s) => Math.max(1, s - 1));
+  }
+
+  async function next() {
+    setErrors({});
     setSaving(true);
     try {
-      const res = await fetch('/api/buyer/credit-application', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requested_credit_limit: requestedLimit,
-          business_years: businessYears ? parseInt(businessYears, 10) : null,
-          annual_turnover: annualTurnover || null,
-          notes: notes.trim() || null,
-          gst_certificate_url: gstUrl || null,
-          pan_card_url: panUrl || null,
-          cin_document_url: cinUrl || null,
-          cancelled_cheque_url: chequeUrl || null,
-          itr_url: itrUrl || null,
-          bank_statement_url: bankUrl || null,
-        }),
-      });
-      const j = await res.json() as { error: string | null };
-      if (!res.ok || j.error) throw new Error(j.error ?? 'Submission failed');
-      setSubmitted(true);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Submission failed');
+      if (step === 1) {
+        const parsed = companyStepSchema.safeParse({
+          entity_type: entityType,
+          legal_company_name: legalName,
+          full_name: fullName,
+          designation,
+          contact_email: email,
+          contact_phone: phone,
+        });
+        if (!parsed.success) return setFieldErrors(parsed.error);
+        if (!(await saveDraft({
+          entity_type: entityType,
+          legal_company_name: legalName,
+          full_name: fullName,
+          designation,
+          contact_email: email,
+          contact_phone: phone,
+          current_step: 2,
+        }))) return;
+      } else if (step === 2) {
+        const parsed = gstStepSchema.safeParse({ gst_number: gstNumber });
+        if (!parsed.success) return setFieldErrors(parsed.error);
+        if (!gstUrl) return void setErrors({ gst_doc: 'Please upload your GST certificate' });
+        if (!(await saveDraft({ gst_number: gstNumber, gst_certificate_url: gstUrl, current_step: 3 }))) return;
+      } else if (step === 3) {
+        const parsed = panStepSchema.safeParse({ pan_number: panNumber });
+        if (!parsed.success) return setFieldErrors(parsed.error);
+        if (!panFrontUrl) return void setErrors({ pan_front: 'Please upload the front of the PAN card' });
+        if (!panBackUrl) return void setErrors({ pan_back: 'Please upload the back of the PAN card' });
+        if (!(await saveDraft({ pan_number: panNumber, pan_card_url: panFrontUrl, pan_card_back_url: panBackUrl, current_step: 4 }))) return;
+      } else if (step === 4) {
+        const parsed = cinStepSchema.safeParse({ entity_type: entityType, cin_number: cinNumber });
+        if (!parsed.success) return setFieldErrors(parsed.error);
+        if (!cinUrl) return void setErrors({ cin_doc: 'Please upload your Certificate of Incorporation / LLP Deed' });
+        if (!(await saveDraft({ cin_number: cinNumber, cin_document_url: cinUrl, current_step: 5 }))) return;
+      } else if (step === 5) {
+        if (!bankUrl) return void setErrors({ bank_doc: 'Please upload your 6-month bank statement' });
+        if (!(await saveDraft({ bank_statement_url: bankUrl, current_step: 6 }))) return;
+      }
+      setStep((s) => Math.min(TOTAL_STEPS, s + 1));
     } finally {
       setSaving(false);
     }
   }
 
+  function setFieldErrors(err: import('zod').ZodError) {
+    const map: Record<string, string> = {};
+    for (const issue of err.issues) map[String(issue.path[0])] = issue.message;
+    setErrors(map);
+    toast.error('Please fix the highlighted fields');
+  }
+
+  async function submit() {
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/buyer/credit-application', { method: 'POST' });
+      const j = (await res.json()) as { data: CreditApplicationRecord | null; error: string | null };
+      if (!res.ok || j.error) throw new Error(j.error ?? 'Submission failed');
+      if (j.data) setApp(j.data);
+      setJustSubmitted(true);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Submission failed');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function startNewApplication() {
+    setApp(null);
+    setJustSubmitted(false);
+    setStep(1);
+    setResumedFrom(0);
+    setGstUrl(''); setPanFrontUrl(''); setPanBackUrl(''); setCinUrl(''); setBankUrl('');
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="w-7 h-7 animate-spin text-teal-500" />
+        <Loader2 className="h-7 w-7 animate-spin text-teal-500" />
       </div>
     );
   }
 
+  const isActive = app && app.status !== 'draft' && app.status !== 'rejected';
+
+  // Thank-you (just submitted) or status tracker for active applications
+  if (isActive && app) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 space-y-6">
+        {justSubmitted && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border-2 border-emerald-200 bg-white">
+              <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-900">Thank you for submitting the application</h1>
+            <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">
+              We have received your details and documents. <strong>We will contact you shortly</strong> to
+              take your credit line forward.
+            </p>
+          </div>
+        )}
+
+        {!justSubmitted && (
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Your credit application</h1>
+            <p className="mt-0.5 text-sm text-slate-500">Track your application status below.</p>
+          </div>
+        )}
+
+        <CreditStatusTracker app={app} />
+
+        <div className="flex flex-wrap gap-3">
+          <Link href="/buyer/account/credit" className="rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700">
+            View Credit Overview
+          </Link>
+          <Link href="/buyer/account/dashboard" className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50">
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Rejected — allow a fresh start
+  if (app && app.status === 'rejected') {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 space-y-6">
+        <CreditStatusTracker app={app} />
+        <button
+          onClick={startNewApplication}
+          className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700"
+        >
+          <RotateCcw className="h-4 w-4" /> Start a new application
+        </button>
+      </div>
+    );
+  }
+
+  // ── Wizard ─────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-      {/* Back to overview */}
+    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
       <Link
         href="/buyer/account/credit-apply"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-teal-600 transition-colors mb-4"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-teal-600"
       >
-        <ChevronLeft className="w-4 h-4" />
-        Back to credit overview
+        <ArrowLeft className="h-4 w-4" /> Back to credit overview
       </Link>
 
-      {/* Page header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center">
-            <BadgeCheck className="w-5 h-5 text-teal-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">Apply for Credit</h1>
+      <h1 className="text-2xl font-bold text-slate-900">Apply for Credit</h1>
+      <p className="mt-0.5 text-sm text-slate-500">
+        Step {step} of {TOTAL_STEPS} — your progress is saved automatically.
+      </p>
+
+      {resumedFrom > 1 && step === resumedFrom && (
+        <div className="mt-4 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-800">
+          Welcome back! You completed {resumedFrom - 1} of {TOTAL_STEPS} steps — let&apos;s continue.
         </div>
-        <p className="text-sm text-slate-500 ml-12">Get a 45-day credit line to place orders now and pay later</p>
+      )}
+
+      {/* Progress stepper */}
+      <div className="mt-6 mb-7">
+        <div className="flex items-center">
+          {STEPS.map((s, i) => {
+            const done = s.n < step;
+            const current = s.n === step;
+            const Icon = s.Icon;
+            return (
+              <div key={s.n} className="flex flex-1 items-center last:flex-none">
+                <div className="flex flex-col items-center gap-1.5">
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors ${
+                      done
+                        ? 'border-teal-600 bg-teal-600 text-white'
+                        : current
+                          ? 'border-teal-600 bg-teal-50 text-teal-700'
+                          : 'border-slate-200 bg-white text-slate-400'
+                    }`}
+                  >
+                    {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                  </div>
+                  <span className={`hidden text-[11px] font-medium sm:block ${current ? 'text-teal-700' : 'text-slate-400'}`}>
+                    {s.label}
+                  </span>
+                </div>
+                {i < STEPS.length - 1 && (
+                  <div className={`mx-1.5 h-0.5 flex-1 rounded-full ${s.n < step ? 'bg-teal-600' : 'bg-slate-200'}`} />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {submitted && <SuccessScreen />}
-      {!submitted && existing && <ApplicationStatus app={existing} />}
-
-      {!submitted && !existing && (
-        <form onSubmit={handleSubmit}>
-          {/* 3-column grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-
-            {/* ── Column 1: What you need ──────────────────────────────── */}
-            <div className="lg:col-span-1 space-y-4">
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
-                <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-4">What You Need</h2>
-
-                <div className="space-y-2.5 mb-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Required</p>
-                  {[
-                    'GST Registration Certificate',
-                    'PAN Card (Company or Director)',
-                    'CIN / LLP Deed',
-                    'Cancelled Cheque',
-                  ].map((doc) => (
-                    <div key={doc} className="flex items-center gap-2.5">
-                      <div className="w-4 h-4 rounded-full border-2 border-teal-400 bg-teal-50 flex items-center justify-center shrink-0">
-                        <div className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                      </div>
-                      <span className="text-sm text-slate-700">{doc}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="border-t border-slate-200 pt-4 space-y-2.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Optional</p>
-                  {[
-                    'Last 2 years ITR',
-                    '6-month Bank Statement',
-                    'MSME / Udyam Certificate',
-                  ].map((doc) => (
-                    <div key={doc} className="flex items-center gap-2.5">
-                      <div className="w-4 h-4 rounded-full border-2 border-slate-300 shrink-0" />
-                      <span className="text-sm text-slate-500">{doc}</span>
-                    </div>
-                  ))}
-                </div>
+      {/* Step card */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        {step === 1 && (
+          <div className="space-y-5">
+            <StepHeader Icon={Building2} title="Company & applicant details" sub="We've pre-filled what we know from your account." />
+            <Field label="Entity type" required>
+              <div className="grid grid-cols-2 gap-2">
+                {(['company', 'llp'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setEntityType(t)}
+                    className={`rounded-lg border-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+                      entityType === t ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-slate-200 text-slate-600 hover:border-teal-300'
+                    }`}
+                  >
+                    {t === 'company' ? 'Private / Public Company' : 'LLP'}
+                  </button>
+                ))}
               </div>
-
-              {/* How it works */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
-                <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-4">How It Works</h3>
-                <div className="space-y-4">
-                  {[
-                    'Submit application with KYC documents',
-                    'Team reviews in 3–5 business days',
-                    'Place orders on 45-day credit terms',
-                    'Consolidated invoice at month-end',
-                  ].map((step, i) => (
-                    <div key={step} className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-teal-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                        {i + 1}
-                      </div>
-                      <p className="text-xs text-slate-600 leading-relaxed">{step}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            </Field>
+            <Field label="Legal company name" required error={errors.legal_company_name}>
+              <input className={inputCls} value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder="As on Certificate of Incorporation" />
+            </Field>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Your full name" required error={errors.full_name}>
+                <input className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" />
+              </Field>
+              <Field label="Your designation" required error={errors.designation}>
+                <input className={inputCls} value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Procurement Manager" />
+              </Field>
             </div>
-
-            {/* ── Column 2: Form ───────────────────────────────────────── */}
-            <div className="lg:col-span-2 space-y-5">
-              {/* Credit details */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
-                <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-5">Credit Details</h2>
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-2">Requested Credit Limit <span className="text-rose-500">*</span></label>
-                    <div className="grid grid-cols-5 gap-2">
-                      {CREDIT_LIMITS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => setRequestedLimit(opt.value)}
-                          className={`py-2.5 text-sm font-bold rounded-xl border-2 transition-all duration-150 ${
-                            requestedLimit === opt.value
-                              ? 'border-teal-600 bg-teal-50 text-teal-700 shadow-sm'
-                              : 'border-slate-200 bg-white text-slate-600 hover:border-teal-400 hover:text-teal-700'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1.5">Years in Business</label>
-                      <input
-                        type="number"
-                        value={businessYears}
-                        onChange={(e) => setBusinessYears(e.target.value)}
-                        className="w-full px-3 py-2.5 text-sm bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                        placeholder="e.g. 5"
-                        min={0}
-                        max={100}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1.5">Annual Turnover</label>
-                      <select
-                        value={annualTurnover}
-                        onChange={(e) => setAnnualTurnover(e.target.value)}
-                        className="w-full px-3 py-2.5 text-sm bg-white border border-slate-300 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                      >
-                        <option value="">Select range</option>
-                        {TURNOVER_OPTIONS.map((o) => (
-                          <option key={o} value={o}>{o}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1.5">Additional Notes <span className="text-slate-400 font-normal">(optional)</span></label>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      className="w-full px-3 py-2.5 text-sm bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
-                      rows={3}
-                      placeholder="Anything you'd like us to know about your business"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Document uploads */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
-                <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-1.5">Upload Documents</h2>
-                <p className="text-xs text-slate-400 mb-5">PDF, JPG, PNG or WebP · Max 10 MB each</p>
-
-                <div className="space-y-2.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">Required</p>
-                  <DocUploadRow label="GST Registration Certificate" required uploaded={!!gstUrl} uploading={uploadingDoc === 'gst_certificate'} onFile={(f) => uploadDoc('gst_certificate', f, setGstUrl)} />
-                  <DocUploadRow label="PAN Card" required uploaded={!!panUrl} uploading={uploadingDoc === 'pan_card'} onFile={(f) => uploadDoc('pan_card', f, setPanUrl)} />
-                  <DocUploadRow label="CIN / LLP Deed" required uploaded={!!cinUrl} uploading={uploadingDoc === 'cin_document'} onFile={(f) => uploadDoc('cin_document', f, setCinUrl)} />
-                  <DocUploadRow label="Cancelled Cheque" required uploaded={!!chequeUrl} uploading={uploadingDoc === 'cancelled_cheque'} onFile={(f) => uploadDoc('cancelled_cheque', f, setChequeUrl)} />
-
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mt-4 mb-2">Optional</p>
-                  <DocUploadRow label="Last 2 Years ITR" uploaded={!!itrUrl} uploading={uploadingDoc === 'itr'} onFile={(f) => uploadDoc('itr', f, setItrUrl)} />
-                  <DocUploadRow label="6-Month Bank Statement" uploaded={!!bankUrl} uploading={uploadingDoc === 'bank_statement'} onFile={(f) => uploadDoc('bank_statement', f, setBankUrl)} />
-                </div>
-              </div>
-
-              {/* Submit */}
-              <div className="flex items-center justify-between p-5 bg-teal-50 border border-teal-200 rounded-xl">
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">Ready to apply?</p>
-                  <p className="text-xs text-slate-500 mt-0.5">By submitting, you confirm all documents are genuine.</p>
-                </div>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 text-white text-sm font-bold rounded-xl hover:bg-teal-500 disabled:opacity-60 transition-colors shadow-lg shadow-teal-500/20"
-                >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
-                  {saving ? 'Submitting…' : 'Submit Application'}
-                </button>
-              </div>
-            </div>
-
-            {/* ── Column 3: Trust & Timeline ───────────────────────────── */}
-            <div className="lg:col-span-1 space-y-4">
-              {/* Why Credit? */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
-                <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-4">Why Apply?</h3>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
-                      <Zap className="w-4 h-4 text-teal-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800">Buy Now, Pay Later</p>
-                      <p className="text-xs text-slate-500 mt-0.5">Order supplies and pay 45 days after delivery</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                      <TrendingUp className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800">Expand Procurement</p>
-                      <p className="text-xs text-slate-500 mt-0.5">Stock more branches without upfront capital</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
-                      <BadgeCheck className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800">Track Per Branch</p>
-                      <p className="text-xs text-slate-500 mt-0.5">Consolidated invoices broken down by location</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Approval Timeline */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
-                <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-4">Approval Timeline</h3>
-                <div className="relative pl-4">
-                  <div className="absolute left-1.75 top-2 bottom-2 w-px bg-slate-200" />
-                  {[
-                    { label: 'Application Submitted', sub: 'Immediately', active: true },
-                    { label: 'Document Verification', sub: '1–2 business days', active: false },
-                    { label: 'Credit Decision', sub: '3–5 business days', active: false },
-                    { label: 'Credit Line Activated', sub: 'Upon approval', active: false },
-                  ].map((step) => (
-                    <div key={step.label} className="relative flex items-start gap-3 pb-4 last:pb-0">
-                      <div className={`absolute -left-1.25 top-1 w-3 h-3 rounded-full border-2 ${step.active ? 'border-teal-500 bg-teal-50' : 'border-slate-300 bg-slate-100'}`} />
-                      <div className="ml-3">
-                        <p className={`text-xs font-semibold ${step.active ? 'text-teal-600' : 'text-slate-600'}`}>{step.label}</p>
-                        <p className="text-[11px] text-slate-400">{step.sub}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Security badge */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-                    <Lock className="w-4 h-4 text-emerald-600" />
-                  </div>
-                  <p className="text-sm font-semibold text-slate-800">Secure & Encrypted</p>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  All documents are stored in encrypted storage. Your financial information is never shared with third parties.
-                </p>
-                <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-600">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span>256-bit AES encryption</span>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Contact email" required error={errors.contact_email}>
+                <input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" />
+              </Field>
+              <Field label="Contact phone" required error={errors.contact_phone}>
+                <input className={inputCls} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="10-digit mobile" />
+              </Field>
             </div>
           </div>
-        </form>
-      )}
+        )}
+
+        {step === 2 && (
+          <div className="space-y-5">
+            <StepHeader Icon={Receipt} title="GST details" sub="Enter your GSTIN and upload the GST registration certificate." />
+            <Field label="GST number (GSTIN)" required error={errors.gst_number}>
+              <input className={`${inputCls} uppercase`} value={gstNumber} onChange={(e) => setGstNumber(e.target.value.toUpperCase())} placeholder="22AAAAA0000A1Z5" maxLength={15} />
+            </Field>
+            <UploadField
+              label="GST Registration Certificate" hint="JPG, PNG, PDF or Excel · max 10 MB"
+              accept={CERT_ACCEPT} exts={CERT_EXTS}
+              uploaded={!!gstUrl} fileName={docNames.gst_certificate}
+              uploading={uploadingDoc === 'gst_certificate'}
+              onFile={(f) => uploadDoc('gst_certificate', f, setGstUrl, 'gst_certificate_url')}
+            />
+            {errors.gst_doc && <p className="-mt-2 text-xs text-rose-600">{errors.gst_doc}</p>}
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="space-y-5">
+            <StepHeader Icon={CreditCard} title="PAN details" sub="Enter the company PAN and upload both sides of the card." />
+            <Field label="PAN number" required error={errors.pan_number}>
+              <input className={`${inputCls} uppercase`} value={panNumber} onChange={(e) => setPanNumber(e.target.value.toUpperCase())} placeholder="AAAAA0000A" maxLength={10} />
+            </Field>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <UploadField
+                label="PAN card — front" hint="JPG, PNG, PDF or Excel"
+                accept={CERT_ACCEPT} exts={CERT_EXTS}
+                uploaded={!!panFrontUrl} fileName={docNames.pan_card}
+                uploading={uploadingDoc === 'pan_card'}
+                onFile={(f) => uploadDoc('pan_card', f, setPanFrontUrl, 'pan_card_url')}
+              />
+              <UploadField
+                label="PAN card — back" hint="JPG, PNG, PDF or Excel"
+                accept={CERT_ACCEPT} exts={CERT_EXTS}
+                uploaded={!!panBackUrl} fileName={docNames.pan_card_back}
+                uploading={uploadingDoc === 'pan_card_back'}
+                onFile={(f) => uploadDoc('pan_card_back', f, setPanBackUrl, 'pan_card_back_url')}
+              />
+            </div>
+            {(errors.pan_front || errors.pan_back) && (
+              <p className="-mt-2 text-xs text-rose-600">{errors.pan_front ?? errors.pan_back}</p>
+            )}
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="space-y-5">
+            <StepHeader Icon={FileCheck} title={entityType === 'llp' ? 'LLP details' : 'CIN details'} sub={entityType === 'llp' ? 'Enter your LLPIN and upload the LLP Deed.' : 'Enter your CIN and upload the Certificate of Incorporation.'} />
+            <Field label={entityType === 'llp' ? 'LLPIN' : 'CIN'} required error={errors.cin_number}>
+              <input className={`${inputCls} uppercase`} value={cinNumber} onChange={(e) => setCinNumber(e.target.value.toUpperCase())} placeholder={entityType === 'llp' ? 'AAA-1234' : 'U72200KA2013PTC097389'} maxLength={21} />
+            </Field>
+            <UploadField
+              label={entityType === 'llp' ? 'LLP Deed' : 'Certificate of Incorporation'} hint="JPG, PNG, PDF or Excel · max 10 MB"
+              accept={CERT_ACCEPT} exts={CERT_EXTS}
+              uploaded={!!cinUrl} fileName={docNames.cin_document}
+              uploading={uploadingDoc === 'cin_document'}
+              onFile={(f) => uploadDoc('cin_document', f, setCinUrl, 'cin_document_url')}
+            />
+            {errors.cin_doc && <p className="-mt-2 text-xs text-rose-600">{errors.cin_doc}</p>}
+          </div>
+        )}
+
+        {step === 5 && (
+          <div className="space-y-5">
+            <StepHeader Icon={Landmark} title="Bank statement" sub="Upload your last 6 months' bank statement. PDF or Excel only." />
+            <UploadField
+              label="6-Month Bank Statement" hint="PDF or Excel only · max 10 MB"
+              accept={BANK_ACCEPT} exts={BANK_EXTS}
+              uploaded={!!bankUrl} fileName={docNames.bank_statement}
+              uploading={uploadingDoc === 'bank_statement'}
+              onFile={(f) => uploadDoc('bank_statement', f, setBankUrl, 'bank_statement_url')}
+            />
+            {errors.bank_doc && <p className="-mt-2 text-xs text-rose-600">{errors.bank_doc}</p>}
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2.5 text-xs text-slate-500">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
+              Only PDF or Excel statements are accepted — anything else will be rejected.
+            </div>
+          </div>
+        )}
+
+        {step === 6 && (
+          <div className="space-y-5">
+            <StepHeader Icon={ClipboardCheck} title="Review & submit" sub="Please confirm everything is correct before submitting." />
+            <dl className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+              {[
+                { k: 'Entity type', v: entityType === 'llp' ? 'LLP' : 'Company' },
+                { k: 'Company', v: legalName },
+                { k: 'Applicant', v: `${fullName}${designation ? ` · ${designation}` : ''}` },
+                { k: 'GST', v: gstNumber, doc: !!gstUrl },
+                { k: 'PAN', v: panNumber, doc: !!panFrontUrl && !!panBackUrl },
+                { k: entityType === 'llp' ? 'LLPIN' : 'CIN', v: cinNumber, doc: !!cinUrl },
+                { k: 'Bank statement', v: bankUrl ? 'Uploaded' : '—', doc: !!bankUrl },
+              ].map((row) => (
+                <div key={row.k} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <dt className="text-xs font-medium uppercase tracking-wider text-slate-400">{row.k}</dt>
+                  <dd className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <span className="max-w-48 truncate">{row.v || '—'}</span>
+                    {'doc' in row && (
+                      row.doc
+                        ? <Check className="h-4 w-4 text-teal-600" />
+                        : <span className="text-xs text-rose-500">missing</span>
+                    )}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="text-xs text-slate-400">By submitting, you confirm all details and documents are genuine.</p>
+          </div>
+        )}
+
+        {/* Nav buttons */}
+        <div className="mt-7 flex items-center justify-between border-t border-slate-100 pt-5">
+          <button
+            type="button"
+            onClick={back}
+            disabled={step === 1 || saving || submitting}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-40"
+          >
+            <ChevronLeft className="h-4 w-4" /> Back
+          </button>
+
+          {step < TOTAL_STEPS ? (
+            <button
+              type="button"
+              onClick={next}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-teal-500/20 transition-colors hover:bg-teal-700 disabled:opacity-60"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Save & Continue <ChevronRight className="h-4 w-4" /></>}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={submit}
+              disabled={submitting}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-teal-500/20 transition-colors hover:bg-teal-700 disabled:opacity-60"
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Submit Application <Check className="h-4 w-4" /></>}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepHeader({ Icon, title, sub }: { Icon: React.ElementType; title: string; sub: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-teal-200 bg-teal-50">
+        <Icon className="h-5 w-5 text-teal-600" />
+      </div>
+      <div>
+        <h2 className="text-base font-bold text-slate-900">{title}</h2>
+        <p className="text-sm text-slate-500">{sub}</p>
+      </div>
     </div>
   );
 }

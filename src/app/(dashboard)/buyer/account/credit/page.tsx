@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { formatINR, formatDate } from '@/lib/utils/formatting';
 import type { CreditAccount } from '@/app/api/buyer/credit/route';
+import type { CreditApplicationRecord } from '@/app/api/buyer/credit-application/route';
+import CreditStatusTracker from '@/components/buyer/CreditStatusTracker';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,18 +75,46 @@ function buildBranchSummary(rows: CreditOrderRow[]): BranchSummary[] {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+/** In-flight / declined application states that warrant showing the tracker. */
+const TRACKED_STATUSES = ['submitted', 'under_review', 'documents_verified', 'meeting_scheduled', 'rejected'];
+
+function ApplicationBlock({ app }: { app: CreditApplicationRecord | null }) {
+  if (!app) return null;
+  if (app.status === 'draft') {
+    return (
+      <div className="flex flex-col gap-3 rounded-xl border border-teal-200 bg-teal-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-teal-800">You have an application in progress</p>
+          <p className="text-xs text-teal-700/80">You&apos;ve completed {Math.max(0, (app.current_step ?? 1) - 1)} of 6 steps. Pick up where you left off.</p>
+        </div>
+        <Link href="/buyer/account/credit-apply/start" className="shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-teal-700">
+          Continue Application →
+        </Link>
+      </div>
+    );
+  }
+  if (TRACKED_STATUSES.includes(app.status)) {
+    return <CreditStatusTracker app={app} />;
+  }
+  return null;
+}
+
 export default function AccountCreditPage() {
   const [credit,  setCredit]  = useState<CreditAccount | null>(null);
+  const [app,     setApp]     = useState<CreditApplicationRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
   const [howOpen, setHowOpen] = useState(false);
 
   useEffect(() => {
-    fetch('/api/buyer/credit')
-      .then((r) => r.json())
-      .then((j: { data: CreditAccount | null; error: string | null }) => {
-        if (j.error) throw new Error(j.error);
-        setCredit(j.data);
+    Promise.all([
+      fetch('/api/buyer/credit').then((r) => r.json()) as Promise<{ data: CreditAccount | null; error: string | null }>,
+      fetch('/api/buyer/credit-application').then((r) => r.json()).catch(() => ({ data: null })) as Promise<{ data: CreditApplicationRecord | null }>,
+    ])
+      .then(([creditRes, appRes]) => {
+        if (creditRes.error) throw new Error(creditRes.error);
+        setCredit(creditRes.data);
+        setApp(appRes.data);
       })
       .catch((e: Error) => setError(e.message ?? 'Failed to load'))
       .finally(() => setLoading(false));
@@ -97,19 +127,25 @@ export default function AccountCreditPage() {
   );
 
   if (error || !credit) return (
-    <div className="space-y-5">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Credit Overview</h1>
         <p className="text-sm text-slate-500 mt-0.5">Your 45-day credit line managed by PrimeServe.</p>
       </div>
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-12 text-center">
-        <CreditCard className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-        <p className="text-slate-600 font-medium text-sm">No credit account found</p>
-        <p className="text-slate-400 text-xs mt-1 mb-5">Apply for a PrimeServe credit line to pay on 45-day terms.</p>
-        <Link href="/buyer/account/credit-apply" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-teal-600 text-white rounded-xl hover:bg-teal-500 transition-colors">
-          <BadgeCheck className="w-4 h-4" /> Apply for Credit
-        </Link>
-      </div>
+
+      <ApplicationBlock app={app} />
+
+      {/* Only prompt to apply when there's no application at all */}
+      {!app && (
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-12 text-center">
+          <CreditCard className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+          <p className="text-slate-600 font-medium text-sm">No credit account found</p>
+          <p className="text-slate-400 text-xs mt-1 mb-5">Apply for a PrimeServe credit line to pay on 45-day terms.</p>
+          <Link href="/buyer/account/credit-apply" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-teal-600 text-white rounded-xl hover:bg-teal-500 transition-colors">
+            <BadgeCheck className="w-4 h-4" /> Apply for Credit
+          </Link>
+        </div>
+      )}
     </div>
   );
 
@@ -129,6 +165,9 @@ export default function AccountCreditPage() {
         <h1 className="text-2xl font-bold text-slate-900">Credit Overview</h1>
         <p className="text-sm text-slate-500 mt-0.5">Your 45-day credit line managed by PrimeServe.</p>
       </div>
+
+      {/* Live application tracker (in-flight / declined) */}
+      <ApplicationBlock app={app} />
 
       {/* ── Status banner ────────────────────────────────────────────────── */}
       <div className={`relative bg-white rounded-xl border ${cfg.border} shadow-sm overflow-hidden`}>

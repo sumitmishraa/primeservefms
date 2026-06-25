@@ -220,7 +220,7 @@ export default function PublicHeader() {
               ? '/buyer/account/credit-apply'
               : '/login?redirect=/buyer/account/credit-apply'
           }
-          className="hidden h-11 shrink-0 items-center gap-1.5 rounded-lg bg-teal-600 px-3.5 text-sm font-semibold text-white shadow-sm shadow-teal-500/25 transition-colors hover:bg-teal-700 md:inline-flex"
+          className="ps-credit-cta hidden h-11 shrink-0 items-center gap-1.5 rounded-lg bg-teal-600 px-3.5 text-sm font-semibold text-white shadow-sm shadow-teal-500/25 transition-all hover:bg-teal-700 md:inline-flex"
         >
           <BadgeCheck className="h-4 w-4" />
           <span className="hidden lg:inline">Apply for Credit</span>
@@ -532,7 +532,7 @@ export default function PublicHeader() {
                     : '/login?redirect=/buyer/account/credit-apply'
                 }
                 onClick={() => setMobileOpen(false)}
-                className="mb-3 flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-teal-500/25 hover:bg-teal-700"
+                className="ps-credit-cta mb-3 flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-teal-500/25 hover:bg-teal-700"
               >
                 <BadgeCheck className="h-4 w-4" /> Apply for Credit
               </Link>

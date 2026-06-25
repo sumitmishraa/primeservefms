@@ -44,6 +44,7 @@ const ADMIN_NAV: NavItem[] = [
   { label: 'Import Products',    href: '/admin/products/import',       icon: Upload },
   { label: 'Orders',             href: '/admin/orders',                icon: ShoppingCart },
   { label: 'Quote Requests',     href: '/admin/quotes',                icon: ClipboardList },
+  { label: 'Credit Applications', href: '/admin/credit-applications',  icon: BadgeCheck },
   { label: 'Buyers',             href: '/admin/buyers',                icon: Users },
   { label: 'Vendor Directory',   href: '/admin/vendors',               icon: BookUser },
   { label: 'Analytics',          href: '/admin/analytics',             icon: BarChart3 },
