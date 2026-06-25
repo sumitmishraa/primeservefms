@@ -22,6 +22,7 @@ import {
   Package,
   LogOut,
   MessageCircle,
+  BadgeCheck,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCartStore } from '@/stores/cartStore';
@@ -194,10 +195,10 @@ export default function PublicHeader() {
 
         <HeaderLocationPin />
 
-        {/* Search — desktop */}
+        {/* Search — desktop (slimmed so the credit CTA has room) */}
         <form
           onSubmit={handleSearch}
-          className="hidden min-w-0 flex-1 md:block"
+          className="hidden min-w-0 flex-1 max-w-md md:block"
           role="search"
         >
           <div className="relative">
@@ -211,6 +212,20 @@ export default function PublicHeader() {
             />
           </div>
         </form>
+
+        {/* Apply for Credit — the USP, highlighted next to search */}
+        <Link
+          href={
+            authResolved && isAuthenticated
+              ? '/buyer/account/credit-apply'
+              : '/login?redirect=/buyer/account/credit-apply'
+          }
+          className="hidden h-11 shrink-0 items-center gap-1.5 rounded-lg bg-teal-600 px-3.5 text-sm font-semibold text-white shadow-sm shadow-teal-500/25 transition-colors hover:bg-teal-700 md:inline-flex"
+        >
+          <BadgeCheck className="h-4 w-4" />
+          <span className="hidden lg:inline">Apply for Credit</span>
+          <span className="lg:hidden">Credit</span>
+        </Link>
 
         {/* Desktop nav links */}
         <nav className="hidden items-center gap-6 lg:flex">
@@ -509,6 +524,18 @@ export default function PublicHeader() {
             </div>
 
             <nav className="space-y-1">
+              {/* Apply for Credit — the USP, highlighted */}
+              <Link
+                href={
+                  authResolved && isAuthenticated
+                    ? '/buyer/account/credit-apply'
+                    : '/login?redirect=/buyer/account/credit-apply'
+                }
+                onClick={() => setMobileOpen(false)}
+                className="mb-3 flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-teal-500/25 hover:bg-teal-700"
+              >
+                <BadgeCheck className="h-4 w-4" /> Apply for Credit
+              </Link>
               <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase text-slate-400">
                 Categories
               </p>
