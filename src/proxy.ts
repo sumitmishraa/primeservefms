@@ -190,7 +190,7 @@ function applySecurityHeaders(response: NextResponse): void {
   // Permissions policy — disable features the app doesn't use
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(self), payment=(self)"
+    "camera=(), microphone=(), geolocation=(self), payment=(self https://api.razorpay.com https://checkout.razorpay.com)"
   );
   // HSTS — force HTTPS in production (1 year, include subdomains)
   if (process.env.NODE_ENV === "production") {
@@ -201,20 +201,22 @@ function applySecurityHeaders(response: NextResponse): void {
   }
   // Content Security Policy
   // next/image uses _next/image; Firebase Auth uses apis.google.com and identitytoolkit;
-  // Razorpay uses api.razorpay.com and checkout.razorpay.com; Supabase uses supabase.co
+  // Razorpay checkout.js loads from checkout.razorpay.com; the payment modal iframes
+  // and API calls come from api.razorpay.com; assets from cdn.razorpay.com;
+  // analytics/logging from lumberjack.razorpay.com; Supabase uses supabase.co.
   response.headers.set(
     "Content-Security-Policy",
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://checkout.razorpay.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://checkout.razorpay.com https://api.razorpay.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://*.supabase.co https://firebasestorage.googleapis.com https://lh3.googleusercontent.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://identitytoolkit.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com https://api.razorpay.com https://firebaseinstallations.googleapis.com",
-      "frame-src https://checkout.razorpay.com https://www.google.com",
+      "img-src 'self' data: blob: https://*.supabase.co https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://cdn.razorpay.com https://*.razorpay.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://identitytoolkit.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com https://api.razorpay.com wss://api.razorpay.com https://lumberjack.razorpay.com https://firebaseinstallations.googleapis.com",
+      "frame-src https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://www.google.com",
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self'",
+      "form-action 'self' https://api.razorpay.com",
       "upgrade-insecure-requests",
     ].join("; ")
   );
