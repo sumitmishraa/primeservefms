@@ -74,7 +74,7 @@ function StatMini({ label, value, icon, highlight }: StatMiniProps) {
           {icon}
         </div>
       </div>
-      <p className={`text-xl font-bold font-mono ${highlight ? 'text-amber-900' : 'text-slate-900'}`}>{value}</p>
+      <p className={`text-xl font-bold font-heading ${highlight ? 'text-amber-900' : 'text-slate-900'}`}>{value}</p>
     </div>
   );
 }
@@ -278,7 +278,7 @@ export default function ClientDetailPage({
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
               <h2 className="font-semibold text-slate-900">Branches</h2>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium font-heading text-slate-600">
                 {branches.length}
               </span>
             </div>
@@ -324,7 +324,7 @@ export default function ClientDetailPage({
                       <td className="px-4 py-3">
                         <p className="font-medium text-slate-900">{branch.name}</p>
                         {branch.branch_code && (
-                          <p className="text-xs text-slate-400 font-mono">{branch.branch_code}</p>
+                          <p className="text-xs text-slate-400 font-heading">{branch.branch_code}</p>
                         )}
                       </td>
                       <td className="px-4 py-3 text-slate-600">{branch.area ?? '—'}</td>
@@ -340,13 +340,13 @@ export default function ClientDetailPage({
                           <span className="text-slate-400">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-slate-700">{branch.total_orders}</td>
-                      <td className="px-4 py-3 text-right font-mono text-slate-800">
+                      <td className="px-4 py-3 text-right font-heading text-slate-700">{branch.total_orders}</td>
+                      <td className="px-4 py-3 text-right font-heading text-slate-800">
                         {branch.total_revenue > 0 ? formatINR(branch.total_revenue) : '—'}
                       </td>
                       <td className="px-4 py-3 text-right">
                         {branch.pending_amount > 0 ? (
-                          <span className="font-mono font-medium text-amber-700">{formatINR(branch.pending_amount)}</span>
+                          <span className="font-heading font-medium text-amber-700">{formatINR(branch.pending_amount)}</span>
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}
@@ -398,12 +398,12 @@ export default function ClientDetailPage({
                   {recent_orders.map((order: ClientDetailOrder) => (
                     <tr key={order.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-4 py-3">
-                        <span className="font-mono text-xs font-semibold text-slate-900">{order.order_number}</span>
+                        <span className="font-heading text-xs font-semibold text-slate-900">{order.order_number}</span>
                       </td>
                       <td className="px-4 py-3 text-slate-600">{order.branch_name ?? '—'}</td>
                       <td className="px-4 py-3 text-slate-700">{order.buyer_name}</td>
-                      <td className="px-4 py-3 text-right text-slate-600">{order.items_count}</td>
-                      <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900">{formatINR(order.total_amount)}</td>
+                      <td className="px-4 py-3 text-right font-heading text-slate-600">{order.items_count}</td>
+                      <td className="px-4 py-3 text-right font-heading font-semibold text-slate-900">{formatINR(order.total_amount)}</td>
                       <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
                       <td className="px-4 py-3 text-xs text-slate-500">{formatDate(order.created_at)}</td>
                       <td className="px-4 py-3 text-right">

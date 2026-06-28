@@ -462,21 +462,21 @@ function CompanyTab() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1.5">GST Number <span className="text-rose-500">*</span></label>
-            <input type="text" value={gstNumber} onChange={(e) => handleGstChange(e.target.value)} className={`${inputCls} font-mono uppercase`} placeholder="22AAAAA0000A1Z5" maxLength={15} />
+            <input type="text" value={gstNumber} onChange={(e) => handleGstChange(e.target.value)} className={`${inputCls} font-heading uppercase`} placeholder="22AAAAA0000A1Z5" maxLength={15} />
             {gstError && <p className="mt-1 text-xs text-rose-500">{gstError}</p>}
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1.5">PAN Number <span className="text-rose-500">*</span></label>
-            <input type="text" value={panNumber} onChange={(e) => { setPanNumber(e.target.value.toUpperCase()); setPanError(''); }} className={`${inputCls} font-mono uppercase`} placeholder="ABCDE1234F" maxLength={10} />
+            <input type="text" value={panNumber} onChange={(e) => { setPanNumber(e.target.value.toUpperCase()); setPanError(''); }} className={`${inputCls} font-heading uppercase`} placeholder="ABCDE1234F" maxLength={10} />
             {panError && <p className="mt-1 text-xs text-rose-500">{panError}</p>}
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1.5">CIN / LLPIN <span className="text-rose-500">*</span></label>
-            <input type="text" value={cinNumber} onChange={(e) => setCinNumber(e.target.value.toUpperCase())} className={`${inputCls} font-mono uppercase`} placeholder="U74999KA2020PTC123456" />
+            <input type="text" value={cinNumber} onChange={(e) => setCinNumber(e.target.value.toUpperCase())} className={`${inputCls} font-heading uppercase`} placeholder="U74999KA2020PTC123456" />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1.5">MSME / Udyam Number <span className="text-slate-400 font-normal">(optional)</span></label>
-            <input type="text" value={msmeNumber} onChange={(e) => setMsmeNumber(e.target.value.toUpperCase())} className={`${inputCls} font-mono uppercase`} placeholder="UDYAM-KA-00-0000000" />
+            <input type="text" value={msmeNumber} onChange={(e) => setMsmeNumber(e.target.value.toUpperCase())} className={`${inputCls} font-heading uppercase`} placeholder="UDYAM-KA-00-0000000" />
           </div>
         </div>
       </div>

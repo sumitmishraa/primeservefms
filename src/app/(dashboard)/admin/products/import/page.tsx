@@ -329,21 +329,21 @@ export default function ImportProductsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4 pt-2 sm:grid-cols-4">
               <div className="text-center">
-                <p className="text-3xl font-bold text-emerald-700 font-mono">{result.imported}</p>
+                <p className="text-3xl font-bold text-emerald-700 font-heading">{result.imported}</p>
                 <p className="text-sm text-emerald-600 mt-1">Products imported</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-amber-600 font-mono">{result.skipped}</p>
+                <p className="text-3xl font-bold text-amber-600 font-heading">{result.skipped}</p>
                 <p className="text-sm text-amber-600 mt-1">Duplicates skipped</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-sky-600 font-mono">
+                <p className="text-3xl font-bold text-sky-600 font-heading">
                   {result.skipped_without_images ?? 0}
                 </p>
                 <p className="text-sm text-sky-600 mt-1">Without images skipped</p>
               </div>
               <div className="text-center">
-                <p className={`text-3xl font-bold font-mono ${result.errors.length > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+                <p className={`text-3xl font-bold font-heading ${result.errors.length > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
                   {result.errors.length}
                 </p>
                 <p className="text-sm text-slate-500 mt-1">Row errors</p>
@@ -364,7 +364,7 @@ export default function ImportProductsPage() {
                 <tbody>
                   {result.errors.map((err, i) => (
                     <tr key={i} className="border-b border-slate-100 last:border-0">
-                      <td className="px-4 py-3 font-mono text-slate-500">{err.row || '—'}</td>
+                      <td className="px-4 py-3 font-heading text-slate-500">{err.row || '—'}</td>
                       <td className="px-4 py-3 text-rose-700">{err.reason}</td>
                     </tr>
                   ))}

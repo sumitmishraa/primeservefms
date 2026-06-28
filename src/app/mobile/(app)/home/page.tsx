@@ -159,7 +159,7 @@ export default function MobileHomePage() {
                   <p className="mt-3 line-clamp-2 min-h-10 text-sm font-bold leading-5 text-slate-900">
                     {product.name}
                   </p>
-                  <p className="mt-1 font-mono text-sm font-extrabold text-[#0D9488]">
+                  <p className="mt-1 font-heading text-sm font-extrabold text-[#0D9488]">
                     {formatINR(product.base_price)}
                     <span className="font-sans text-[11px] font-semibold text-slate-400">
                       {' '}/ {product.unit_of_measure}
@@ -245,7 +245,7 @@ export default function MobileHomePage() {
                     <p className="font-heading text-sm font-extrabold text-slate-900">
                       {order.order_number}
                     </p>
-                    <p className="mt-0.5 font-mono text-xs font-bold text-slate-500">
+                    <p className="mt-0.5 font-heading text-xs font-bold text-slate-500">
                       {formatINR(order.total_amount)}
                     </p>
                   </div>

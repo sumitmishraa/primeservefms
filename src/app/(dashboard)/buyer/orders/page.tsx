@@ -181,7 +181,7 @@ export default function BuyerOrdersPage() {
             >
               {tab.label}
               {count > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full font-mono ${
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-heading ${
                   isActive ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-500'
                 }`}>
                   {count}
@@ -225,7 +225,7 @@ export default function BuyerOrdersPage() {
                 <div className="flex items-start justify-between gap-4">
                   {/* Left */}
                   <div className="min-w-0 flex-1">
-                    <p className="text-base font-bold text-teal-600 font-mono">{order.order_number}</p>
+                    <p className="text-base font-bold text-teal-600 font-heading">{order.order_number}</p>
                     <p className="text-xs text-slate-400 mt-0.5">Placed {formatDate(order.created_at)}</p>
                     <p className="text-sm text-slate-600 mt-2 truncate">
                       {itemsPreview(order.order_items)}
@@ -237,7 +237,7 @@ export default function BuyerOrdersPage() {
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${STATUS_STYLES[order.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>
                       {STATUS_LABELS[order.status] ?? order.status}
                     </span>
-                    <p className="font-mono font-bold text-slate-900 text-base">{formatINR(order.total_amount)}</p>
+                    <p className="font-heading font-bold text-slate-900 text-base">{formatINR(order.total_amount)}</p>
                     <p className="text-xs text-slate-400">
                       {order.payment_status === 'paid' ? (
                         <span className="text-emerald-600 font-medium">Paid ✓</span>

@@ -120,7 +120,7 @@ function AccountContent() {
               <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-slate-400">
                 {item.label}
               </p>
-              <p className={`mt-2 truncate font-mono text-xs font-extrabold ${item.tone}`}>
+              <p className={`mt-2 truncate font-heading text-xs font-extrabold ${item.tone}`}>
                 {item.value}
               </p>
             </Card>

@@ -154,7 +154,7 @@ function StatCard({ label, value, icon: Icon, iconBg, iconColor }: StatCardProps
           <Icon className={`h-4 w-4 ${iconColor}`} aria-hidden="true" />
         </div>
       </div>
-      <p className="font-mono text-2xl font-bold text-slate-900">{value}</p>
+      <p className="font-heading text-2xl font-bold text-slate-900">{value}</p>
     </div>
   );
 }
@@ -175,7 +175,7 @@ function MonthlyChart({ data }: { data: AnalyticsData['monthly_orders'] }) {
         const pct        = (d.orders / maxOrders) * 100;
         return (
           <div key={d.month} className="flex flex-1 flex-col items-center gap-1">
-            <span className="text-xs font-mono text-slate-500">{d.orders}</span>
+            <span className="text-xs font-heading text-slate-500">{d.orders}</span>
             <div className="w-full rounded-t-sm bg-teal-500 transition-all" style={{ height: `${Math.max(pct, 2)}%` }} />
             <span className="text-xs text-slate-400">{label}</span>
           </div>
@@ -209,7 +209,7 @@ function StatusBarChart({ data }: { data: AnalyticsData['orders_by_status'] }) {
                 <span className="text-xs font-semibold text-white">{row.count}</span>
               </div>
             </div>
-            <span className="w-28 shrink-0 text-right text-xs text-slate-500 font-mono">
+            <span className="w-28 shrink-0 text-right text-xs text-slate-500 font-heading">
               {formatINR(row.amount)}
             </span>
           </div>
@@ -449,8 +449,8 @@ export default function AdminAnalyticsPage() {
                         <p className="font-medium text-slate-800 leading-snug line-clamp-1">{p.name}</p>
                         <p className="text-xs text-slate-400">{p.category}</p>
                       </td>
-                      <td className="py-2.5 pr-3 text-right font-mono text-slate-700">{p.order_count}</td>
-                      <td className="py-2.5 text-right font-mono text-sm font-semibold text-teal-700">
+                      <td className="py-2.5 pr-3 text-right font-heading text-slate-700">{p.order_count}</td>
+                      <td className="py-2.5 text-right font-heading text-sm font-semibold text-teal-700">
                         {formatINR(p.revenue)}
                       </td>
                     </tr>
@@ -487,7 +487,7 @@ export default function AdminAnalyticsPage() {
                   </div>
                   <div className="mt-1 flex items-center justify-between">
                     <span className="text-xs text-slate-400">{cat.orders} orders</span>
-                    <span className="text-xs font-mono text-slate-600">{formatINR(cat.revenue)}</span>
+                    <span className="text-xs font-heading text-slate-600">{formatINR(cat.revenue)}</span>
                   </div>
                 </div>
               ))}
@@ -519,11 +519,11 @@ export default function AdminAnalyticsPage() {
                     <tr key={c.name} className="hover:bg-slate-50">
                       <td className="py-2.5 pr-4 text-xs text-slate-400">{i + 1}</td>
                       <td className="py-2.5 pr-4 font-medium text-slate-800">{c.name}</td>
-                      <td className="py-2.5 pr-4 text-right font-mono text-slate-700">{c.total_orders}</td>
-                      <td className="py-2.5 pr-4 text-right font-mono font-semibold text-teal-700">
+                      <td className="py-2.5 pr-4 text-right font-heading text-slate-700">{c.total_orders}</td>
+                      <td className="py-2.5 pr-4 text-right font-heading font-semibold text-teal-700">
                         {formatINR(c.total_revenue)}
                       </td>
-                      <td className="py-2.5 text-right font-mono text-amber-600">
+                      <td className="py-2.5 text-right font-heading text-amber-600">
                         {formatINR(c.pending)}
                       </td>
                     </tr>
@@ -560,8 +560,8 @@ export default function AdminAnalyticsPage() {
                         <p className="font-medium text-slate-800">{b.name}</p>
                         {b.company && <p className="text-xs text-slate-400">{b.company}</p>}
                       </td>
-                      <td className="py-2.5 pr-4 text-right font-mono text-slate-700">{b.orders}</td>
-                      <td className="py-2.5 text-right font-mono font-semibold text-teal-700">
+                      <td className="py-2.5 pr-4 text-right font-heading text-slate-700">{b.orders}</td>
+                      <td className="py-2.5 text-right font-heading font-semibold text-teal-700">
                         {formatINR(b.spent)}
                       </td>
                     </tr>

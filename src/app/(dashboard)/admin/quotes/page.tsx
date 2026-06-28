@@ -100,7 +100,7 @@ function RespondPanel({ quote, onSaved }: { quote: AdminQuote; onSaved: () => vo
             step={0.01}
             value={form.quoted_amount}
             onChange={(e) => setForm((f) => ({ ...f, quoted_amount: e.target.value }))}
-            className={`${inputCls} font-mono`}
+            className={`${inputCls} font-heading`}
             placeholder="0.00"
           />
         </div>
@@ -244,7 +244,7 @@ export default function AdminQuotesPage() {
                       {STATUS_LABELS[quote.status] ?? quote.status}
                     </span>
                     {quote.quoted_amount && (
-                      <span className="text-xs font-bold text-teal-700 font-mono">&#8377;{formatINR(quote.quoted_amount)}</span>
+                      <span className="text-xs font-bold text-teal-700 font-heading">&#8377;{formatINR(quote.quoted_amount)}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-3 mt-1 flex-wrap">
@@ -323,10 +323,10 @@ export default function AdminQuotesPage() {
                             <tr key={i} className="hover:bg-slate-50 text-slate-700">
                               <td className="px-3 py-2.5 font-medium truncate">{item.product_name}</td>
                               <td className="px-3 py-2.5 text-slate-500 truncate">{item.description || '—'}</td>
-                              <td className="px-3 py-2.5 text-center font-mono">{item.quantity}</td>
+                              <td className="px-3 py-2.5 text-center font-heading">{item.quantity}</td>
                               <td className="px-3 py-2.5 text-center text-slate-500">{item.unit}</td>
                               <td className="px-3 py-2.5 text-slate-500 truncate">{item.preferred_brand || '—'}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-teal-700">
+                              <td className="px-3 py-2.5 text-right font-heading text-teal-700">
                                 {item.target_price > 0 ? formatINR(item.target_price) : '—'}
                               </td>
                             </tr>
@@ -340,7 +340,7 @@ export default function AdminQuotesPage() {
                     <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                       <p className="text-xs font-semibold text-purple-700 mb-1">Your Response</p>
                       {quote.quoted_amount && (
-                        <p className="text-sm font-bold text-purple-900 font-mono">{formatINR(quote.quoted_amount)}</p>
+                        <p className="text-sm font-bold text-purple-900 font-heading">{formatINR(quote.quoted_amount)}</p>
                       )}
                       {quote.admin_notes && <p className="text-sm text-purple-800 mt-1">{quote.admin_notes}</p>}
                     </div>

@@ -97,12 +97,12 @@ function OrdersContent() {
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="font-mono text-sm font-extrabold text-[#0D9488]">{order.order_number}</p>
+                      <p className="font-heading text-sm font-extrabold text-[#0D9488]">{order.order_number}</p>
                       <p className="mt-1 text-xs font-semibold text-slate-400">{formatDate(order.created_at)}</p>
                     </div>
                     <div className="text-right">
                       <Badge tone={statusTone[order.status] ?? 'slate'}>{order.status.replaceAll('_', ' ')}</Badge>
-                      <p className="mt-2 font-mono text-base font-extrabold text-slate-900">{formatINR(order.total_amount)}</p>
+                      <p className="mt-2 font-heading text-base font-extrabold text-slate-900">{formatINR(order.total_amount)}</p>
                     </div>
                   </div>
                   <p className="mt-4 truncate text-sm font-semibold text-slate-500">{itemPreview}</p>

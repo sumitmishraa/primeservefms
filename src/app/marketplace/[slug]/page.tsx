@@ -278,7 +278,7 @@ function _VariantCard({ variant, isSelected, badge, onSelect }: VariantCardProps
           {formatINR(variant.base_price)}
         </span>
         {savingPct > 0 && (
-          <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-700">
+          <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 font-heading text-[10px] font-semibold text-emerald-700">
             -{savingPct}%
           </span>
         )}
@@ -689,7 +689,7 @@ export default function ProductDetailPage({
               </div>
               {product.hsn_code && (
                 <p className="mt-2 text-[11px] text-slate-500">
-                  HSN&nbsp;<span className="font-mono font-semibold text-slate-700">{product.hsn_code}</span>
+                  HSN&nbsp;<span className="font-heading font-semibold text-slate-700">{product.hsn_code}</span>
                   &nbsp;· HSN mapped for billing
                 </p>
               )}
@@ -917,7 +917,7 @@ function ProductGallery({
             </button>
 
             {/* Counter pill */}
-            <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-slate-900/70 px-3 py-1 font-mono text-[11px] font-medium text-white backdrop-blur">
+            <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-slate-900/70 px-3 py-1 font-heading text-[11px] font-medium text-white backdrop-blur">
               {activeIdx + 1} / {total}
             </span>
           </>
@@ -1062,7 +1062,7 @@ function KvRow({ k, v, mono = false }: { k: string; v: string; mono?: boolean })
       <span className="text-[11px] text-slate-500">{k}</span>
       <span className={[
         'text-right text-xs font-semibold text-slate-800',
-        mono ? 'font-mono' : '',
+        mono ? 'font-heading' : '',
       ].join(' ')}>
         {v}
       </span>
@@ -1134,7 +1134,7 @@ function VolumePricingTable({
                 className="transition-colors even:bg-slate-50/50 hover:bg-teal-50/20"
               >
                 <td className="px-5 py-3.5 text-slate-700">
-                  <span className="font-mono font-semibold text-slate-900">
+                  <span className="font-heading font-semibold text-slate-900">
                     {tier.min_qty}
                     {tier.max_qty != null ? `–${tier.max_qty}` : '+'}
                   </span>{' '}

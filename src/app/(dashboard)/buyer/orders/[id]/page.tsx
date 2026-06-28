@@ -207,7 +207,7 @@ export default function BuyerOrderDetailPage() {
         </Link>
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 font-mono">{order.order_number}</h1>
+            <h1 className="text-2xl font-bold text-slate-900 font-heading">{order.order_number}</h1>
             <p className="text-sm text-slate-500 mt-0.5">Placed {formatDate(order.created_at)}</p>
           </div>
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${STATUS_STYLES[order.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>
@@ -305,12 +305,12 @@ export default function BuyerOrderDetailPage() {
                         <p className="text-xs text-slate-400 mt-0.5">SKU: {item.product_sku}</p>
                       )}
                     </td>
-                    <td className="px-4 py-3.5 text-right font-mono text-slate-700">{item.quantity}</td>
-                    <td className="px-4 py-3.5 text-right font-mono text-slate-700">{formatINR(item.unit_price)}</td>
-                    <td className="px-4 py-3.5 text-right font-mono text-slate-500 text-xs">
+                    <td className="px-4 py-3.5 text-right font-heading text-slate-700">{item.quantity}</td>
+                    <td className="px-4 py-3.5 text-right font-heading text-slate-700">{formatINR(item.unit_price)}</td>
+                    <td className="px-4 py-3.5 text-right font-heading text-slate-500 text-xs">
                       {item.gst_rate}% · {formatINR(item.gst_amount)}
                     </td>
-                    <td className="px-5 py-3.5 text-right font-mono font-semibold text-slate-900">{formatINR(item.total_amount)}</td>
+                    <td className="px-5 py-3.5 text-right font-heading font-semibold text-slate-900">{formatINR(item.total_amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -324,24 +324,24 @@ export default function BuyerOrderDetailPage() {
           <div className="space-y-2.5">
             <div className="flex justify-between text-sm">
               <span className="text-slate-500">Subtotal</span>
-              <span className="font-mono text-slate-700">{formatINR(order.subtotal)}</span>
+              <span className="font-heading text-slate-700">{formatINR(order.subtotal)}</span>
             </div>
             {Array.from(gstByRate.entries()).map(([rate, amount]) => (
               <div key={rate} className="flex justify-between text-sm">
                 <span className="text-slate-500">GST {rate}%</span>
-                <span className="font-mono text-slate-600">{formatINR(amount)}</span>
+                <span className="font-heading text-slate-600">{formatINR(amount)}</span>
               </div>
             ))}
             <div className="flex justify-between text-sm">
               <span className="text-slate-500">Delivery</span>
               {order.shipping_amount === 0
-                ? <span className="font-mono text-emerald-600 font-medium">FREE</span>
-                : <span className="font-mono text-slate-600">{formatINR(order.shipping_amount)}</span>
+                ? <span className="font-heading text-emerald-600 font-medium">FREE</span>
+                : <span className="font-heading text-slate-600">{formatINR(order.shipping_amount)}</span>
               }
             </div>
             <div className="flex justify-between text-base font-bold pt-2.5 border-t border-slate-200">
               <span className="text-slate-900">Total</span>
-              <span className="font-mono text-teal-600">{formatINR(order.total_amount)}</span>
+              <span className="font-heading text-teal-600">{formatINR(order.total_amount)}</span>
             </div>
           </div>
         </div>
@@ -375,7 +375,7 @@ export default function BuyerOrderDetailPage() {
               {!isCreditOrder && razorpayPaymentId && (
                 <div className="flex justify-between">
                   <span className="text-slate-500">Payment ID</span>
-                  <span className="font-mono text-xs text-slate-600 truncate max-w-[140px]">
+                  <span className="font-heading text-xs text-slate-600 truncate max-w-[140px]">
                     {razorpayPaymentId}
                   </span>
                 </div>

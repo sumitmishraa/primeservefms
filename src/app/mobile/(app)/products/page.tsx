@@ -181,7 +181,7 @@ function ProductsContent() {
                     </div>
                     <p className="line-clamp-2 min-h-10 text-sm font-extrabold leading-5 text-slate-900">{product.name}</p>
                     {product.size_variant && <p className="mt-1 text-[11px] font-semibold text-slate-400">{product.size_variant}</p>}
-                    <p className="mt-2 font-mono text-base font-extrabold text-[#0D9488]">
+                    <p className="mt-2 font-heading text-base font-extrabold text-[#0D9488]">
                       {formatINR(product.base_price)}
                       <span className="font-sans text-[11px] font-bold text-slate-400"> / {product.unit_of_measure}</span>
                     </p>
@@ -211,7 +211,7 @@ function ProductsContent() {
               <div className="min-w-0 flex-1">
                 <h2 className="font-heading text-lg font-extrabold text-slate-900">Add to cart</h2>
                 <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-600">{modal.product.name}</p>
-                <p className="mt-1 font-mono text-sm font-extrabold text-[#0D9488]">{formatINR(modal.product.base_price)} / {modal.product.unit_of_measure}</p>
+                <p className="mt-1 font-heading text-sm font-extrabold text-[#0D9488]">{formatINR(modal.product.base_price)} / {modal.product.unit_of_measure}</p>
               </div>
             </div>
             <div className="mt-5 flex items-center gap-3">
@@ -228,7 +228,7 @@ function ProductsContent() {
                   const value = Number.parseInt(event.target.value, 10);
                   if (!Number.isNaN(value)) setModal((prev) => prev && { ...prev, qty: value });
                 }}
-                className="h-12 min-w-0 flex-1 rounded-2xl border-2 border-[#14B8A6] text-center font-mono text-xl font-extrabold outline-none"
+                className="h-12 min-w-0 flex-1 rounded-2xl border-2 border-[#14B8A6] text-center font-heading text-xl font-extrabold outline-none"
                 inputMode="numeric"
               />
               <button

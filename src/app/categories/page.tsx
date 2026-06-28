@@ -60,7 +60,7 @@ export default function CategoriesPage() {
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 text-teal-600 transition-colors group-hover:bg-teal-600 group-hover:text-white">
                       <Icon className="h-6 w-6" />
                     </div>
-                    <span className="font-mono text-xs font-semibold text-slate-400">
+                    <span className="font-heading text-xs font-semibold text-slate-400">
                       {cat.productCount}+ products
                     </span>
                   </div>

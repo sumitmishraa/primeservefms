@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Admin â€” Orders Command Center
  *
  * Features:
@@ -247,7 +247,7 @@ export default function AdminOrdersPage() {
                 {count > 0 && (
                   <span
                     className={[
-                      'inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold',
+                      'inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold font-heading',
                       isPending
                         ? 'bg-amber-500 text-white'
                         : isActive
@@ -379,7 +379,7 @@ export default function AdminOrdersPage() {
                           ].join(' ')}
                         >
                           <td className="px-4 py-3">
-                            <span className="font-mono text-xs font-semibold text-slate-900">
+                            <span className="font-heading text-xs font-semibold text-slate-900">
                               {order.order_number}
                             </span>
                           </td>
@@ -391,10 +391,10 @@ export default function AdminOrdersPage() {
                               {order.buyer?.full_name ?? ''}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono text-slate-700">
+                          <td className="px-4 py-3 text-right font-heading text-slate-700">
                             â€”
                           </td>
-                          <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900">
+                          <td className="px-4 py-3 text-right font-heading font-semibold text-slate-900">
                             {formatINR(order.total_amount)}
                           </td>
                           <td className="px-4 py-3">

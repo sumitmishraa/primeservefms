@@ -300,7 +300,7 @@ export default function PublicHeader() {
             >
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 font-mono text-[10px] font-bold leading-none text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 font-heading text-[10px] font-bold leading-none text-white">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}

@@ -107,7 +107,7 @@ function VariantGroupPanel({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-base font-semibold text-slate-800">Variant Group Members</h2>
-          <p className="mt-0.5 font-mono text-[11px] text-slate-400 break-all">{groupSlug}</p>
+          <p className="mt-0.5 font-heading text-[11px] text-slate-400 break-all">{groupSlug}</p>
         </div>
         <button
           type="button"
@@ -157,7 +157,7 @@ function VariantGroupPanel({
                 </div>
 
                 {/* Price */}
-                <span className="font-mono text-sm font-bold text-slate-700 shrink-0">
+                <span className="font-heading text-sm font-bold text-slate-700 shrink-0">
                   {formatINR(Number(sibling.base_price))}
                 </span>
 

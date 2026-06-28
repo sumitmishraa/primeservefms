@@ -210,7 +210,7 @@ function CartModal({ product, onClose, onAdd }: CartModalProps) {
             min={product.moq}
             value={qty}
             onChange={(e) => setValidQty(parseInt(e.target.value, 10))}
-            className="h-9 w-20 rounded-lg border border-slate-300 px-2 text-center font-mono text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="h-9 w-20 rounded-lg border border-slate-300 px-2 text-center font-heading text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             aria-label="Quantity"
           />
 
@@ -361,7 +361,7 @@ export default function AddToCartButton({
               className="rounded bg-teal-600 px-2 py-1 text-xs font-semibold text-white hover:bg-teal-700"
               onClick={() => {
                 toast.dismiss(t.id);
-                router.push('/cart');
+                router.push('/buyer/cart');
               }}
             >
               View Cart
@@ -428,7 +428,7 @@ export default function AddToCartButton({
             min={product.moq}
             value={qty}
             onChange={(e) => setValidQty(parseInt(e.target.value, 10))}
-            className="h-10 w-24 rounded-lg border border-slate-300 px-3 text-center font-mono text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            className="h-10 w-24 rounded-lg border border-slate-300 px-3 text-center font-heading text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             aria-label="Quantity"
           />
 

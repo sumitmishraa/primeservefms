@@ -157,7 +157,7 @@ export default function BuyerDashboardPage() {
                 </div>
                 <p className="text-sm font-medium text-slate-600">Active Orders</p>
               </div>
-              <p className="text-3xl font-bold text-slate-900">{stats?.active_orders ?? 0}</p>
+              <p className="text-3xl font-bold text-slate-900 font-heading">{stats?.active_orders ?? 0}</p>
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
@@ -167,7 +167,7 @@ export default function BuyerDashboardPage() {
                 </div>
                 <p className="text-sm font-medium text-slate-600">Spent This Month</p>
               </div>
-              <p className="text-2xl font-bold text-slate-900 font-mono">{formatINR(stats?.total_this_month ?? 0)}</p>
+              <p className="text-2xl font-bold text-slate-900 font-heading">{formatINR(stats?.total_this_month ?? 0)}</p>
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
@@ -177,7 +177,7 @@ export default function BuyerDashboardPage() {
                 </div>
                 <p className="text-sm font-medium text-slate-600">Total Orders</p>
               </div>
-              <p className="text-3xl font-bold text-slate-900">{stats?.total_orders ?? 0}</p>
+              <p className="text-3xl font-bold text-slate-900 font-heading">{stats?.total_orders ?? 0}</p>
             </div>
           </div>
 
@@ -196,14 +196,14 @@ export default function BuyerDashboardPage() {
                     className="flex items-center justify-between gap-4 bg-white rounded-xl border border-slate-200 shadow-sm p-4 hover:border-teal-300 hover:shadow-md transition-all"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-teal-600 font-mono">{order.order_number}</p>
+                      <p className="text-sm font-bold text-teal-600 font-heading">{order.order_number}</p>
                       <p className="text-xs text-slate-400 mt-0.5">{formatDate(order.created_at)} · {order.item_count} item{order.item_count !== 1 ? 's' : ''}</p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[order.status] ?? 'bg-slate-50 text-slate-600'}`}>
                         {STATUS_LABELS[order.status] ?? order.status}
                       </span>
-                      <p className="font-mono font-bold text-slate-900 text-sm">{formatINR(order.total_amount)}</p>
+                      <p className="font-heading font-bold text-slate-900 text-sm">{formatINR(order.total_amount)}</p>
                     </div>
                   </Link>
                 ))}

@@ -110,7 +110,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       <div className="flex flex-1 flex-col gap-1.5 p-4">
         {/* SKU + size-variant chip */}
         <div className="flex items-center justify-between gap-2">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+          <p className="font-heading text-[11px] font-semibold uppercase tracking-wider text-slate-400">
             {sku}
           </p>
           {variantCount > 1 ? (

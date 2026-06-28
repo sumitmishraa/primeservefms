@@ -59,7 +59,7 @@ function KpiCard({
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right mt-1 leading-relaxed">{label}</p>
         </div>
         <div>
-          <p className="text-2xl font-extrabold text-slate-900 font-mono tabular-nums tracking-tight leading-none">{value}</p>
+          <p className="text-2xl font-extrabold text-slate-900 font-heading tabular-nums tracking-tight leading-none">{value}</p>
           {sub && <p className={`text-xs mt-1.5 font-semibold ${subColor}`}>{sub}</p>}
         </div>
       </div>
@@ -402,7 +402,7 @@ export default function BuyerDashboard() {
                           {order.branch_name && <span className="font-medium text-slate-400">{order.branch_name} · </span>}
                           {order.item_count} item{order.item_count !== 1 ? 's' : ''} · {formatDate(order.created_at)}
                         </div>
-                        <span className="text-sm font-bold text-slate-900 font-mono tabular-nums tracking-tight">{formatINR(order.total_amount)}</span>
+                        <span className="text-sm font-bold text-slate-900 font-heading tabular-nums tracking-tight">{formatINR(order.total_amount)}</span>
                       </div>
                     </div>
                   ))}
@@ -450,7 +450,7 @@ export default function BuyerDashboard() {
                         </div>
                         <div className="flex items-center justify-between">
                           <p className="text-xs text-slate-500">Due: {row.due_date ? formatDate(row.due_date) : 'Not delivered yet'}</p>
-                          <span className="text-sm font-bold text-slate-900 font-mono tabular-nums tracking-tight">{formatINR(row.total_amount)}</span>
+                          <span className="text-sm font-bold text-slate-900 font-heading tabular-nums tracking-tight">{formatINR(row.total_amount)}</span>
                         </div>
                       </div>
                     );
@@ -488,8 +488,8 @@ export default function BuyerDashboard() {
                           <span className="text-xs text-slate-600 mr-2">{i + 1}.</span>
                           {p.product_name}
                         </td>
-                        <td className="py-3 pr-4 text-right text-slate-400 font-mono tabular-nums">{p.total_qty.toLocaleString('en-IN')}</td>
-                        <td className="py-3 text-right font-bold text-slate-900 font-mono tabular-nums tracking-tight">{formatINR(p.total_spend)}</td>
+                        <td className="py-3 pr-4 text-right text-slate-400 font-heading tabular-nums">{p.total_qty.toLocaleString('en-IN')}</td>
+                        <td className="py-3 text-right font-bold text-slate-900 font-heading tabular-nums tracking-tight">{formatINR(p.total_spend)}</td>
                       </tr>
                     ))}
                   </tbody>

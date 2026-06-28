@@ -120,7 +120,7 @@ function StatCard({ label, value, icon: Icon, iconBg, iconColor, urgent, href }:
           <Icon className={`w-4 h-4 ${iconColor}`} aria-hidden="true" />
         </div>
       </div>
-      <p className={`text-2xl font-bold font-mono ${urgent ? 'text-amber-800' : 'text-slate-900'}`}>{value}</p>
+      <p className={`text-2xl font-bold font-heading ${urgent ? 'text-amber-800' : 'text-slate-900'}`}>{value}</p>
     </div>
   );
   if (href) return <Link href={href} className="block">{card}</Link>;
@@ -333,14 +333,14 @@ export default function AdminDashboardPage() {
                   {pendingOrders.map((order) => (
                     <tr key={order.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
                       <td className="py-3 pr-4">
-                        <span className="font-mono text-xs font-semibold text-slate-700">{order.order_number}</span>
+                        <span className="font-heading text-xs font-semibold text-slate-700">{order.order_number}</span>
                       </td>
                       <td className="py-3 pr-4">
                         <p className="font-medium text-slate-900 leading-tight">{order.buyer_name}</p>
                         {order.buyer_company && <p className="text-xs text-slate-400 mt-0.5">{order.buyer_company}</p>}
                       </td>
-                      <td className="py-3 pr-4 text-right text-slate-600">{order.items_count}</td>
-                      <td className="py-3 pr-4 text-right font-mono text-slate-900 font-semibold">{formatINR(order.total_amount)}</td>
+                      <td className="py-3 pr-4 text-right font-heading text-slate-600">{order.items_count}</td>
+                      <td className="py-3 pr-4 text-right font-heading text-slate-900 font-semibold">{formatINR(order.total_amount)}</td>
                       <td className="py-3 pr-4 text-slate-500 text-xs whitespace-nowrap">{formatDate(order.created_at)}</td>
                       <td className="py-3 text-right">
                         <Link href={`/admin/orders/${order.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-lg transition-colors">
@@ -441,9 +441,9 @@ export default function AdminDashboardPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-slate-800 leading-snug">
                       <span className="font-medium">{meta.label}</span>{' '}
-                      <span className="font-mono text-xs text-slate-600">{order.order_number}</span>{' '}
+                      <span className="font-heading text-xs text-slate-600">{order.order_number}</span>{' '}
                       {order.status === 'delivered' ? `delivered to ${displayName}` : `from ${displayName}`}{' '}
-                      — <span className="font-semibold font-mono">{formatINR(order.total_amount)}</span>
+                      — <span className="font-semibold font-heading">{formatINR(order.total_amount)}</span>
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">{formatDate(order.created_at)}</p>
                   </div>

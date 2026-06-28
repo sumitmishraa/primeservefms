@@ -120,7 +120,7 @@ export default function OrderSuccessPage() {
         <div className="p-5 flex items-center justify-between gap-4">
           <div>
             <p className="text-xs text-slate-500 mb-1">Order Number</p>
-            <p className="text-xl font-mono font-bold text-teal-600">{order.order_number}</p>
+            <p className="text-xl font-heading font-bold text-teal-600">{order.order_number}</p>
             <p className="text-xs text-slate-400 mt-1">{formatDate(order.created_at)}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
@@ -157,7 +157,7 @@ export default function OrderSuccessPage() {
                   {item.product_name}
                   <span className="text-slate-400 ml-1">×{item.quantity}</span>
                 </span>
-                <span className="font-mono text-slate-800 whitespace-nowrap">
+                <span className="font-heading text-slate-800 whitespace-nowrap">
                   {formatINR(item.total_amount)}
                 </span>
               </div>
@@ -169,25 +169,25 @@ export default function OrderSuccessPage() {
         <div className="p-5 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-slate-500">Subtotal</span>
-            <span className="font-mono text-slate-700">{formatINR(order.subtotal)}</span>
+            <span className="font-heading text-slate-700">{formatINR(order.subtotal)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-slate-500">GST</span>
-            <span className="font-mono text-slate-700">{formatINR(order.gst_amount)}</span>
+            <span className="font-heading text-slate-700">{formatINR(order.gst_amount)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-slate-500">Delivery</span>
             {order.shipping_amount === 0 ? (
-              <span className="font-mono text-emerald-600 font-medium">FREE</span>
+              <span className="font-heading text-emerald-600 font-medium">FREE</span>
             ) : (
-              <span className="font-mono text-slate-700">{formatINR(order.shipping_amount)}</span>
+              <span className="font-heading text-slate-700">{formatINR(order.shipping_amount)}</span>
             )}
           </div>
           <div className="flex justify-between text-sm font-semibold pt-2 border-t border-slate-100">
             <span className="text-slate-900">
               {isCreditOrder ? 'Total (Due in 45 Days)' : 'Total Paid'}
             </span>
-            <span className="font-mono text-teal-600 text-base">{formatINR(order.total_amount)}</span>
+            <span className="font-heading text-teal-600 text-base">{formatINR(order.total_amount)}</span>
           </div>
           <div className="flex justify-between text-xs pt-1">
             <span className="text-slate-400">Payment Method</span>

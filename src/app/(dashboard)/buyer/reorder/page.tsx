@@ -122,11 +122,11 @@ export default function QuickReorderPage() {
               <div key={order.id} className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="min-w-0">
-                    <p className="font-bold text-teal-600 font-mono text-sm">{order.order_number}</p>
+                    <p className="font-bold text-teal-600 font-heading text-sm">{order.order_number}</p>
                     <p className="text-xs text-slate-400 mt-0.5">{formatDate(order.created_at)}</p>
                     <p className="text-sm text-slate-600 mt-1.5 line-clamp-2">{itemsSummary(order.order_items)}</p>
                   </div>
-                  <p className="font-mono font-bold text-slate-900 text-base whitespace-nowrap shrink-0">{formatINR(order.total_amount)}</p>
+                  <p className="font-heading font-bold text-slate-900 text-base whitespace-nowrap shrink-0">{formatINR(order.total_amount)}</p>
                 </div>
                 <button
                   onClick={() => handleReorder(order.id)}

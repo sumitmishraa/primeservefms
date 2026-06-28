@@ -130,7 +130,7 @@ export default function MobileCartPage() {
             <ProductThumb src={item.thumbnail_url} alt={item.name} className="h-20 w-20 shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="line-clamp-2 text-sm font-extrabold leading-5 text-slate-900">{item.name}</p>
-              <p className="mt-1 font-mono text-sm font-extrabold text-[#0D9488]">{formatINR(item.price)} / {item.unit}</p>
+              <p className="mt-1 font-heading text-sm font-extrabold text-[#0D9488]">{formatINR(item.price)} / {item.unit}</p>
               <div className="mt-3 flex items-center gap-2">
                 <button
                   type="button"
@@ -139,7 +139,7 @@ export default function MobileCartPage() {
                 >
                   -
                 </button>
-                <span className="w-9 text-center font-mono text-sm font-extrabold text-slate-900">{item.quantity}</span>
+                <span className="w-9 text-center font-heading text-sm font-extrabold text-slate-900">{item.quantity}</span>
                 <button
                   type="button"
                   onClick={() => updateQty(item.product_id, item.quantity + 1)}
@@ -147,7 +147,7 @@ export default function MobileCartPage() {
                 >
                   +
                 </button>
-                <span className="ml-auto font-mono text-sm font-extrabold text-slate-900">{formatINR(item.price * item.quantity)}</span>
+                <span className="ml-auto font-heading text-sm font-extrabold text-slate-900">{formatINR(item.price * item.quantity)}</span>
               </div>
             </div>
             <button type="button" onClick={() => updateQty(item.product_id, 0)} className="self-start text-xl font-light text-slate-300">
@@ -173,15 +173,15 @@ export default function MobileCartPage() {
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="font-semibold text-slate-500">Subtotal</span>
-              <span className="font-mono font-extrabold text-slate-900">{formatINR(subtotal)}</span>
+              <span className="font-heading font-extrabold text-slate-900">{formatINR(subtotal)}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-semibold text-slate-500">GST estimate</span>
-              <span className="font-mono font-extrabold text-slate-900">{formatINR(gst)}</span>
+              <span className="font-heading font-extrabold text-slate-900">{formatINR(gst)}</span>
             </div>
             <div className="flex justify-between border-t border-slate-100 pt-3">
               <span className="font-heading font-extrabold text-slate-900">Total</span>
-              <span className="font-mono text-lg font-extrabold text-[#0D9488]">{formatINR(grandTotal)}</span>
+              <span className="font-heading text-lg font-extrabold text-[#0D9488]">{formatINR(grandTotal)}</span>
             </div>
           </div>
         </Card>
@@ -197,7 +197,7 @@ export default function MobileCartPage() {
         <div className="flex items-center gap-4">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold uppercase tracking-[0.15em] text-slate-400">{items.length} items</p>
-            <p className="font-mono text-xl font-extrabold text-slate-900">{formatINR(grandTotal)}</p>
+            <p className="font-heading text-xl font-extrabold text-slate-900">{formatINR(grandTotal)}</p>
           </div>
           <button
             type="button"

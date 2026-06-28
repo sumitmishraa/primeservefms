@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ProductForm â€” shared form for "new product" and "edit product" pages.
  *
  * Sections: Basic Info Â· Product Details Â· Pricing Â· Images Â· Tags
@@ -473,7 +473,7 @@ export default function ProductForm({
               set('group_slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-{2,}/g, '-'))
             }
             placeholder="e.g. crescent-checked-cloth-brooms-cloth"
-            className={`${inputCls} font-mono text-xs`}
+            className={`${inputCls} font-heading text-xs`}
           />
         </Field>
 

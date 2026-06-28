@@ -172,7 +172,7 @@ export default function AdminBuyersPage() {
             <div className="flex items-center gap-3">
               <h1 className="font-heading text-2xl font-bold text-slate-900">Buyers</h1>
               {!isLoading && (
-                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-sm font-medium text-slate-600">
+                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-sm font-medium font-heading text-slate-600">
                   {buyers.length}
                 </span>
               )}

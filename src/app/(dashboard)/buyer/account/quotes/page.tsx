@@ -138,7 +138,7 @@ function VariantPicker({ catalogName, selected, onSelect, onClear }: VariantPick
                     <p className="text-[10px] text-slate-400">{[r.brand, r.size_variant].filter(Boolean).join(' · ')}</p>
                   )}
                 </div>
-                <span className="text-xs font-bold text-teal-700 font-mono shrink-0">{formatINR(r.base_price)}</span>
+                <span className="text-xs font-bold text-teal-700 font-heading shrink-0">{formatINR(r.base_price)}</span>
               </button>
             ))}
           </div>
@@ -234,7 +234,7 @@ function AddMoreProducts({ onAdd }: { onAdd: (item: AdditionalItem) => void }) {
                   <p className="text-xs text-slate-400">{[r.brand, r.size_variant].filter(Boolean).join(' · ')}</p>
                 )}
               </div>
-              <span className="text-sm font-bold text-teal-700 font-mono shrink-0">{formatINR(r.base_price)}</span>
+              <span className="text-sm font-bold text-teal-700 font-heading shrink-0">{formatINR(r.base_price)}</span>
             </button>
           ))}
         </div>
@@ -540,7 +540,7 @@ export default function AccountQuotesPage() {
                           </div>
                           <div>
                             <label className="block text-xs text-slate-500 mb-1">Quantity <span className="text-rose-400">*</span></label>
-                            <input type="number" min={1} value={item.quantity} onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value, 10) || 1)} className={`${inputCls} font-mono`} />
+                            <input type="number" min={1} value={item.quantity} onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value, 10) || 1)} className={`${inputCls} font-heading`} />
                           </div>
                           <div>
                             <label className="block text-xs text-slate-500 mb-1">Preferred Brand</label>
@@ -548,7 +548,7 @@ export default function AccountQuotesPage() {
                           </div>
                           <div>
                             <label className="block text-xs text-slate-500 mb-1">Target Price (&#8377;)</label>
-                            <input type="number" min={0} step={0.01} value={item.target_price || ''} onChange={(e) => updateItem(idx, 'target_price', parseFloat(e.target.value) || 0)} className={`${inputCls} font-mono`} placeholder="0" />
+                            <input type="number" min={0} step={0.01} value={item.target_price || ''} onChange={(e) => updateItem(idx, 'target_price', parseFloat(e.target.value) || 0)} className={`${inputCls} font-heading`} placeholder="0" />
                           </div>
                         </div>
                         <div className="flex items-end gap-2">
@@ -585,7 +585,7 @@ export default function AccountQuotesPage() {
                     <p className="text-sm font-semibold text-teal-800 mb-2">Expected Excel Format</p>
                     <div className="flex flex-wrap gap-1.5 mb-2">
                       {['Product Name', 'Size / Description', 'Unit', 'Quantity', 'Preferred Brand'].map((col) => (
-                        <span key={col} className="bg-white border border-teal-200 rounded px-2 py-1 text-xs font-mono text-teal-800">{col}</span>
+                        <span key={col} className="bg-white border border-teal-200 rounded px-2 py-1 text-xs font-heading text-teal-800">{col}</span>
                       ))}
                     </div>
                     <p className="text-xs text-teal-600">Each row after the header is one product. We match each item to our catalog and show pricing before you submit.</p>
@@ -819,7 +819,7 @@ export default function AccountQuotesPage() {
                               <div key={i} className="flex items-center gap-3 px-4 py-3 border-b border-amber-100 last:border-b-0 bg-amber-50/30">
                                 <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                                 <span className="font-heading text-sm font-semibold text-slate-800 flex-1 truncate">{item.requested_name}</span>
-                                <span className="shrink-0 text-xs text-slate-500 font-mono">{item.requested_qty} {item.requested_unit}</span>
+                                <span className="shrink-0 text-xs text-slate-500 font-heading">{item.requested_qty} {item.requested_unit}</span>
                                 <span className="shrink-0 text-[11px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">Will be quoted</span>
                               </div>
                             ))}
@@ -909,7 +909,7 @@ export default function AccountQuotesPage() {
                       {STATUS_LABELS[quote.status] ?? quote.status}
                     </span>
                     {quote.quoted_amount && (
-                      <span className="text-xs font-bold text-teal-700 font-mono">Quoted: {formatINR(quote.quoted_amount)}</span>
+                      <span className="text-xs font-bold text-teal-700 font-heading">Quoted: {formatINR(quote.quoted_amount)}</span>
                     )}
                     {quote.document_url && (
                       <span className="flex items-center gap-1 text-xs text-slate-400"><FileSpreadsheet className="w-3 h-3" />Excel</span>
@@ -958,12 +958,12 @@ export default function AccountQuotesPage() {
                               <tr key={i} className="text-slate-700 hover:bg-slate-50">
                                 <td className="px-3 py-2.5 font-medium truncate">{item.product_name}</td>
                                 <td className="px-3 py-2.5 text-slate-500 truncate">{item.description || '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-mono">{item.quantity}</td>
+                                <td className="px-3 py-2.5 text-center font-heading">{item.quantity}</td>
                                 <td className="px-3 py-2.5 text-center text-slate-500">{item.unit}</td>
                                 <td className="px-3 py-2.5 text-right">
                                   <span className="block text-slate-500 truncate">{item.preferred_brand || '—'}</span>
                                   {item.target_price > 0 && (
-                                    <span className="text-xs font-mono text-teal-700">{formatINR(item.target_price)}</span>
+                                    <span className="text-xs font-heading text-teal-700">{formatINR(item.target_price)}</span>
                                   )}
                                 </td>
                               </tr>
@@ -978,7 +978,7 @@ export default function AccountQuotesPage() {
                     <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                       <p className="text-xs font-semibold text-purple-700 mb-2">PrimeServe Response</p>
                       {quote.quoted_amount && (
-                        <p className="text-sm font-bold text-purple-900 font-mono mb-1">
+                        <p className="text-sm font-bold text-purple-900 font-heading mb-1">
                           Quoted: {formatINR(quote.quoted_amount)}
                           {quote.valid_until && (
                             <span className="font-normal text-purple-600 ml-2">valid until {new Date(quote.valid_until).toLocaleDateString('en-IN')}</span>

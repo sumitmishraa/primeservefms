@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import Link from 'next/link';
 import {
   BadgeCheck, Zap, TrendingUp, Building2, ArrowRight, MessageCircle,
-  FilePlus2, ShieldCheck, Video, CheckCircle2, FileText, Check,
+  FilePlus2, ShieldCheck, CheckCircle2, FileText, Check,
   CalendarClock,
 } from 'lucide-react';
 
@@ -17,8 +17,8 @@ const BENEFITS = [
 const STEPS = [
   { Icon: FilePlus2,   title: 'Start your application', body: 'Click Apply Now and confirm your company & applicant details — most of it is pre-filled.' },
   { Icon: FileText,    title: 'Add your KYC',          body: 'Enter your GST, PAN and CIN/LLP numbers and upload the matching documents.' },
-  { Icon: ShieldCheck, title: 'Verification & call',   body: 'We verify your documents and have a short credit discussion over Zoom or a call.' },
-  { Icon: BadgeCheck,  title: 'Get your credit line',  body: 'Once approved, your 45-day credit line is activated and ready to use.' },
+  { Icon: ShieldCheck, title: 'Document verification', body: 'We review and verify your submitted documents — this usually happens within a few hours.' },
+  { Icon: BadgeCheck,  title: 'Get your credit line',  body: 'Once approved (within 24 hours of submission), your 45-day credit line is activated and ready to use.' },
 ];
 
 const REQUIRED_DOCS = [
@@ -35,9 +35,8 @@ const OPTIONAL_DOCS = [
 
 const TIMELINE = [
   { Icon: CheckCircle2, label: 'Application Submitted', sub: 'We receive your details instantly' },
-  { Icon: ShieldCheck,  label: 'Document Verification', sub: 'Under 24 hours' },
-  { Icon: Video,        label: 'Credit Discussion',     sub: 'Zoom or call — within the next 24 hours' },
-  { Icon: BadgeCheck,   label: 'Credit Term Approved',  sub: 'Your credit line is activated' },
+  { Icon: ShieldCheck,  label: 'Document Verification', sub: 'We review and verify your documents' },
+  { Icon: BadgeCheck,   label: 'Credit Approved',       sub: 'Within 24 hours of submission' },
 ];
 
 // ─── Reusable CTAs ──────────────────────────────────────────────────────────

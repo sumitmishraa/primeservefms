@@ -546,7 +546,7 @@ export default function OrderDetailPage({
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-slate-400" />
-                <span className="font-mono text-sm text-slate-600">
+                <span className="font-heading text-sm text-slate-600">
                   {order!.assigned_vendor_phone}
                 </span>
               </div>
@@ -729,7 +729,7 @@ export default function OrderDetailPage({
         {/* Order header */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="font-heading text-2xl font-bold tracking-tight text-slate-900 font-mono">
+            <h1 className="font-heading text-2xl font-bold tracking-tight text-slate-900 font-heading">
               {order.order_number}
             </h1>
             <p className="mt-1 text-sm text-slate-500">
@@ -773,7 +773,7 @@ export default function OrderDetailPage({
               {buyer?.phone && (
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-slate-400" />
-                  <span className="font-mono text-sm text-slate-600">{buyer.phone}</span>
+                  <span className="font-heading text-sm text-slate-600">{buyer.phone}</span>
                 </div>
               )}
             </div>
@@ -865,22 +865,22 @@ export default function OrderDetailPage({
                         <td className="px-4 py-3 font-medium text-slate-900">
                           {item.product_name}
                         </td>
-                        <td className="px-4 py-3 font-mono text-xs text-slate-500">
+                        <td className="px-4 py-3 font-heading text-xs text-slate-500">
                           {item.product_sku ?? '—'}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-slate-700">
+                        <td className="px-4 py-3 text-right font-heading text-slate-700">
                           {item.quantity}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-slate-700">
+                        <td className="px-4 py-3 text-right font-heading text-slate-700">
                           {formatINR(item.unit_price)}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-xs text-slate-500">
+                        <td className="px-4 py-3 text-right font-heading text-xs text-slate-500">
                           {formatINR(item.gst_amount)}
                           <span className="ml-1 text-xs text-slate-400">
                             ({item.gst_rate}%)
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono font-semibold text-slate-900">
+                        <td className="px-4 py-3 text-right font-heading font-semibold text-slate-900">
                           {formatINR(item.total_amount)}
                         </td>
                       </tr>
@@ -894,21 +894,21 @@ export default function OrderDetailPage({
                 <div className="ml-auto w-full max-w-xs space-y-2 text-sm">
                   <div className="flex justify-between text-slate-600">
                     <span>Subtotal</span>
-                    <span className="font-mono">{formatINR(subtotal)}</span>
+                    <span className="font-heading">{formatINR(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-slate-600">
                     <span>GST</span>
-                    <span className="font-mono">{formatINR(gstTotal)}</span>
+                    <span className="font-heading">{formatINR(gstTotal)}</span>
                   </div>
                   {order.shipping_amount > 0 && (
                     <div className="flex justify-between text-slate-600">
                       <span>Shipping</span>
-                      <span className="font-mono">{formatINR(order.shipping_amount)}</span>
+                      <span className="font-heading">{formatINR(order.shipping_amount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between border-t border-slate-200 pt-2 font-semibold text-slate-900">
                     <span>Grand Total</span>
-                    <span className="font-mono text-teal-700">
+                    <span className="font-heading text-teal-700">
                       {formatINR(grandTotal + order.shipping_amount)}
                     </span>
                   </div>

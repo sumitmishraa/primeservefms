@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
@@ -90,7 +90,7 @@ function PriceCell({
           if (e.key === 'Enter')  { void commitEdit(); }
           if (e.key === 'Escape') { setEditing(false); }
         }}
-        className="w-28 border border-teal-400 rounded px-2 py-0.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-teal-500"
+        className="w-28 border border-teal-400 rounded px-2 py-0.5 text-sm font-heading focus:outline-none focus:ring-1 focus:ring-teal-500"
         autoFocus
       />
     );
@@ -101,7 +101,7 @@ function PriceCell({
       type="button"
       onClick={startEdit}
       title="Click to edit price"
-      className={`font-mono text-sm px-1 rounded hover:bg-slate-100 transition-colors ${
+      className={`font-heading text-sm px-1 rounded hover:bg-slate-100 transition-colors ${
         product.base_price === 0 ? 'text-rose-600 font-semibold' : 'text-slate-800'
       }`}
     >
@@ -373,7 +373,7 @@ export default function AdminProductsPage() {
     const min = Math.min(...prices);
     const max = Math.max(...prices);
     return (
-      <span className="font-mono text-sm text-slate-800">
+      <span className="font-heading text-sm text-slate-800">
         {min === max ? formatINR(min) : `${formatINR(min)} â€“ ${formatINR(max)}`}
       </span>
     );
@@ -608,7 +608,7 @@ export default function AdminProductsPage() {
                         />
                       </td>
 
-                      <td className="px-4 py-3 font-mono text-slate-400 text-xs">{rowNum}</td>
+                      <td className="px-4 py-3 font-heading text-slate-400 text-xs">{rowNum}</td>
 
                       {/* Name + thumbnail + variant badge */}
                       <td className="px-4 py-3">
@@ -636,7 +636,7 @@ export default function AdminProductsPage() {
                               )}
                             </div>
                             {rep.sku && (
-                              <div className="text-[11px] font-mono text-slate-400 mt-0.5">{rep.sku}</div>
+                              <div className="text-[11px] font-heading text-slate-400 mt-0.5">{rep.sku}</div>
                             )}
                           </div>
                         </div>

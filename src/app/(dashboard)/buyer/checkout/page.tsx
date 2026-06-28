@@ -689,13 +689,13 @@ export default function CheckoutPage() {
                 {profile.gst_number && (
                   <div>
                     <p className="text-xs font-medium text-slate-500 mb-0.5">GST Number</p>
-                    <p className="text-sm text-slate-800 font-mono">{profile.gst_number}</p>
+                    <p className="text-sm text-slate-800 font-heading">{profile.gst_number}</p>
                   </div>
                 )}
                 {profile.tax_id && (
                   <div>
                     <p className="text-xs font-medium text-slate-500 mb-0.5">PAN</p>
-                    <p className="text-sm text-slate-800 font-mono">{profile.tax_id}</p>
+                    <p className="text-sm text-slate-800 font-heading">{profile.tax_id}</p>
                   </div>
                 )}
                 {profile.client_name && (
@@ -854,7 +854,7 @@ export default function CheckoutPage() {
                 }}
                 placeholder="29XXXXX1234X1Z5"
                 maxLength={15}
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono transition-colors ${
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-heading transition-colors ${
                   errors.gstNumber ? 'border-rose-400' : 'border-slate-300'
                 }`}
               />
@@ -1024,20 +1024,20 @@ export default function CheckoutPage() {
                     <div className="pl-7 space-y-1">
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-500">Credit limit</span>
-                        <span className="font-mono font-medium text-slate-700">
+                        <span className="font-heading font-medium text-slate-700">
                           {formatINR(credit.credit_limit)}
                         </span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-500">Used</span>
-                        <span className="font-mono text-slate-600">
+                        <span className="font-heading text-slate-600">
                           {formatINR(credit.used_amount)}
                         </span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-500">Available</span>
                         <span
-                          className={`font-mono font-semibold ${
+                          className={`font-heading font-semibold ${
                             creditAvailable ? 'text-emerald-600' : 'text-rose-500'
                           }`}
                         >
@@ -1112,7 +1112,7 @@ export default function CheckoutPage() {
                       {item.quantity} × {formatINR(item.unit_price)}
                     </p>
                   </div>
-                  <p className="text-sm font-mono font-semibold text-slate-900 whitespace-nowrap">
+                  <p className="text-sm font-heading font-semibold text-slate-900 whitespace-nowrap">
                     {formatINR(item.unit_price * item.quantity)}
                   </p>
                 </div>
@@ -1136,22 +1136,22 @@ export default function CheckoutPage() {
             <div className="border-t border-slate-100 pt-3 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">Subtotal</span>
-                <span className="font-mono text-slate-800">{formatINR(subtotal)}</span>
+                <span className="font-heading text-slate-800">{formatINR(subtotal)}</span>
               </div>
 
               {gstBreakdown.map(({ rate, amount }) => (
                 <div key={rate} className="flex justify-between text-sm">
                   <span className="text-slate-600">GST {rate}%</span>
-                  <span className="font-mono text-slate-700">{formatINR(amount)}</span>
+                  <span className="font-heading text-slate-700">{formatINR(amount)}</span>
                 </div>
               ))}
 
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">Delivery</span>
                 {deliveryCharge === 0 ? (
-                  <span className="font-mono font-medium text-emerald-600">FREE</span>
+                  <span className="font-heading font-medium text-emerald-600">FREE</span>
                 ) : (
-                  <span className="font-mono text-slate-700">{formatINR(deliveryCharge)}</span>
+                  <span className="font-heading text-slate-700">{formatINR(deliveryCharge)}</span>
                 )}
               </div>
             </div>
@@ -1159,7 +1159,7 @@ export default function CheckoutPage() {
             {/* Grand total */}
             <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-200">
               <span className="font-semibold text-slate-900 text-base">Total</span>
-              <span className="font-mono text-xl font-bold text-teal-600">
+              <span className="font-heading text-xl font-bold text-teal-600">
                 {formatINR(grandTotal)}
               </span>
             </div>

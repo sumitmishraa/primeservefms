@@ -120,7 +120,7 @@ export default function ProductSidebar({
                       </span>
                       <span className="font-medium">{cat.label}</span>
                     </span>
-                    <span className="font-mono text-[11px] text-slate-400">
+                    <span className="font-heading text-[11px] text-slate-400">
                       {cat.productCount}
                     </span>
                   </label>

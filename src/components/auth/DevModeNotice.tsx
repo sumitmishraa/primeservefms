@@ -54,7 +54,7 @@ export default function DevModeNotice() {
               key={e.phone}
               className="flex items-center justify-between gap-2 rounded-lg bg-white/70 px-3 py-1.5"
             >
-              <code className="font-mono text-[13px] text-amber-900">
+              <code className="font-heading text-[13px] text-amber-900">
                 <span className="font-semibold">{e.phone}</span>
                 <span className="mx-2 text-amber-600">→</span>
                 <span className="text-amber-700">OTP:</span>{' '}

@@ -23,7 +23,7 @@ export default function BranchCard({ branch, clientName }: BranchCardProps) {
             <p className="text-xs text-teal-600 font-medium mt-0.5 truncate">{clientName}</p>
           )}
           {branch.branch_code && (
-            <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 text-slate-500">
+            <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-heading font-medium bg-slate-100 text-slate-500">
               {branch.branch_code}
             </span>
           )}

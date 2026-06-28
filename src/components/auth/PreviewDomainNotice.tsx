@@ -48,7 +48,7 @@ export default function PreviewDomainNotice() {
           <p className="font-semibold">Preview deployment</p>
           <p className="mt-0.5 text-amber-800">
             Phone OTP sign-in only works on the production URL{' '}
-            <code className="rounded bg-amber-100 px-1 py-0.5 font-mono text-[11px]">
+            <code className="rounded bg-amber-100 px-1 py-0.5 font-heading text-[11px]">
               app.primeservefs.com
             </code>
             . On this preview, please use <strong>Email &amp; Password</strong> instead.

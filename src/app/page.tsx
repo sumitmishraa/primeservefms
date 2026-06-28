@@ -467,7 +467,7 @@ export default function HomePage() {
                     {cat.description}
                   </p>
                   <div className="mt-4 flex items-center justify-between text-xs">
-                    <span className="font-mono font-semibold text-slate-400">
+                    <span className="font-heading font-semibold text-slate-400">
                       {cat.productCount}+ products
                     </span>
                     <span className="inline-flex items-center gap-1 font-semibold text-teal-600 opacity-0 transition-opacity group-hover:opacity-100">

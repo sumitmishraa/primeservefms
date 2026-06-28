@@ -141,7 +141,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
 
         {/* Line total + remove (desktop right-side) */}
         <div className="hidden sm:flex flex-col items-end justify-between gap-2">
-          <p className="font-bold text-slate-900 font-mono text-sm">
+          <p className="font-bold text-slate-900 font-heading text-sm">
             {formatINR(lineTotal)}
           </p>
           <button
@@ -175,7 +175,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
             onKeyDown={(e) => {
               if (e.key === 'Enter') commitQty(pendingQty);
             }}
-            className="w-16 h-8 text-center text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono"
+            className="w-16 h-8 text-center text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-heading"
             aria-label="Quantity"
           />
 
@@ -194,7 +194,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowProps) {
 
         {/* Mobile: line total + remove */}
         <div className="flex sm:hidden items-center gap-3">
-          <p className="font-bold text-slate-900 font-mono text-sm">
+          <p className="font-bold text-slate-900 font-heading text-sm">
             {formatINR(lineTotal)}
           </p>
           <button
@@ -310,7 +310,7 @@ export default function BuyerCartPage() {
             {/* Subtotal */}
             <div className="flex justify-between items-center text-sm py-2 border-b border-slate-100">
               <span className="text-slate-600">Subtotal</span>
-              <span className="font-mono font-medium text-slate-900">
+              <span className="font-heading font-medium text-slate-900">
                 {formatINR(subtotal)}
               </span>
             </div>
@@ -322,7 +322,7 @@ export default function BuyerCartPage() {
                 className="flex justify-between items-center text-sm py-2 border-b border-slate-100"
               >
                 <span className="text-slate-600">GST {rate}%</span>
-                <span className="font-mono text-slate-700">{formatINR(amount)}</span>
+                <span className="font-heading text-slate-700">{formatINR(amount)}</span>
               </div>
             ))}
 
@@ -330,9 +330,9 @@ export default function BuyerCartPage() {
             <div className="flex justify-between items-center text-sm py-2 border-b border-slate-100">
               <span className="text-slate-600">Delivery</span>
               {deliveryCharge === 0 ? (
-                <span className="font-mono font-medium text-emerald-600">FREE</span>
+                <span className="font-heading font-medium text-emerald-600">FREE</span>
               ) : (
-                <span className="font-mono text-slate-700">{formatINR(deliveryCharge)}</span>
+                <span className="font-heading text-slate-700">{formatINR(deliveryCharge)}</span>
               )}
             </div>
 
@@ -346,7 +346,7 @@ export default function BuyerCartPage() {
             {/* Grand total */}
             <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-200">
               <span className="font-semibold text-slate-900">Grand Total</span>
-              <span className="font-mono text-xl font-bold text-teal-600">
+              <span className="font-heading text-xl font-bold text-teal-600">
                 {formatINR(grandTotal)}
               </span>
             </div>
