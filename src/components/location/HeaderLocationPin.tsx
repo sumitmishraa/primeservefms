@@ -88,9 +88,15 @@ export default function HeaderLocationPin({
     setLoading(true);
     navigator.geolocation.getCurrentPosition(
       resolveLocation,
-      () => {
+      (positionError) => {
         setLoading(false);
-        setMessage('Allow location');
+        if (positionError.code === positionError.PERMISSION_DENIED) {
+          setMessage('Enable in Settings');
+        } else if (positionError.code === positionError.TIMEOUT) {
+          setMessage('Location timed out');
+        } else {
+          setMessage('Location unavailable');
+        }
       },
       {
         enableHighAccuracy: false,

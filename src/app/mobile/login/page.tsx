@@ -92,9 +92,22 @@ function MobileLoginContent() {
       const result = await sendPhoneOTP(`+91${phone}`, 'send-otp-btn');
       setConfirmation(result);
       setOtpSent(true);
-    } catch {
+    } catch (err) {
       clearRecaptchaVerifier();
-      setError('Failed to send OTP. Check the number and try again.');
+      const code = (err as { code?: string })?.code ?? '';
+      if (code === 'auth/billing-not-enabled' || code === 'auth/operation-not-allowed') {
+        setError('Phone OTP is not yet active. Please use Email & Password to sign in.');
+      } else if (code === 'auth/too-many-requests') {
+        setError('Too many attempts. Please wait a few minutes and try again.');
+      } else if (code === 'auth/invalid-phone-number') {
+        setError('Invalid phone number. Please check and try again.');
+      } else if (code === 'auth/captcha-check-failed') {
+        setError('Security check failed. Please refresh and try again.');
+      } else if (code === 'auth/quota-exceeded') {
+        setError('SMS limit reached for today. Please try Email & Password instead.');
+      } else {
+        setError('Could not send OTP. Please use Email & Password to sign in.');
+      }
     } finally {
       setLoading(false);
     }
@@ -239,16 +252,23 @@ function MobileLoginContent() {
 
             {/* OTP / Email segmented control */}
             <div className="mt-3 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1">
-              {(['otp', 'password'] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => switchMethod(m)}
-                  className={`ps-press h-10 rounded-xl text-xs font-extrabold ${authMethod === m ? 'bg-white text-[#0D9488] shadow-sm' : 'text-slate-500'}`}
-                >
-                  {m === 'otp' ? 'Phone OTP' : 'Email & Password'}
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={() => switchMethod('otp')}
+                className={`ps-press h-10 rounded-xl text-xs font-extrabold ${authMethod === 'otp' ? 'bg-white text-[#0D9488] shadow-sm' : 'text-slate-500'}`}
+              >
+                Phone OTP
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMethod('password')}
+                className={`ps-press relative h-10 rounded-xl text-xs font-extrabold ${authMethod === 'password' ? 'bg-white text-[#0D9488] shadow-sm' : 'text-slate-500'}`}
+              >
+                Email & Password
+                <span className="absolute -right-1 -top-1 rounded-full bg-[#14B8A6] px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-wide text-white">
+                  Works now
+                </span>
+              </button>
             </div>
 
             <div className="mt-5">

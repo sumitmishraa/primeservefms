@@ -1,11 +1,10 @@
 'use client';
 
-import Image from 'next/image';
-import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 import {
   Box,
   Brush,
-  ChevronRight,
   ClipboardList,
   Coffee,
   Droplets,
@@ -25,18 +24,15 @@ import {
   Wrench,
 } from 'lucide-react';
 import {
-  Card,
   MobilePage,
   ScreenHeader,
   categoryIconMap,
-  categoryImages,
   mobileIcons,
 } from '@/components/mobile/PrimeserveMobile';
 import { PRODUCT_CATEGORIES, SUBCATEGORIES } from '@/lib/constants/categories';
 
-/** Subcategory slug → icon mapping using confirmed lucide-react icons */
+/** Subcategory slug → icon mapping */
 const SUBCAT_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  // Housekeeping Materials
   air_and_room_fresheners: Wind,
   brooms_and_cleaning_cloths: Brush,
   brushes_and_scrubbing_tools: Brush,
@@ -58,7 +54,6 @@ const SUBCAT_ICON_MAP: Record<string, React.ComponentType<{ className?: string }
   toilet_fresheners: Wind,
   urinal_care: Droplets,
   wipers_and_dusters: Feather,
-  // Cleaning Chemicals
   laundry_chemicals: Layers,
   kitchen_hygiene_and_warewashing: Coffee,
   housekeeping_and_general_cleaners: FlaskConical,
@@ -71,9 +66,7 @@ const SUBCAT_ICON_MAP: Record<string, React.ComponentType<{ className?: string }
   bulk_cleaning_chemicals: FlaskConical,
   branded_cleaning_liquids: FlaskConical,
   soaps_and_detergent_powders: Droplets,
-  // Pantry
   disposable_cups_and_plates: Coffee,
-  // Office Stationeries
   copier_and_printing_paper: FileText,
   pens_pencils_and_markers: PenTool,
   notebooks_and_writing_pads: ClipboardList,
@@ -91,97 +84,129 @@ const SUBCAT_ICON_MAP: Record<string, React.ComponentType<{ className?: string }
   rubber_bands_and_elastics: Package,
   envelopes_and_covers: ClipboardList,
   general_stationery: PenTool,
-  // Facility & Tools
   safety_equipment: ShieldCheck,
   plumbing_tools: Wrench,
-  // Printing
   printing_supplies: Printer,
 };
 
-/** Fallback icon rotation for any slug not in the map */
 const FALLBACK_ICONS = [
   Sparkles, Box, ClipboardList, FileText, Package, ShoppingBag, ShieldCheck, Wrench,
   Star, Feather, FlaskConical, Coffee, Droplets, Wind, Layers,
 ];
 
-export default function MobileCategoriesPage() {
+function CategoriesContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialSlug = searchParams.get('active') ?? PRODUCT_CATEGORIES[0]?.value ?? '';
+  const [activeCategory, setActiveCategory] = useState(initialSlug);
+
+  const activeCat = PRODUCT_CATEGORIES.find((c) => c.value === activeCategory) ?? PRODUCT_CATEGORIES[0];
+  const subcategories = SUBCATEGORIES[activeCat?.value ?? ''] ?? [];
+
   return (
-    <MobilePage>
+    <MobilePage withBottomPadding={false} className="flex flex-col">
       <ScreenHeader
         title="Categories"
-        subtitle="Browse PrimeServe by category and subcategory"
+        subtitle="Browse by category and subcategory"
         variant="dark"
       />
 
-      <div className="space-y-3 px-5 py-5">
-        {PRODUCT_CATEGORIES.map((category) => {
-          const CatIcon = categoryIconMap[category.value] ?? mobileIcons.Box;
-          const subcategories = SUBCATEGORIES[category.value] ?? [];
-          return (
-            <Card key={category.value} className="overflow-hidden">
-              {/* ── Category header: small 56×56 image icon + name ── */}
-              <Link
-                href={`/mobile/products?category=${category.value}`}
-                className="ps-press flex items-center gap-3 border-b border-slate-100 p-4"
+      {/* Two-panel layout */}
+      <div className="flex flex-1 overflow-hidden" style={{ height: 'calc(100dvh - 128px)' }}>
+        {/* ── Left sidebar: category rail ── */}
+        <nav className="w-[82px] shrink-0 overflow-y-auto bg-slate-100" style={{ scrollbarWidth: 'none' }}>
+          {PRODUCT_CATEGORIES.map((cat) => {
+            const Icon = categoryIconMap[cat.value] ?? mobileIcons.Box;
+            const isActive = cat.value === activeCategory;
+            return (
+              <button
+                key={cat.value}
+                type="button"
+                onClick={() => setActiveCategory(cat.value)}
+                className={`relative flex w-full flex-col items-center gap-1.5 px-2 py-4 text-center transition-colors ${
+                  isActive
+                    ? 'bg-white text-[#0D9488]'
+                    : 'text-slate-500 hover:bg-white/60'
+                }`}
               >
-                {/* 56×56 category image with icon overlay */}
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-[#0B1220]">
-                  <Image
-                    src={categoryImages[category.value]}
-                    alt={category.label}
-                    fill
-                    className="object-cover opacity-75"
-                    sizes="56px"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/25">
-                    <CatIcon className="h-5 w-5 text-white drop-shadow-sm" />
-                  </div>
-                </div>
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 h-10 w-[3px] -translate-y-1/2 rounded-r-full bg-[#14B8A6]" />
+                )}
+                <span
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+                    isActive ? 'bg-[rgba(20,184,166,0.14)]' : 'bg-white'
+                  }`}
+                >
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-[#0D9488]' : 'text-slate-400'}`} />
+                </span>
+                <span className={`line-clamp-2 text-[10px] font-extrabold leading-3 ${isActive ? 'text-[#0D9488]' : 'text-slate-500'}`}>
+                  {cat.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
 
-                <div className="min-w-0 flex-1">
-                  <h2 className="font-heading text-base font-extrabold text-slate-900">
-                    {category.label}
-                  </h2>
-                  <p className="mt-0.5 text-xs font-semibold text-slate-400">
-                    {category.productCount}+ products
-                  </p>
-                </div>
-                <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
-              </Link>
+        {/* ── Right panel: subcategory grid ── */}
+        <div className="flex-1 overflow-y-auto bg-white px-3 pb-24 pt-3" style={{ scrollbarWidth: 'none' }}>
+          {/* Category header */}
+          <div className="mb-4 rounded-2xl bg-[rgba(20,184,166,0.08)] p-3">
+            <p className="font-heading text-base font-extrabold text-slate-900">{activeCat?.label}</p>
+            <p className="mt-0.5 text-xs font-semibold text-slate-400">
+              {activeCat?.productCount}+ products
+            </p>
+          </div>
 
-              {/* ── Subcategories list ── */}
-              {subcategories.length > 0 ? (
-                <div className="p-2">
-                  {subcategories.map((subcategory, index) => {
-                    const SubIcon =
-                      SUBCAT_ICON_MAP[subcategory.slug] ??
-                      FALLBACK_ICONS[index % FALLBACK_ICONS.length];
-                    return (
-                      <Link
-                        key={subcategory.slug}
-                        href={`/mobile/products?category=${category.value}&subcategory=${subcategory.slug}`}
-                        className="ps-press flex items-center gap-3 rounded-xl px-3 py-2.5"
-                      >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[rgba(20,184,166,0.10)]">
-                          <SubIcon className="h-4 w-4 text-[#0D9488]" />
-                        </span>
-                        <span className="min-w-0 flex-1 text-sm font-bold leading-5 text-slate-700">
-                          {subcategory.label}
-                        </span>
-                        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-200" />
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="px-4 py-3 text-sm font-semibold text-slate-400">
-                  Products coming soon
-                </div>
-              )}
-            </Card>
-          );
-        })}
+          {subcategories.length > 0 ? (
+            <div className="grid grid-cols-3 gap-2">
+              {subcategories.map((subcat, index) => {
+                const SubIcon =
+                  SUBCAT_ICON_MAP[subcat.slug] ??
+                  FALLBACK_ICONS[index % FALLBACK_ICONS.length];
+                return (
+                  <button
+                    key={subcat.slug}
+                    type="button"
+                    onClick={() =>
+                      router.push(
+                        `/mobile/products?category=${activeCat?.value}&subcategory=${subcat.slug}`,
+                      )
+                    }
+                    className="ps-press flex flex-col items-center gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-3 text-center transition-colors hover:border-[rgba(20,184,166,0.35)] hover:bg-[rgba(20,184,166,0.06)]"
+                  >
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(20,184,166,0.12)]">
+                      <SubIcon className="h-6 w-6 text-[#0D9488]" />
+                    </span>
+                    <span className="line-clamp-2 text-[11px] font-bold leading-3.5 text-slate-700">
+                      {subcat.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                <mobileIcons.Box className="h-8 w-8 text-slate-300" />
+              </span>
+              <p className="mt-4 font-heading text-base font-extrabold text-slate-700">
+                Coming soon
+              </p>
+              <p className="mt-1 text-sm font-semibold text-slate-400">
+                Products are being added to this category.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </MobilePage>
+  );
+}
+
+export default function MobileCategoriesPage() {
+  return (
+    <Suspense fallback={null}>
+      <CategoriesContent />
+    </Suspense>
   );
 }
