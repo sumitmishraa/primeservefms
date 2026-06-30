@@ -97,26 +97,27 @@ function PhoneOTPTab({ redirectTo }: { redirectTo: string | null }) {
       if (code === 'auth/invalid-phone-number' || msg.includes('invalid-phone-number')) {
         toast.error('Invalid phone number. Please check and try again.');
       } else if (code === 'auth/too-many-requests' || msg.includes('too-many-requests')) {
-        toast.error('Too many attempts. Please wait a few minutes.');
+        toast.error('Too many attempts. Please wait a few minutes and try again.');
       } else if (code === 'auth/quota-exceeded') {
         toast.error('Daily SMS quota reached. Please try email login or come back tomorrow.');
-      } else if (
-        code === 'auth/captcha-check-failed' ||
-        code === 'auth/internal-error' ||
-        msg.includes('captcha')
-      ) {
+      } else if (code === 'auth/captcha-check-failed' || msg.includes('captcha')) {
         toast.error(
-          'OTP verification blocked. This usually means this domain isn\'t authorised in Firebase — try email/password login or use the production URL.',
-          { duration: 6000 }
+          'reCAPTCHA check failed. If you have an ad blocker, open this page in Incognito mode (Ctrl+Shift+N) and try again.',
+          { duration: 8000 }
+        );
+      } else if (code === 'auth/internal-error') {
+        toast.error(
+          'OTP request blocked — likely an ad blocker or extension. Try Incognito mode (Ctrl+Shift+N) or use Email & Password login.',
+          { duration: 8000 }
         );
       } else if (code === 'auth/operation-not-allowed') {
-        toast.error('Phone sign-in is disabled in Firebase. Contact support.');
+        toast.error('Phone sign-in is disabled. Please use Email & Password login or contact support.');
       } else if (code === 'auth/billing-not-enabled') {
-        toast.error('SMS service requires a Firebase Blaze plan upgrade.');
+        toast.error('SMS service requires a Firebase Blaze plan upgrade. Contact support.');
       } else if (code) {
-        toast.error(`OTP failed (${code}). Please try email/password login instead.`);
+        toast.error(`OTP failed (${code}). Please try Email & Password login instead.`);
       } else {
-        toast.error('Could not send OTP. Please try email/password login instead.');
+        toast.error('Could not send OTP. Please try Email & Password login instead.');
       }
     }
   }, [phone, startTimer]);
@@ -308,9 +309,19 @@ function ForgotPasswordPanel({ onBack }: { onBack: () => void }) {
       console.error('[reset password OTP] firebase error:', { code, msg });
 
       if (code === 'auth/too-many-requests' || msg.includes('too-many-requests')) {
-        toast.error('Too many attempts. Please wait a few minutes.');
+        toast.error('Too many attempts. Please wait a few minutes and try again.');
       } else if (code === 'auth/invalid-phone-number' || msg.includes('invalid-phone-number')) {
         toast.error('Invalid phone number. Please check and try again.');
+      } else if (code === 'auth/captcha-check-failed' || msg.includes('captcha')) {
+        toast.error(
+          'reCAPTCHA check failed. If you have an ad blocker, open in Incognito mode (Ctrl+Shift+N) and try again.',
+          { duration: 8000 }
+        );
+      } else if (code === 'auth/internal-error') {
+        toast.error(
+          'OTP blocked — likely an ad blocker. Try Incognito mode (Ctrl+Shift+N) and try again.',
+          { duration: 8000 }
+        );
       } else if (code) {
         toast.error(`OTP failed (${code}). Please try again.`);
       } else {

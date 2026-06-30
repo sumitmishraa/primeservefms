@@ -83,14 +83,15 @@ export function PhoneVerification({ onVerified, disabled = false }: PhoneVerific
         toast.error('Too many attempts. Please wait a few minutes and try again.');
       } else if (code === 'auth/quota-exceeded') {
         toast.error('Daily SMS quota reached. Try again tomorrow.');
-      } else if (
-        code === 'auth/captcha-check-failed' ||
-        code === 'auth/internal-error' ||
-        msg.includes('captcha')
-      ) {
+      } else if (code === 'auth/captcha-check-failed' || msg.includes('captcha')) {
         toast.error(
-          'OTP verification blocked. This domain may not be authorised in Firebase — use the production URL.',
-          { duration: 6000 }
+          'reCAPTCHA check failed. If you have an ad blocker, open in Incognito mode (Ctrl+Shift+N) and try again.',
+          { duration: 8000 }
+        );
+      } else if (code === 'auth/internal-error') {
+        toast.error(
+          'OTP blocked — likely an ad blocker or extension. Try Incognito mode (Ctrl+Shift+N) and try again.',
+          { duration: 8000 }
         );
       } else if (code === 'auth/operation-not-allowed') {
         toast.error('Phone sign-in is disabled in Firebase. Contact support.');
