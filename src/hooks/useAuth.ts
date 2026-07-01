@@ -190,9 +190,10 @@ export function useAuth() {
       setLoading(true);
       try {
         const res = await fetch('/api/auth/verify', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ idToken, mode: 'login' }),
+          method:      'POST',
+          credentials: 'include',
+          headers:     { 'Content-Type': 'application/json' },
+          body:        JSON.stringify({ idToken, mode: 'login' }),
         });
         const json = (await res.json()) as { user?: UserProfile; error?: string; code?: string };
 

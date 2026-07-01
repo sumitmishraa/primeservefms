@@ -182,7 +182,9 @@ export function destroySession(): NextResponse {
   response.cookies.set(SESSION_COOKIE, "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    // Must match the attributes used in createSession() for the browser to
+    // reliably recognise this as the same cookie and clear it.
+    sameSite: "strict",
     maxAge: 0,
     path: "/",
   });

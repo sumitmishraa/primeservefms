@@ -208,11 +208,16 @@ function applySecurityHeaders(response: NextResponse): void {
     "Content-Security-Policy",
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://checkout.razorpay.com https://api.razorpay.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://www.google.com https://apis.google.com https://checkout.razorpay.com https://api.razorpay.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://*.supabase.co https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://cdn.razorpay.com https://*.razorpay.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://identitytoolkit.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com https://api.razorpay.com wss://api.razorpay.com https://lumberjack.razorpay.com https://firebaseinstallations.googleapis.com",
+      // https://www.google.com is required here (not just frame-src) because the
+      // reCAPTCHA widget that Firebase phone-auth relies on makes XHR/fetch calls
+      // to google.com directly from the top-level page, not just from its iframe.
+      // Without it, reCAPTCHA verification is silently blocked and Firebase phone
+      // OTP fails with auth/captcha-check-failed or auth/internal-error.
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://identitytoolkit.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com https://www.google.com https://api.razorpay.com wss://api.razorpay.com https://lumberjack.razorpay.com https://firebaseinstallations.googleapis.com",
       "frame-src https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://www.google.com",
       "object-src 'none'",
       "base-uri 'self'",
